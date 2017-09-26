@@ -1,0 +1,153 @@
+package ch.fhnw.modeller.webservice.ontology;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.update.UpdateAction;
+import org.apache.jena.update.UpdateExecutionFactory;
+import org.apache.jena.update.UpdateFactory;
+import org.apache.jena.update.UpdateProcessor;
+import org.apache.jena.update.UpdateRequest;
+
+
+public final class OntologyManager {
+
+	private static OntologyManager INSTANCE;
+	private boolean localOntology = false;
+	//private Model rdfModel;
+	
+	private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment";
+	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
+	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
+	private static String READENDPOINT			= TRIPLESTOREENDPOINT + "/get";
+
+	public static synchronized OntologyManager getInstance() {
+		if (INSTANCE == null) {
+			INSTANCE = new OntologyManager();
+		}
+		return INSTANCE;
+	}
+
+	public OntologyManager() {
+//		rdfModel = ModelFactory.createDefaultModel();
+//		setNamespaces(rdfModel);
+//		loadOntologyiesToModel();
+	}
+
+	private void applyReasoningRulesToMainModel(String ruleFile) {
+		List<String> ruleSet = null;
+		try {
+			ruleSet = RuleParser.parseRules(this.getClass().getClassLoader().getResourceAsStream(ruleFile));
+			for (String rule : ruleSet) {
+				performConstructRule(new ParameterizedSparqlString(rule));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+	public Model applyReasoningRulesToTempModel(Model tempModel, ParameterizedSparqlString constructQuery) {
+		// System.out.println("### applyReasoningRulesToTempModel: "
+		// +constructQuery.toString());
+		return performConstructRule(tempModel, constructQuery);
+	}
+
+	public void setNamespaces(Model model) {
+		for (NAMESPACE ns : NAMESPACE.values()) {
+			model.setNsPrefix(ns.getPrefix(), ns.getURI());
+		}
+	}
+
+//	private void loadOntologyiesToModel() {
+//			rdfModel.read(READENDPOINT);
+//	}
+
+	private void addNamespacesToQuery(ParameterizedSparqlString queryStr) {
+		for (NAMESPACE ns : NAMESPACE.values()) {
+			queryStr.setNsPrefix(ns.getPrefix(), ns.getURI());
+		}
+	}
+
+	public Model performConstructRule(Model model, ParameterizedSparqlString query) {
+	
+		// System.out.println("### performConstructRule: " +query.toString());
+		Model temp = ModelFactory.createOntologyModel();
+		addNamespacesToQuery(query);
+		System.out.println("### local performConstructRule: " + query.toString());
+		QueryExecution qexec = QueryExecutionFactory.create(query.toString(), model);
+		temp = qexec.execConstruct();
+		model = model.union(temp);
+		return model;
+	}
+	
+	public void performConstructRule(ParameterizedSparqlString query) {
+		
+		// System.out.println("### performConstructRule: " +query.toString());
+		addNamespacesToQuery(query);
+		System.out.println("### online performConstructRule: " + query.toString());
+		QueryExecution qexec = QueryExecutionFactory.sparqlService(QUERYENDPOINT, query.toString());
+		qexec.execConstruct();
+		qexec.close();
+	}
+
+	public void printModel(Model model, String fileName) {
+		// RDFDataMgr.write(System.out, model, Lang.TURTLE);
+
+		try {
+			RDFDataMgr.write(new FileOutputStream(fileName), model, Lang.TURTLE);
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("****************************************************");
+	}
+
+//	public void printCurrentModel(String filename) {
+//		this.printModel(this.rdfModel, filename);
+//	}
+
+	public QueryExecution query(ParameterizedSparqlString queryStr) {
+		addNamespacesToQuery(queryStr);
+		System.out.println("***Performed query***\n" + queryStr.toString() + "***Performed query***\n");
+		Query query = QueryFactory.create(queryStr.toString());
+		QueryExecution qexec;
+		
+		qexec = QueryExecutionFactory.sparqlService(QUERYENDPOINT, query);
+	
+		return qexec;
+	}
+	
+
+	public void insertQuery(ParameterizedSparqlString queryStr) {
+		addNamespacesToQuery(queryStr);
+	
+		UpdateRequest update = UpdateFactory.create(queryStr.toString());
+		UpdateProcessor up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
+		up.execute();
+		
+	}
+	
+	public boolean isLocalOntology() {
+		return localOntology;
+	}
+
+	public static String getREADENDPOINT() {
+		return READENDPOINT;
+	}
+
+	
+}

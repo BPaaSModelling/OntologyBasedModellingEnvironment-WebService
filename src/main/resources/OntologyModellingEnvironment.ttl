@@ -1,0 +1,129 @@
+# baseURI: http://ikm-group.ch/archiMEO/ontology-based-modelling-environment#
+# prefix: obme
+
+@prefix obme: <http://ikm-group.ch/archiMEO/ontology-based-modelling-environment#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+obme:BPMN_Task
+  rdf:type obme:PaletteElement ;
+  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
+  obme:paletteElementImageURL "http://test.com/image1.png" ;
+  obme:paletteElementIsShowedInRootPalette "true"^^xsd:boolean ;
+  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
+  obme:paletteElementThumbnailURL "http://test.com/image2.png" ;
+  obme:paletteElementX2ForTextLabelSize 50 ;
+  obme:paletteElementY2ForTextLabelSize 20 ;
+  rdfs:label "Task" ;
+.
+obme:Category_Activities
+  rdf:type obme:PaletteCategory ;
+  obme:paletteCategoryOrderNumber 1 ;
+  rdfs:label "Activities" ;
+.
+obme:Category_Data
+  rdf:type obme:PaletteCategory ;
+  obme:paletteCategoryOrderNumber 4 ;
+  rdfs:label "Data" ;
+.
+obme:Category_Events
+  rdf:type obme:PaletteCategory ;
+  obme:paletteCategoryOrderNumber 2 ;
+  rdfs:label "Events" ;
+.
+obme:Category_Gateways
+  rdf:type obme:PaletteCategory ;
+  obme:paletteCategoryOrderNumber 3 ;
+  rdfs:label "Gateways" ;
+.
+obme:PaletteCategory
+  rdf:type owl:Class ;
+  rdfs:subClassOf owl:Thing ;
+.
+obme:PaletteElement
+  rdf:type owl:Class ;
+  rdfs:subClassOf owl:Thing ;
+.
+obme:User_Task
+  rdf:type obme:PaletteElement ;
+  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
+  obme:paletteElementHasParentPaletteElement obme:BPMN_Task ;
+  obme:paletteElementImageURL "http://test.com/image4.png" ;
+  obme:paletteElementIsShowedInRootPalette "false"^^xsd:boolean ;
+  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+  obme:paletteElementThumbnailURL "http://test.com/image3.png" ;
+  obme:paletteElementX2ForTextLabelSize 50 ;
+  obme:paletteElementY2ForTextLabelSize 20 ;
+  rdfs:label "User Task" ;
+.
+obme:metamodelElementX0ForImagePosition
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:integer ;
+.
+obme:metamodelElementX1ForTextLabelPosition
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:integer ;
+.
+obme:metamodelElementY0ForImagePosition
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:integer ;
+.
+obme:metamodelElementY1ForTextLabelPosition
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:integer ;
+.
+obme:paletteCategoryOrderNumber
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain obme:PaletteCategory ;
+  rdfs:range xsd:integer ;
+.
+obme:paletteElementHasPaletteCategory
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain obme:PaletteElement ;
+  rdfs:range obme:PaletteCategory ;
+.
+obme:paletteElementHasParentPaletteElement
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain obme:PaletteElement ;
+  rdfs:range obme:PaletteElement ;
+.
+obme:paletteElementImageURL
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain obme:PaletteElement ;
+  rdfs:range xsd:string ;
+.
+obme:paletteElementIsShowedInRootPalette
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain obme:PaletteElement ;
+  rdfs:range xsd:boolean ;
+.
+obme:paletteElementRepresentMetamodelElement
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain obme:PaletteElement ;
+  rdfs:label "Data" ;
+  rdfs:range owl:Class ;
+.
+obme:paletteElementThumbnailURL
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain obme:PaletteElement ;
+  rdfs:range xsd:string ;
+.
+obme:paletteElementX2ForTextLabelSize
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain obme:PaletteElement ;
+  rdfs:range xsd:integer ;
+.
+obme:paletteElementY2ForTextLabelSize
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain obme:PaletteElement ;
+  rdfs:range xsd:integer ;
+.
+<http://ikm-group.ch/ontology-based-modelling-environment>
+  owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
+.
