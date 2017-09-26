@@ -49,7 +49,9 @@ public class ModellingEnvironment {
 		}
 		
 		
-		String json = gson.toJson(all_palette_elements);
+		
+		
+		String json = gson.toJson(addChildElements(all_palette_elements));
 		System.out.println("\n####################<start>####################");
 		System.out.println("/search genereated json: " +json);
 		System.out.println("####################<end>####################");
@@ -172,4 +174,27 @@ public class ModellingEnvironment {
 		qexec.close();
 		return result;
 }
+
+	private ArrayList<PaletteElement> addChildElements(ArrayList<PaletteElement> all_palette_elements){
+		//the goal of this method is to return an array of paletteElements compiled with their childs
+		int tempNumber = 0; //it is used to skip parent elements
+		while (tempNumber != all_palette_elements.size()){
+			//System.out.println("==== Analysing element "+all_palette_elements.get(tempNumber).getId()+"====");
+			if (all_palette_elements.get(tempNumber).getParentElement() == null){
+				tempNumber++;
+				continue;
+			}
+			for (int i = 0; i < all_palette_elements.size(); i++){
+				if (all_palette_elements.get(tempNumber).getParentElement().equals(all_palette_elements.get(i).getId())){
+					all_palette_elements.get(i).getChildElements().add(all_palette_elements.get(tempNumber));
+					all_palette_elements.remove(tempNumber);
+					break;
+				}
+			}
+			tempNumber++;
+		}
+		//System.out.println("Total size: " +all_palette_elements.size());
+		return all_palette_elements;
+	}
+	
 }

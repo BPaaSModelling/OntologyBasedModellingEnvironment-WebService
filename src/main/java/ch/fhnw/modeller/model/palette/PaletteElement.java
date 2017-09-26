@@ -129,6 +129,7 @@ public class PaletteElement {
 		this.parentElement = parentElement;
 		this.textLabelSizeX2 = textLabelSizeX2;
 		this.textLabelSizeY2 = textLabelSizeY2;
+		this.childElements = new ArrayList<PaletteElement>();
 	}
 
 	public PaletteElement(String id, String label, String imageURL, String thumbnailURL, boolean showedInPalette,
@@ -150,7 +151,7 @@ public class PaletteElement {
 	}
 
 	public PaletteElement(){
-		
+		this.childElements = new ArrayList<PaletteElement>();
 	}
 	
 	
