@@ -1,4 +1,6 @@
 # baseURI: http://ikm-group.ch/archiMEO/ontology-based-modelling-environment#
+# imports: http://ikm-group.ch/archiMEO/BPMN
+# imports: http://ikm-group.ch/archiMEO/metamodel
 # prefix: obme
 
 @prefix obme: <http://ikm-group.ch/archiMEO/ontology-based-modelling-environment#> .
@@ -7,6 +9,11 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+obme:
+  rdf:type owl:Ontology ;
+  owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
+  owl:imports <http://ikm-group.ch/archiMEO/metamodel> ;
+.
 obme:BPMN_Task
   rdf:type obme:PaletteElement ;
   obme:paletteElementHasPaletteCategory obme:Category_Activities ;
@@ -38,6 +45,10 @@ obme:Category_Gateways
   obme:paletteCategoryOrderNumber 3 ;
   rdfs:label "Gateways" ;
 .
+obme:ModellingElementRefersToData
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain obme:PaletteElement ;
+.
 obme:PaletteCategory
   rdf:type owl:Class ;
   rdfs:subClassOf owl:Thing ;
@@ -60,7 +71,7 @@ obme:User_Task
 .
 obme:metamodelElementX0ForImagePosition
   rdf:type owl:DatatypeProperty ;
-  rdfs:domain owl:Thing ;
+  rdfs:domain <http://ikm-group.ch/archiMEO/metamodel#MetamodelElement> ;
   rdfs:range xsd:integer ;
 .
 obme:metamodelElementX1ForTextLabelPosition
