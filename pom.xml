@@ -85,5 +85,5 @@
 			<version>2.24</version>
 		</dependency>
   </dependencies>
-  <artifactId>OngologyBasedModellingEnvironment-WebService</artifactId>
+  <artifactId>OntologyBasedModellingEnvironment-WebService</artifactId>
 </project>
