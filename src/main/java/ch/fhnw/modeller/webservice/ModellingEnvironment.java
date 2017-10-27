@@ -62,7 +62,7 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 		
-		queryStr.append("SELECT ?element ?label ?representedClass ?imageURL ?thumbnailURL ?showedInPalette ?representedClassLabel ?parentElement ?textLabelSizeX2 ?textLabelSizeY2 WHERE {");
+		queryStr.append("SELECT ?element ?label ?representedClass ?imageURL ?thumbnailURL ?showedInPalette ?representedClassLabel ?parentElement ?textLabelSizeX2 ?textLabelSizeY2 ?paletteCategory WHERE {");
 		queryStr.append("?element rdf:type* obme:PaletteElement .");
 		queryStr.append("?element rdfs:label ?label .");
 		queryStr.append("?element obme:paletteElementRepresentMetamodelElement ?representedClass .");
@@ -76,6 +76,9 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 		queryStr.append("OPTIONAL{");
 		queryStr.append("?element obme:paletteElementHasParentPaletteElement ?parentElement .");
+		queryStr.append("}");
+		queryStr.append("OPTIONAL{");
+		queryStr.append("?element obme:paletteElementHasPaletteCategory ?paletteCategory .");
 		queryStr.append("}");
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
@@ -103,6 +106,9 @@ public class ModellingEnvironment {
 				
 				if (soln.get("?parentElement") != null){
 					tempPaletteElement.setParentElement(soln.get("?parentElement").toString());
+				}
+				if (soln.get("?paletteCategory") != null){
+					tempPaletteElement.setPaletteCategory(soln.get("?paletteCategory").toString());
 				}
 				
 				
@@ -176,25 +182,45 @@ public class ModellingEnvironment {
 }
 
 	private ArrayList<PaletteElement> addChildElements(ArrayList<PaletteElement> all_palette_elements){
-		//the goal of this method is to return an array of paletteElements compiled with their childs
-		int tempNumber = 0; //it is used to skip parent elements
-		while (tempNumber != all_palette_elements.size()){
-			//System.out.println("==== Analysing element "+all_palette_elements.get(tempNumber).getId()+"====");
-			if (all_palette_elements.get(tempNumber).getParentElement() == null){
-				tempNumber++;
-				continue;
-			}
-			for (int i = 0; i < all_palette_elements.size(); i++){
-				if (all_palette_elements.get(tempNumber).getParentElement().equals(all_palette_elements.get(i).getId())){
-					all_palette_elements.get(i).getChildElements().add(all_palette_elements.get(tempNumber));
-					all_palette_elements.remove(tempNumber);
-					break;
-				}
-			}
-			tempNumber++;
+	ArrayList<PaletteElement> parentList = new ArrayList<PaletteElement>();
+	System.out.println("pre: " + all_palette_elements.size());
+	for (int i = 0; i < all_palette_elements.size(); i++){
+		if (all_palette_elements.get(i).getParentElement() == null){
+			parentList.add(all_palette_elements.get(i));
 		}
-		//System.out.println("Total size: " +all_palette_elements.size());
-		return all_palette_elements;
+	}
+	System.out.println("post: " + all_palette_elements.size());
+	System.out.println("Number of parents: " + parentList.size());
+		for (int i = 0; i < parentList.size();i++){
+			if (parentList.get(i).getChildElements().size() == 0){
+				//System.out.println("=========");
+				addChilds(parentList.get(i), all_palette_elements);
+				//System.out.println("1. Analysing " + all_palette_elements.get(i).getId());
+			}
+		}
+		return parentList;
+	}
+	
+	
+	private void addChilds(PaletteElement parent, ArrayList<PaletteElement> list){
+		ArrayList<PaletteElement> childList = getChildren(parent, list);
+		for (int i = 0; i < childList.size(); i++){
+			//System.out.println("3. Adding child of " + list.get(i).getId());
+			parent.getChildElements().add(childList.get(i));
+			addChilds(childList.get(i), list);
+		}
+	}
+	
+	private ArrayList<PaletteElement> getChildren(PaletteElement parent, ArrayList<PaletteElement> list){
+		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
+		for (int i = 0; i < list.size(); i++){
+			if (list.get(i).getParentElement() != null &&
+			list.get(i).getParentElement().equals(parent.getId())){
+				//System.out.println("2. Found a child of " + parent.getId() + " -> " + list.get(i).getId());
+				result.add(list.get(i));
+			}
+		}
+		return result;
 	}
 	
 }
