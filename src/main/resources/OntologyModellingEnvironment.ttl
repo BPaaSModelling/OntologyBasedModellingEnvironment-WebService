@@ -14,13 +14,24 @@ obme:
   owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
   owl:imports <http://ikm-group.ch/archiMEO/metamodel> ;
 .
+obme:Activity_Task
+  rdf:type obme:PaletteElement ;
+  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
+  obme:paletteElementImageURL "Task.png" ;
+  obme:paletteElementIsShowedInRootPalette "true"^^xsd:boolean ;
+  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
+  obme:paletteElementThumbnailURL "Thumbnail_Task.png" ;
+  obme:paletteElementX2ForTextLabelSize 50 ;
+  obme:paletteElementY2ForTextLabelSize 20 ;
+  rdfs:label "Activity Task" ;
+.
 obme:BPMN_Task
   rdf:type obme:PaletteElement ;
   obme:paletteElementHasPaletteCategory obme:Category_Activities ;
-  obme:paletteElementImageURL "http://test.com/image1.png" ;
+  obme:paletteElementImageURL "Task.png" ;
   obme:paletteElementIsShowedInRootPalette "true"^^xsd:boolean ;
   obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "http://test.com/image2.png" ;
+  obme:paletteElementThumbnailURL "Thumbnail_Task.png" ;
   obme:paletteElementX2ForTextLabelSize 50 ;
   obme:paletteElementY2ForTextLabelSize 20 ;
   rdfs:label "Task" ;
@@ -57,14 +68,50 @@ obme:PaletteElement
   rdf:type owl:Class ;
   rdfs:subClassOf owl:Thing ;
 .
+obme:Simple_Task
+  rdf:type obme:PaletteElement ;
+  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
+  obme:paletteElementHasParentPaletteElement obme:User_Task ;
+  obme:paletteElementImageURL "User_Task.png" ;
+  obme:paletteElementIsShowedInRootPalette "false"^^xsd:boolean ;
+  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+  obme:paletteElementThumbnailURL "Thumbnail_Task.png" ;
+  obme:paletteElementX2ForTextLabelSize 50 ;
+  obme:paletteElementY2ForTextLabelSize 20 ;
+  rdfs:label "Simple Task" ;
+.
+obme:Simple_Task_1
+  rdf:type obme:PaletteElement ;
+  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
+  obme:paletteElementHasParentPaletteElement obme:Simple_Task ;
+  obme:paletteElementImageURL "User_Task.png" ;
+  obme:paletteElementIsShowedInRootPalette "false"^^xsd:boolean ;
+  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+  obme:paletteElementThumbnailURL "Thumbnail_Task.png" ;
+  obme:paletteElementX2ForTextLabelSize 50 ;
+  obme:paletteElementY2ForTextLabelSize 20 ;
+  rdfs:label "Very Simple Task" ;
+.
+obme:Simple_Task_1_1
+  rdf:type obme:PaletteElement ;
+  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
+  obme:paletteElementHasParentPaletteElement obme:Simple_Task_1 ;
+  obme:paletteElementImageURL "User_Task.png" ;
+  obme:paletteElementIsShowedInRootPalette "false"^^xsd:boolean ;
+  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+  obme:paletteElementThumbnailURL "Thumbnail_Task.png" ;
+  obme:paletteElementX2ForTextLabelSize 50 ;
+  obme:paletteElementY2ForTextLabelSize 20 ;
+  rdfs:label "Extremly Simple Task" ;
+.
 obme:User_Task
   rdf:type obme:PaletteElement ;
   obme:paletteElementHasPaletteCategory obme:Category_Activities ;
   obme:paletteElementHasParentPaletteElement obme:BPMN_Task ;
-  obme:paletteElementImageURL "http://test.com/image4.png" ;
+  obme:paletteElementImageURL "User_Task.png" ;
   obme:paletteElementIsShowedInRootPalette "false"^^xsd:boolean ;
   obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
-  obme:paletteElementThumbnailURL "http://test.com/image3.png" ;
+  obme:paletteElementThumbnailURL "Thumbnail_Task.png" ;
   obme:paletteElementX2ForTextLabelSize 50 ;
   obme:paletteElementY2ForTextLabelSize 20 ;
   rdfs:label "User Task" ;
