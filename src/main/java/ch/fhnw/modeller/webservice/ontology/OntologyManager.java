@@ -134,7 +134,7 @@ public final class OntologyManager {
 
 	public void insertQuery(ParameterizedSparqlString queryStr) {
 		addNamespacesToQuery(queryStr);
-	
+		System.out.println("***Trying to insert***\n" + queryStr.toString() + "***End query***\n");
 		UpdateRequest update = UpdateFactory.create(queryStr.toString());
 		UpdateProcessor up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
 		up.execute();

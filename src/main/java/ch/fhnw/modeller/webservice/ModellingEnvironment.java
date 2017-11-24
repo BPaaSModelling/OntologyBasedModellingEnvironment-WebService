@@ -1,19 +1,17 @@
 package ch.fhnw.modeller.webservice;
 
 import java.util.ArrayList;
-
+import java.util.UUID;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-
 import com.google.gson.Gson;
-
 import ch.fhnw.modeller.model.palette.PaletteCategory;
 import ch.fhnw.modeller.model.palette.PaletteElement;
 import ch.fhnw.modeller.persistence.GlobalVariables;
@@ -118,6 +116,7 @@ public class ModellingEnvironment {
 		qexec.close();
 		return result;
 }
+	
 	@GET
 	@Path("/getPaletteCategories")
 	public Response getPaletteCategories() {
@@ -201,7 +200,6 @@ public class ModellingEnvironment {
 		return parentList;
 	}
 	
-	
 	private void addChilds(PaletteElement parent, ArrayList<PaletteElement> list){
 		ArrayList<PaletteElement> childList = getChildren(parent, list);
 		for (int i = 0; i < childList.size(); i++){
@@ -223,4 +221,28 @@ public class ModellingEnvironment {
 		return result;
 	}
 	
+	@POST
+	@Path("/createElement")
+	public Response getMsg(String json) {
+		
+		System.out.println("/paletteElement received: " +json);
+		
+		Gson gson = new Gson();
+		PaletteElement pElement = gson.fromJson(json, PaletteElement.class);
+
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+		
+		querStr.append("INSERT DATA{");
+		querStr.append("<"+pElement.getRepresentedClass() + "-" + pElement.getUuid()+">"  +" rdf:type " + "<"+pElement.getRepresentedClass()+">" + " ;");
+		System.out.println("    Element ID: " + pElement.getId() + pElement.getUuid());
+		System.out.println("    Element Type: " + pElement.getRepresentedClassLabel());
+		querStr.append("rdfs:label \"" + pElement.getTempLabel() +"\" ;");
+		System.out.println("    Element Label: "+ pElement.getTempLabel());
+		querStr.append("}");
+		//Model modelTpl = ModelFactory.createDefaultModel();
+		ontology.insertQuery(querStr);
+	
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
 }

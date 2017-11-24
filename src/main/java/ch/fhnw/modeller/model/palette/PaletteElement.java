@@ -16,6 +16,8 @@ public class PaletteElement {
 	int textLabelSizeX2;			//defines the dimension of the label
 	int textLabelSizeY2;			// -- same
 	ArrayList<PaletteElement> childElements;
+	String uuid;
+	String tempLabel;
 	
 	
 	public String getId() {
@@ -152,6 +154,22 @@ public class PaletteElement {
 
 	public PaletteElement(){
 		this.childElements = new ArrayList<PaletteElement>();
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public String getTempLabel() {
+		return tempLabel;
+	}
+
+	public void setTempLabel(String tempLabel) {
+		this.tempLabel = tempLabel;
 	}
 	
 	
