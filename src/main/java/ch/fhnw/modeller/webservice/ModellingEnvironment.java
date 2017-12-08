@@ -62,7 +62,7 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 		
-		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parentElement ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width WHERE {");
+		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parentElement ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness WHERE {");
 		queryStr.append("?element rdf:type* lo:PaletteElement .");
 		queryStr.append("?element rdfs:label ?label .");
 		queryStr.append("?element lo:paletteModelIsRelatedToLanguageElement ?representedClass .");
@@ -79,6 +79,9 @@ public class ModellingEnvironment {
 		queryStr.append("OPTIONAL{ ?element lo:paletteElementShape ?shape }.");
 		queryStr.append("OPTIONAL{ ?element lo:paletteElementThumbnailURL ?thumbnailURL }.");
 		queryStr.append("OPTIONAL{ ?element lo:paletteElementWidth ?width }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderColor ?borderColor }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderThickness ?borderThickness }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderType ?borderType }.");
 		
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
@@ -125,6 +128,15 @@ public class ModellingEnvironment {
 				}
 				if (soln.get("?width") != null){
 					tempPaletteElement.setWidth(FormatConverter.ParseOntologyInteger(soln.get("?width").toString()));
+				}
+				if (soln.get("?borderColor") != null){
+					tempPaletteElement.setBorderColor(soln.get("?borderColor").toString());
+				}
+				if (soln.get("?borderThickness") != null){
+					tempPaletteElement.setBorderThickness(soln.get("?borderThickness").toString());
+				}
+				if (soln.get("?borderType") != null){
+					tempPaletteElement.setBorderType(soln.get("?borderType").toString());
 				}
 				
 				

@@ -14,6 +14,9 @@ public class PaletteElement extends PaletteModel {
 	private Boolean usesImage;
 	private String imageURL;
 	private String thumbnailURL;
+	private String borderColor;
+	private String borderThickness;
+	private String borderType;
 					
 
 	public String getShape() {
@@ -96,11 +99,34 @@ public class PaletteElement extends PaletteModel {
 		this.thumbnailURL = thumbnailURL;
 	}
 
+	public String getBorderColor() {
+		return borderColor;
+	}
+
+	public void setBorderColor(String borderColor) {
+		this.borderColor = borderColor;
+	}
+
+	public String getBorderThickness() {
+		return borderThickness;
+	}
+
+	public void setBorderThickness(String borderThickness) {
+		this.borderThickness = borderThickness;
+	}
+
+	public String getBorderType() {
+		return borderType;
+	}
+
+	public void setBorderType(String borderType) {
+		this.borderType = borderType;
+	}
+	
+	
 
 	public PaletteElement() {
 		super();
 	}
-	
-
 	
 }

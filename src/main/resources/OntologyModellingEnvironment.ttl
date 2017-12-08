@@ -432,6 +432,24 @@ lo:paletteElementBackgroundColor
   rdfs:label "Background Color" ;
   rdfs:range xsd:string ;
 .
+lo:paletteElementBorderColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "palette element border color" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementBorderThickness
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "palette element border thickness" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementBorderType
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Border style" ;
+  rdfs:range xsd:string ;
+.
 lo:paletteElementHeight
   rdf:type owl:DatatypeProperty ;
   rdfs:domain lo:PaletteElement ;
