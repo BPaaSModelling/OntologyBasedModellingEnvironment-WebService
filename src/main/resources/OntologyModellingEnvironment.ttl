@@ -309,16 +309,28 @@ lo:User_Task
   rdf:type lo:PaletteModel ;
   rdfs:label "User Task" ;
 .
-lo:elementModelClassType
+lo:graphicalElementClassType
   rdf:type owl:DatatypeProperty ;
   rdfs:domain owl:Thing ;
   rdfs:label "Class Type" ;
   rdfs:range xsd:string ;
 .
-lo:elementModelHasLabelText
+lo:graphicalElementLabel
   rdf:type owl:DatatypeProperty ;
   rdfs:domain owl:Thing ;
-  rdfs:label "element model has label text" ;
+  rdfs:label "Label" ;
+  rdfs:range xsd:string ;
+.
+lo:graphicalElementX
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "X coordinate" ;
+  rdfs:range xsd:string ;
+.
+lo:graphicalElementY
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "Y coordinate" ;
   rdfs:range xsd:string ;
 .
 lo:hiddenFromPalette

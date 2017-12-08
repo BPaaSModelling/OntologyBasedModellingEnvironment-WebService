@@ -13,7 +13,7 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import com.google.gson.Gson;
 
-import ch.fhnw.modeller.model.metamodel.MetamodelElement;
+import ch.fhnw.modeller.model.metamodel.GraphicalElement;
 import ch.fhnw.modeller.model.palette.PaletteCategory;
 import ch.fhnw.modeller.model.palette.PaletteElement;
 import ch.fhnw.modeller.persistence.GlobalVariables;
@@ -263,19 +263,19 @@ public class ModellingEnvironment {
 		System.out.println("/element received: " +json);
 		
 		Gson gson = new Gson();
-		MetamodelElement mElement = gson.fromJson(json, MetamodelElement.class);
+		GraphicalElement gElement = gson.fromJson(json, GraphicalElement.class);
 
 		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
-		System.out.println("test: "+mElement.getUuid());
+		System.out.println("test: "+gElement.getUuid());
 		querStr.append("INSERT {");
-		querStr.append("<"+mElement.getUuid()+">"  +" rdf:type " + "<"+mElement.getClassType()+">" + " ;");
-		System.out.println("    Element ID: " + mElement.getUuid());
-		System.out.println("    Element Type: " + mElement.getClassType());
-		querStr.append("rdfs:label \"" + mElement.getTextLabel() +"\" ;");
-		System.out.println("    Element Label: "+ mElement.getTextLabel());
+		querStr.append("<"+gElement.getUuid()+">"  +" rdf:type " + "<"+gElement.getClassType()+">" + " ;");
+		System.out.println("    Element ID: " + gElement.getUuid());
+		System.out.println("    Element Type: " + gElement.getClassType());
+		querStr.append("rdfs:label \"" + gElement.getLabel() +"\" ;");
+		System.out.println("    Element Label: "+ gElement.getLabel());
 		System.out.println("The following properties need to be defined in the ontology and added here:");
-		System.out.println("    [*]Element Top Position: "+ mElement.getTop());
-		System.out.println("    [*]Element Left Position: "+ mElement.getLeft());
+		System.out.println("    [*]Element Top Position: "+ gElement.getX());
+		System.out.println("    [*]Element Left Position: "+ gElement.getY());
 
 		querStr.append("}");
 		//Model modelTpl = ModelFactory.createDefaultModel();
