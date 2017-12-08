@@ -153,7 +153,7 @@ lo:Gateway
   rdf:type lo:PaletteElement ;
   lo:hiddenFromPalette "false"^^xsd:boolean ;
   lo:paletteElementBackgroundColor "orange" ;
-  lo:paletteElementHeight 50 ;
+  lo:paletteElementHeight 60 ;
   lo:paletteElementIconPosition "top-left" ;
   lo:paletteElementIconURL "test.png" ;
   lo:paletteElementImageURL "test.png" ;
@@ -161,7 +161,7 @@ lo:Gateway
   lo:paletteElementShape "diamond" ;
   lo:paletteElementThumbnailURL "test.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 50 ;
+  lo:paletteElementWidth 60 ;
   lo:paletteModelHasPaletteCategory lo:Category_Gateways ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
   rdfs:label "Gateway" ;
@@ -284,7 +284,7 @@ lo:Task
   rdf:type lo:PaletteElement ;
   lo:hiddenFromPalette "false"^^xsd:boolean ;
   lo:paletteElementBackgroundColor "#c9dcf5" ;
-  lo:paletteElementHeight 50 ;
+  lo:paletteElementHeight 70 ;
   lo:paletteElementIconPosition "top-left" ;
   lo:paletteElementIconURL "test.png" ;
   lo:paletteElementImageURL "test.png" ;
@@ -292,7 +292,7 @@ lo:Task
   lo:paletteElementShape "roundrectangle" ;
   lo:paletteElementThumbnailURL "test.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 75 ;
+  lo:paletteElementWidth 100 ;
   lo:paletteModelHasPaletteCategory lo:Category_Activities ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
   rdfs:label "Task" ;
