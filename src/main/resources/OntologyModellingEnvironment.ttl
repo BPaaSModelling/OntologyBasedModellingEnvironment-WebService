@@ -121,7 +121,7 @@ lo:Event
   lo:paletteElementIconURL "test.png" ;
   lo:paletteElementImageURL "test.png" ;
   lo:paletteElementLabelPosition "inside" ;
-  lo:paletteElementShape "circle" ;
+  lo:paletteElementShape "ellipse" ;
   lo:paletteElementThumbnailURL "test.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
   lo:paletteElementWidth 60 ;
