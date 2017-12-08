@@ -1,14 +1,458 @@
-# baseURI: http://ikm-group.ch/archiMEO/ontology-based-modelling-environment#
+# baseURI: http://fhnw.ch/modelingEnvironment/LanguageOntology
+# imports: http://datashapes.org/dash
+# imports: http://fhnw.ch/modelingEnvironment/DomainOntology
 # imports: http://ikm-group.ch/archiMEO/BPMN
-# imports: http://ikm-group.ch/archiMEO/metamodel
-# prefix: obme
+# prefix: lo
 
-@prefix obme: <http://ikm-group.ch/archiMEO/ontology-based-modelling-environment#> .
+@prefix : <http://fhnw.ch/modelingEnvironment/LanguageOntology#> .
+@prefix do: <http://fhnw.ch/modelingEnvironment/DomainOntology#> .
+@prefix lo: <http://fhnw.ch/modelingEnvironment/LanguageOntology#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix top: <http://ikm-group.ch/archiMEO/top#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+<http://fhnw.ch/modelingEnvironment/LanguageOntology>
+  rdf:type owl:Ontology ;
+  owl:imports <http://datashapes.org/dash> ;
+  owl:imports <http://fhnw.ch/modelingEnvironment/DomainOntology> ;
+  owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
+.
+lo:Activity_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Activity Task" ;
+.
+lo:AdHoc_Subprocess
+  rdf:type lo:PaletteModel ;
+  rdfs:label "AdHoc Subprocess" ;
+.
+lo:Arrow1
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Arrow 1" ;
+.
+lo:Business_Rule_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Business Rule Task" ;
+.
+lo:Call_Activity
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Call Activity" ;
+.
+lo:Call_Activity16aaa14c-86e9-4ebc-52ad-7b77b69d1cd9
+  rdf:type lo:Call_Activity ;
+  rdfs:label "New Call Activity text text" ;
+.
+lo:Category_Activities
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Activities" ;
+.
+lo:Category_Connectors
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Connectors" ;
+.
+lo:Category_Data
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Data" ;
+.
+lo:Category_Events
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Events" ;
+.
+lo:Category_Gateways
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Gateways" ;
+.
+lo:CloseTransferCaseRecord
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Close Transfer Case Record" ;
+.
+lo:Collapsed_Subprocess
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Collapsed Subprocess" ;
+.
+lo:ConfirmTransfer
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Confirm Transfer" ;
+.
+lo:DataInput
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Data Input" ;
+.
+lo:DataObject
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Data Object" ;
+.
+lo:DataOutput
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Data Output" ;
+.
+lo:DataStore
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Data Store" ;
+.
+lo:Discretionary_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Discretionary Task" ;
+.
+lo:EventBased_Gateway
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Event Based Gateway" ;
+.
+lo:Event_Collapsed_Subprocess
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Event Collapsed Subprocess" ;
+.
+lo:Event_Subprocess
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Event Subprocess" ;
+.
+lo:Exclusive_Gateway
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Exclusive Gateway" ;
+.
+lo:FinalizeKoGu
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Finalize KoGu" ;
+.
+lo:KoGu
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu" ;
+.
+lo:KoGu_Orthopaedic
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu Orthopaedic" ;
+.
+lo:KoGu_Paediatric
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu Paediatric" ;
+.
+lo:KoGu_Psychiatric
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu Psychiatric" ;
+.
+lo:KoGu_Stroke
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu Stroke" ;
+.
+lo:MakeDispositionOfCase
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Make Disposition Of Case" ;
+.
+lo:Manual_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Manual Task" ;
+.
+lo:Message_End
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Message End" ;
+.
+lo:Message_Intermediate
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Message Intermediate" ;
+.
+lo:Message_Start
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Message Start" ;
+.
+lo:Message_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Message Task" ;
+.
+lo:PaletteCategory
+  rdf:type owl:Class ;
+  rdfs:subClassOf owl:Thing ;
+.
+lo:PaletteConnector
+  rdf:type owl:Class ;
+  rdfs:label "Palette Connector" ;
+  rdfs:subClassOf lo:PaletteModel ;
+.
+lo:PaletteElement
+  rdf:type owl:Class ;
+  rdfs:label "Palette Element" ;
+  rdfs:subClassOf lo:PaletteModel ;
+.
+lo:PaletteModel
+  rdf:type owl:Class ;
+  rdfs:subClassOf owl:Thing ;
+.
+lo:Parallel_Gateway
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Parallel Gateway" ;
+.
+lo:PrepareKoGu
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Prepare KoGu" ;
+.
+lo:PrepareMedicalRecordAdmission
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Prepare Medical Record Admission" ;
+.
+lo:PrepareRehabAdmission
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Prepare Rehab Admission" ;
+.
+lo:Receive_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Receive Task" ;
+.
+lo:RelaseTransferCase
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Release Transfer Case" ;
+.
+lo:Send_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Send Task" ;
+.
+lo:Service_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Service Task" ;
+.
+lo:Simple_End
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Simple End" ;
+.
+lo:Simple_Gateway
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Simple Gateway" ;
+.
+lo:Simple_Intermediate
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Simple Intermediate" ;
+.
+lo:Simple_Start
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Simple Start" ;
+.
+lo:Task
+  rdf:type lo:PaletteElement ;
+  lo:paletteElementBackgroundColor "blue" ;
+  lo:paletteElementHeight 50 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "test.png" ;
+  lo:paletteElementImageURL "test.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "rectangular" ;
+  lo:paletteElementThumbnailURL "test.png" ;
+  lo:paletteElementUsesImage "true"^^xsd:boolean ;
+  lo:paletteElementWidth 50 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
+  rdfs:label "Task" ;
+  lo:hiddenFromPalette "false"^^xsd:boolean;
+.
+lo:Timer_Intermediate
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Timer Intermediate" ;
+.
+lo:Timer_Start
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Timer Start" ;
+.
+lo:User_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "User Task" ;
+.
+lo:elementModelClassType
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "Class Type" ;
+  rdfs:range xsd:string ;
+.
+lo:elementModelHasLabelText
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "element model has label text" ;
+  rdfs:range xsd:string ;
+.
+lo:hiddenFromPalette
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteCategory ;
+  rdfs:domain lo:PaletteModel ;
+  rdfs:label "Hide from Palette" ;
+  rdfs:range xsd:boolean ;
+.
+lo:languageElementIsRelatedToDomainElement
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "Domain Ontology Class" ;
+  rdfs:range owl:Thing ;
+.
+lo:paletteCategoryOrderNumber
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteCategory ;
+  rdfs:label "palette category order number" ;
+  rdfs:range xsd:integer ;
+.
+lo:paletteConnectorArrowBaseBorderColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Border Color of Arrow Base" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseBorderThickness
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Thickness of Arrow Base Border" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Color of Arrow Base" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseShape
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Shape of Arrow Base" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseURLImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "URL of Arrow Base Image" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseUsesImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Use an Image for the Base Arrow" ;
+  rdfs:range xsd:boolean ;
+.
+lo:paletteConnectorArrowHeadBorderColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Border Color of Arrow Head" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadBorderThickness
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Thickness of Arrow Head Border" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Color of Arrow Head" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadShape
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Shape of Arrow Head" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadURLImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "URL of Arrow Head Image" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadUsesImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Use an Image for the Head Arrow" ;
+  rdfs:range xsd:boolean ;
+.
+lo:paletteConnectorLineColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Connector Line Color" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorLineThickness
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Palette Line Thickness" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorLineType
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Connector Line Type" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementBackgroundColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Background Color" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementHeight
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Height" ;
+  rdfs:range xsd:integer ;
+.
+lo:paletteElementIconPosition
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Icon Position" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementIconURL
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Icon URL" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementImageURL
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "URL of Icon Image" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementLabelPosition
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Label position" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementShape
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Shape of Palette Element" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementThumbnailURL
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "URL of palette image" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementUsesImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Use Images instead of Shape" ;
+  rdfs:range xsd:boolean ;
+.
+lo:paletteElementWidth
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Width" ;
+  rdfs:range xsd:integer ;
+.
+lo:paletteModelHasPaletteCategory
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain lo:PaletteModel ;
+  rdfs:label "Palette Category" ;
+  rdfs:range lo:PaletteCategory ;
+.
+lo:paletteModelHasParentPaletteModel
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain lo:PaletteModel ;
+  rdfs:label "Parent Palette Model" ;
+  rdfs:range lo:PaletteModel ;
+.
+lo:paletteModelIsRelatedToLanguageElement
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain lo:PaletteModel ;
+  rdfs:label "palette model is related to language element" ;
+  rdfs:range rdfs:Class ;
+.
 <http://ikm-group.ch/archiMEO/BPMN#CloseTransferCaseRecord>
   rdf:type owl:Class ;
   rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
@@ -19,6 +463,14 @@
 .
 <http://ikm-group.ch/archiMEO/BPMN#Data>
   rdfs:label "Data" ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#DataInput>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#Data> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#DataOutput>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#Data> ;
 .
 <http://ikm-group.ch/archiMEO/BPMN#FinalizeKoGu>
   rdf:type owl:Class ;
@@ -45,561 +497,25 @@
   rdf:type owl:Class ;
   rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
 .
-obme:
-  rdf:type owl:Ontology ;
-  owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
-  owl:imports <http://ikm-group.ch/archiMEO/metamodel> ;
-.
-obme:Activity_Task
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
-  obme:paletteElementImageURL "Task.png" ;
-  obme:paletteElementIsShowedInRootPalette "true"^^xsd:boolean ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 50 ;
-  obme:paletteElementY2ForTextLabelSize 20 ;
-  rdfs:label "Activity Task" ;
-.
-obme:AdHoc_Subprocess
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:AdHoc_Subprocess ;
-  obme:paletteElementImageURL "AdHoc_Subprocess.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_AdHoc_Subprocess.png" ;
-  obme:paletteElementX2ForTextLabelSize 50 ;
-  obme:paletteElementY2ForTextLabelSize 20 ;
-  rdfs:label "AdHoc Subprocess" ;
-.
-obme:Arrow1
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Connectors ;
-  obme:paletteElementImageURL "arrow1.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#MessageFlow> ;
-  obme:paletteElementThumbnailURL "arrow1.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Arrow 1" ;
-.
-obme:Business_Rule_Task
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
-  obme:paletteElementHasParentPaletteElement obme:Activity_Task ;
-  obme:paletteElementImageURL "Business_Rule_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Business_Rule_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Business Rule Task" ;
-.
-obme:Call_Activity
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
-  obme:paletteElementImageURL "Call_Activity.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Call_Activity.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Call Activity" ;
-.
-obme:Call_Activity16aaa14c-86e9-4ebc-52ad-7b77b69d1cd9
-  rdf:type obme:Call_Activity ;
-  rdfs:label "New Call Activity text text" ;
-.
-obme:Category_Activities
-  rdf:type obme:PaletteCategory ;
-  obme:paletteCategoryOrderNumber 1 ;
-  rdfs:label "Activities" ;
-.
-obme:Category_Connectors
-  rdf:type obme:PaletteCategory ;
-  obme:paletteCategoryOrderNumber 0 ;
-  rdfs:label "Connectors" ;
-.
-obme:Category_Data
-  rdf:type obme:PaletteCategory ;
-  obme:paletteCategoryOrderNumber 4 ;
-  rdfs:label "Data" ;
-.
-obme:Category_Events
-  rdf:type obme:PaletteCategory ;
-  obme:paletteCategoryOrderNumber 2 ;
-  rdfs:label "Events" ;
-.
-obme:Category_Gateways
-  rdf:type obme:PaletteCategory ;
-  obme:paletteCategoryOrderNumber 3 ;
-  rdfs:label "Gateways" ;
-.
-obme:CloseTransferCaseRecord
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Close Transfer Case Record" ;
-.
-obme:Collapsed_Subprocess
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementImageURL "Collapsed_Subprocess.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Collapsed_Subprocess.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Collapsed Subprocess" ;
-.
-obme:ConfirmTransfer
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Confirm Transfer" ;
-.
-obme:DataInput
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementHasParentPaletteElement obme:DataObject ;
-  obme:paletteElementImageURL "DataInput.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "DataInput.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Data Input" ;
-.
-obme:DataObject
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementImageURL "DataObject.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "DataObject.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Data Object" ;
-.
-obme:DataOutput
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementHasParentPaletteElement obme:DataObject ;
-  obme:paletteElementImageURL "DataOutput.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "DataOutput.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Data Output" ;
-.
-obme:DataStore
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementImageURL "DataStore.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "DataStore.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Data Store" ;
-.
-obme:EventBased_Gateway
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Gateways ;
-  obme:paletteElementImageURL "EventBased_Gateway.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
-  obme:paletteElementThumbnailURL "EventBased_Gateway.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Event Based Gateway" ;
-.
-obme:Event_Collapsed_Subprocess
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:Event_Subprocess ;
-  obme:paletteElementImageURL "Event_Collapsed_Subprocess.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Event_Collapsed_Subprocess.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Event Collapsed Subprocess" ;
-.
-obme:Event_Subprocess
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementImageURL "Event_Subprocess.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Event_Subprocess.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Event Subprocess" ;
-.
-obme:Exclusive_Gateway
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Gateways ;
-  obme:paletteElementImageURL "Exclusive_Gateway.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#ExclusiveGateway> ;
-  obme:paletteElementThumbnailURL "Exclusive_Gateway.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Exclusive Gateway" ;
-.
-obme:FinalizeKoGu
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Finalize KoGu" ;
-.
-obme:KoGu
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementHasParentPaletteElement obme:DataObject ;
-  obme:paletteElementImageURL "KoGu.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "KoGu.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "KoGu" ;
-.
-obme:KoGu_Orthopaedic
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementHasParentPaletteElement obme:KoGu ;
-  obme:paletteElementImageURL "KoGu.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "KoGu.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "KoGu Orthopaedic" ;
-.
-obme:KoGu_Paediatric
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementHasParentPaletteElement obme:KoGu ;
-  obme:paletteElementImageURL "KoGu.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "KoGu.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "KoGu Paediatric" ;
-.
-obme:KoGu_Psychiatric
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementHasParentPaletteElement obme:KoGu ;
-  obme:paletteElementImageURL "KoGu.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "KoGu.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "KoGu Psychiatric" ;
-.
-obme:KoGu_Stroke
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Data ;
-  obme:paletteElementHasParentPaletteElement obme:KoGu ;
-  obme:paletteElementImageURL "KoGu_Stroke.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
-  obme:paletteElementThumbnailURL "KoGu.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "KoGu Stroke" ;
-.
-obme:MakeDispositionOfCase
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Make Disposition Of Case" ;
-.
-obme:Manual_Task
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "Manual_Task.png" ;
-  obme:paletteElementIsShowedInRootPalette "false"^^xsd:boolean ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Manual_Task.png" ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Manual Task" ;
-.
-obme:Message_End
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Events ;
-  obme:paletteElementHasParentPaletteElement obme:Simple_End ;
-  obme:paletteElementImageURL "Message_End.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#EndEvent> ;
-  obme:paletteElementThumbnailURL "Message_End.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Message End" ;
-.
-obme:Message_Intermediate
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Events ;
-  obme:paletteElementHasParentPaletteElement obme:Simple_Intermediate ;
-  obme:paletteElementImageURL "Message_Intermediate.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#IntermediateEvent> ;
-  obme:paletteElementThumbnailURL "Message_Intermediate.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Message Intermediate" ;
-.
-obme:Message_Start
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Events ;
-  obme:paletteElementHasParentPaletteElement obme:Simple_Start ;
-  obme:paletteElementImageURL "Message_Start.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#StartEvent> ;
-  obme:paletteElementThumbnailURL "Message_Start.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Message Start" ;
-.
-obme:Message_Task
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:Activity_Task ;
-  obme:paletteElementImageURL "Message_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Message_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Message Task" ;
-.
-obme:ModellingElementRefersToData
-  rdf:type owl:ObjectProperty ;
-  rdfs:domain obme:PaletteElement ;
-.
-obme:PaletteCategory
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGu>
   rdf:type owl:Class ;
-  rdfs:subClassOf owl:Thing ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#Data> ;
 .
-obme:PaletteElement
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGuOrthopaedic>
   rdf:type owl:Class ;
-  rdfs:subClassOf owl:Thing ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu> ;
 .
-obme:Parallel_Gateway
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Gateways ;
-  obme:paletteElementImageURL "Parallel_Gateway.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#ParallelGateway> ;
-  obme:paletteElementThumbnailURL "Parallel_Gateway.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Parallel Gateway" ;
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGuPaediatric>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu> ;
 .
-obme:PrepareKoGu
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Prepare KoGu" ;
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGuPsychiatric>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu> ;
 .
-obme:PrepareMedicalRecordAdmission
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Prepare Medical Record Admission" ;
-.
-obme:PrepareRehabAdmission
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Prepare Rehab Admission" ;
-.
-obme:Receive_Task
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:Message_Task ;
-  obme:paletteElementImageURL "Receive_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Receive_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Receive Task" ;
-.
-obme:RelaseTransferCase
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:User_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Release Transfer Case" ;
-.
-obme:Send_Task
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:Message_Task ;
-  obme:paletteElementImageURL "Send_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Send_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Send Task" ;
-.
-obme:Service_Task
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Activities ;
-  obme:paletteElementHasParentPaletteElement obme:Activity_Task ;
-  obme:paletteElementImageURL "Service_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#ServiceTask> ;
-  obme:paletteElementThumbnailURL "Thumbnail_Service_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Service Task" ;
-.
-obme:Simple_End
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Events ;
-  obme:paletteElementImageURL "Simple_End.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#EndEvent> ;
-  obme:paletteElementThumbnailURL "Simple_End.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Simple End" ;
-.
-obme:Simple_Gateway
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Gateways ;
-  obme:paletteElementImageURL "Simple_Gateway.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
-  obme:paletteElementThumbnailURL "Simple_Gateway.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Simple Gateway" ;
-.
-obme:Simple_Intermediate
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Events ;
-  obme:paletteElementImageURL "Simple_Intermediate.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#IntermediateEvent> ;
-  obme:paletteElementThumbnailURL "Simple_Intermediate.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Simple Intermediate" ;
-.
-obme:Simple_Start
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Events ;
-  obme:paletteElementImageURL "Simple_Start.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#StartEvent> ;
-  obme:paletteElementThumbnailURL "Simple_Start.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Simple Start" ;
-.
-obme:Timer_Intermediate
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Events ;
-  obme:paletteElementHasParentPaletteElement obme:Simple_Intermediate ;
-  obme:paletteElementImageURL "Timer_Intermediate.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#IntermediateEvent> ;
-  obme:paletteElementThumbnailURL "Timer_Intermediate.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Timer Intermediate" ;
-.
-obme:Timer_Start
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasPaletteCategory obme:Category_Events ;
-  obme:paletteElementHasParentPaletteElement obme:Simple_Start ;
-  obme:paletteElementImageURL "Timer_Start.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#StartEvent> ;
-  obme:paletteElementThumbnailURL "Timer_Start.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "Timer Start" ;
-.
-obme:User_Task
-  rdf:type obme:PaletteElement ;
-  obme:paletteElementHasParentPaletteElement obme:Activity_Task ;
-  obme:paletteElementImageURL "User_Task.png" ;
-  obme:paletteElementRepresentMetamodelElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
-  obme:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
-  obme:paletteElementX2ForTextLabelSize 0 ;
-  obme:paletteElementY2ForTextLabelSize 0 ;
-  rdfs:label "User Task" ;
-.
-obme:metamodelElementX0ForImagePosition
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain <http://ikm-group.ch/archiMEO/metamodel#MetamodelElement> ;
-  rdfs:range xsd:integer ;
-.
-obme:metamodelElementX1ForTextLabelPosition
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain owl:Thing ;
-  rdfs:range xsd:integer ;
-.
-obme:metamodelElementY0ForImagePosition
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain owl:Thing ;
-  rdfs:range xsd:integer ;
-.
-obme:metamodelElementY1ForTextLabelPosition
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain owl:Thing ;
-  rdfs:range xsd:integer ;
-.
-obme:paletteCategoryOrderNumber
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain obme:PaletteCategory ;
-  rdfs:range xsd:integer ;
-.
-obme:paletteElementHasPaletteCategory
-  rdf:type owl:ObjectProperty ;
-  rdfs:domain obme:PaletteElement ;
-  rdfs:range obme:PaletteCategory ;
-.
-obme:paletteElementHasParentPaletteElement
-  rdf:type owl:ObjectProperty ;
-  rdfs:domain obme:PaletteElement ;
-  rdfs:range obme:PaletteElement ;
-.
-obme:paletteElementImageURL
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain obme:PaletteElement ;
-  rdfs:range xsd:string ;
-.
-obme:paletteElementIsShowedInRootPalette
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain obme:PaletteElement ;
-  rdfs:range xsd:boolean ;
-.
-obme:paletteElementRepresentMetamodelElement
-  rdf:type owl:ObjectProperty ;
-  rdfs:domain obme:PaletteElement ;
-  rdfs:label "Data" ;
-  rdfs:range owl:Class ;
-.
-obme:paletteElementThumbnailURL
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain obme:PaletteElement ;
-  rdfs:range xsd:string ;
-.
-obme:paletteElementX2ForTextLabelSize
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain obme:PaletteElement ;
-  rdfs:range xsd:integer ;
-.
-obme:paletteElementY2ForTextLabelSize
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain obme:PaletteElement ;
-  rdfs:range xsd:integer ;
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGuStroke>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu> ;
 .
 <http://ikm-group.ch/ontology-based-modelling-environment>
   owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;

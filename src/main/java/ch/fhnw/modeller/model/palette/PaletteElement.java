@@ -2,178 +2,113 @@ package ch.fhnw.modeller.model.palette;
 
 import java.util.ArrayList;
 
-public class PaletteElement {
+public class PaletteElement extends PaletteModel {
 
-	String id;
-	String label;
-	String imageURL;
-	String thumbnailURL;
-	boolean showedInPalette;
-	String paletteCategory;			
-	String representedClass;		//might be bpmn:Task
-	String representedClassLabel;	//might be "Task"
-	String parentElement;			
-	int textLabelSizeX2;			//defines the dimension of the label
-	int textLabelSizeY2;			// -- same
-	ArrayList<PaletteElement> childElements;
-	String uuid;
-	String tempLabel;
-	
-	
-	public String getId() {
-		return id;
+	private String shape;
+	private String backgroundColor;
+	private String height;
+	private String width;
+	private String labelPosition;
+	private String iconURL;
+	private String iconPosition;
+	private Boolean usesImages;
+	private String imageURL;
+	private String thumbnailURL;
+			
+	private String representedClass;		//might be bpmn:Task
+
+	public String getShape() {
+		return shape;
 	}
-	
-	public void setId(String id) {
-		this.id = id;
+
+	public void setShape(String shape) {
+		this.shape = shape;
 	}
-	
-	public String getLabel() {
-		return label;
+
+	public String getBackgroundColor() {
+		return backgroundColor;
 	}
-	
-	public void setLabel(String label) {
-		this.label = label;
+
+	public void setBackgroundColor(String backgroundColor) {
+		this.backgroundColor = backgroundColor;
 	}
-	
+
+	public String getHeight() {
+		return height;
+	}
+
+	public void setHeight(String height) {
+		this.height = height;
+	}
+
+	public String getWidth() {
+		return width;
+	}
+
+	public void setWidth(String width) {
+		this.width = width;
+	}
+
+	public String getLabelPosition() {
+		return labelPosition;
+	}
+
+	public void setLabelPosition(String labelPosition) {
+		this.labelPosition = labelPosition;
+	}
+
+	public String getIconURL() {
+		return iconURL;
+	}
+
+	public void setIconURL(String iconURL) {
+		this.iconURL = iconURL;
+	}
+
+	public String getIconPosition() {
+		return iconPosition;
+	}
+
+	public void setIconPosition(String iconPosition) {
+		this.iconPosition = iconPosition;
+	}
+
+	public Boolean getUsesImages() {
+		return usesImages;
+	}
+
+	public void setUsesImages(Boolean usesImages) {
+		this.usesImages = usesImages;
+	}
+
 	public String getImageURL() {
 		return imageURL;
 	}
-	
+
 	public void setImageURL(String imageURL) {
 		this.imageURL = imageURL;
 	}
-	
+
 	public String getThumbnailURL() {
 		return thumbnailURL;
 	}
-	
+
 	public void setThumbnailURL(String thumbnailURL) {
 		this.thumbnailURL = thumbnailURL;
 	}
-	
-	public String getPaletteCategory() {
-		return paletteCategory;
-	}
-	
-	public void setPaletteCategory(String paletteCategory) {
-		this.paletteCategory = paletteCategory;
-	}
-	
+
 	public String getRepresentedClass() {
 		return representedClass;
 	}
-	
+
 	public void setRepresentedClass(String representedClass) {
 		this.representedClass = representedClass;
 	}
-	
-	public String getRepresentedClassLabel() {
-		return representedClassLabel;
-	}
-	
-	public void setRepresentedClassLabel(String representedClassLabel) {
-		this.representedClassLabel = representedClassLabel;
-	}
-	
-	public int getTextLabelSizeX2() {
-		return textLabelSizeX2;
-	}
-	
-	public void setTextLabelSizeX2(int textLabelSizeX2) {
-		this.textLabelSizeX2 = textLabelSizeX2;
-	}
-	
-	public int getTextLabelSizeY2() {
-		return textLabelSizeY2;
-	}
-	
-	public void setTextLabelSizeY2(int textLabelSizeY2) {
-		this.textLabelSizeY2 = textLabelSizeY2;
-	}
-	
-	public ArrayList<PaletteElement> getChildElements() {
-		return childElements;
-	}
-	
-	public void setChildElements(ArrayList<PaletteElement> childElements) {
-		this.childElements = childElements;
-	}
 
-	public String getParentElement() {
-		return parentElement;
-	}
-
-	public void setParentElement(String parentElement) {
-		this.parentElement = parentElement;
-	}
-
-	public boolean isShowedInPalette() {
-		return showedInPalette;
-	}
-
-	public void setShowedInPalette(boolean showedInPalette) {
-		this.showedInPalette = showedInPalette;
-	}
-
-	public PaletteElement(String id, String label, String imageURL, String thumbnailURL, boolean showedInPalette,
-			String paletteCategory, String representedClass, String representedClassLabel, String parentElement,
-			int textLabelSizeX2, int textLabelSizeY2) {
+	public PaletteElement() {
 		super();
-		this.id = id;
-		this.label = label;
-		this.imageURL = imageURL;
-		this.thumbnailURL = thumbnailURL;
-		this.showedInPalette = showedInPalette;
-		this.paletteCategory = paletteCategory;
-		this.representedClass = representedClass;
-		this.representedClassLabel = representedClassLabel;
-		this.parentElement = parentElement;
-		this.textLabelSizeX2 = textLabelSizeX2;
-		this.textLabelSizeY2 = textLabelSizeY2;
-		this.childElements = new ArrayList<PaletteElement>();
-	}
-
-	public PaletteElement(String id, String label, String imageURL, String thumbnailURL, boolean showedInPalette,
-			String paletteCategory, String representedClass, String representedClassLabel, String parentElement,
-			int textLabelSizeX2, int textLabelSizeY2, ArrayList<PaletteElement> childElements) {
-		super();
-		this.id = id;
-		this.label = label;
-		this.imageURL = imageURL;
-		this.thumbnailURL = thumbnailURL;
-		this.showedInPalette = showedInPalette;
-		this.paletteCategory = paletteCategory;
-		this.representedClass = representedClass;
-		this.representedClassLabel = representedClassLabel;
-		this.parentElement = parentElement;
-		this.textLabelSizeX2 = textLabelSizeX2;
-		this.textLabelSizeY2 = textLabelSizeY2;
-		this.childElements = childElements;
-	}
-
-	public PaletteElement(){
-		this.childElements = new ArrayList<PaletteElement>();
-	}
-
-	public String getUuid() {
-		return uuid;
-	}
-
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
-
-	public String getTempLabel() {
-		return tempLabel;
-	}
-
-	public void setTempLabel(String tempLabel) {
-		this.tempLabel = tempLabel;
 	}
 	
-	
 
-	
 	
 }

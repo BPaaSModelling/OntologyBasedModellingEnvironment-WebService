@@ -12,6 +12,8 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import com.google.gson.Gson;
+
+import ch.fhnw.modeller.model.metamodel.MetamodelElement;
 import ch.fhnw.modeller.model.palette.PaletteCategory;
 import ch.fhnw.modeller.model.palette.PaletteElement;
 import ch.fhnw.modeller.persistence.GlobalVariables;
@@ -60,24 +62,24 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 		
-		queryStr.append("SELECT ?element ?label ?representedClass ?imageURL ?thumbnailURL ?showedInPalette ?representedClassLabel ?parentElement ?textLabelSizeX2 ?textLabelSizeY2 ?paletteCategory WHERE {");
-		queryStr.append("?element rdf:type* obme:PaletteElement .");
+		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parentElement ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width WHERE {");
+		queryStr.append("?element rdf:type* lo:PaletteElement .");
 		queryStr.append("?element rdfs:label ?label .");
-		queryStr.append("?element obme:paletteElementRepresentMetamodelElement ?representedClass .");
-		queryStr.append("?representedClass rdfs:label ?representedClassLabel .");
-		queryStr.append("?element obme:paletteElementImageURL ?imageURL .");
-		queryStr.append("?element obme:paletteElementThumbnailURL ?thumbnailURL .");
-		queryStr.append("?element obme:paletteElementX2ForTextLabelSize ?textLabelSizeX2 .");
-		queryStr.append("?element obme:paletteElementY2ForTextLabelSize ?textLabelSizeY2 .");
-		queryStr.append("OPTIONAL{");
-		queryStr.append("?element obme:paletteElementIsShowedInRootPalette ?showedInPalette .");
-		queryStr.append("}");
-		queryStr.append("OPTIONAL{");
-		queryStr.append("?element obme:paletteElementHasParentPaletteElement ?parentElement .");
-		queryStr.append("}");
-		queryStr.append("OPTIONAL{");
-		queryStr.append("?element obme:paletteElementHasPaletteCategory ?paletteCategory .");
-		queryStr.append("}");
+		queryStr.append("?element lo:paletteModelIsRelatedToLanguageElement ?representedClass .");
+		queryStr.append("?element lo:hiddenFromPalette ?hidden .");
+		queryStr.append("?element lo:paletteModelHasPaletteCategory ?category .");
+		queryStr.append("?element lo:paletteElementUsesImage ?usesImage .");
+		
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementBackgroundColor ?backgroundColor }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementHeight ?height }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementIconPosition ?iconPosition }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementIconURL ?iconURL}.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementImageURL ?imageURL }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementLabelPosition ?labelPosition }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementShape ?shape }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementThumbnailURL ?thumbnailURL }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteElementWidth ?width }.");
+		
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
 
@@ -89,24 +91,40 @@ public class ModellingEnvironment {
 				PaletteElement tempPaletteElement = new PaletteElement();
 				
 				QuerySolution soln = results.next();
-				tempPaletteElement.setId(soln.get("?element").toString());
+				tempPaletteElement.setUuid(soln.get("?element").toString());
 				tempPaletteElement.setLabel(soln.get("?label").toString());
-				tempPaletteElement.setRepresentedClass(soln.get("?representedClass").toString());
-				tempPaletteElement.setRepresentedClassLabel(soln.get("?representedClassLabel").toString());
-				tempPaletteElement.setImageURL(soln.get("?imageURL").toString());
-				tempPaletteElement.setThumbnailURL(soln.get("?thumbnailURL").toString());
-				tempPaletteElement.setTextLabelSizeX2(FormatConverter.ParseOntologyInteger(soln.get("?textLabelSizeX2").toString(), soln.get("?element").toString()));
-				tempPaletteElement.setTextLabelSizeY2(FormatConverter.ParseOntologyInteger(soln.get("?textLabelSizeY2").toString(), soln.get("?element").toString()));
+				tempPaletteElement.setRepresentedLanguageClass(soln.get("?representedClass").toString());
+				tempPaletteElement.setHiddenFromPalette(Boolean.parseBoolean((soln.get("?hidden").toString())));
+				tempPaletteElement.setPaletteCategory(soln.get("?category").toString());
+				tempPaletteElement.setUsesImages(Boolean.parseBoolean((soln.get("?usesImage").toString())));
 				
-				if (soln.get("?showedInPalette") != null){
-					tempPaletteElement.setShowedInPalette(FormatConverter.ParseOntologyBoolean(soln.get("?showedInPalette").toString(), soln.get("?element").toString()));
+				if (soln.get("?backgroundColor") != null){
+					tempPaletteElement.setBackgroundColor(soln.get("?backgroundColor").toString());
 				}
 				
-				if (soln.get("?parentElement") != null){
-					tempPaletteElement.setParentElement(soln.get("?parentElement").toString());
+				if (soln.get("?height") != null){
+					tempPaletteElement.setHeight(soln.get("?height").toString());
 				}
-				if (soln.get("?paletteCategory") != null){
-					tempPaletteElement.setPaletteCategory(soln.get("?paletteCategory").toString());
+				if (soln.get("?iconPosition") != null){
+					tempPaletteElement.setIconPosition(soln.get("?iconPosition").toString());
+				}
+				if (soln.get("?iconURL") != null){
+					tempPaletteElement.setIconURL(soln.get("?iconURL").toString());
+				}
+				if (soln.get("?imageURL") != null){
+					tempPaletteElement.setImageURL(soln.get("?imageURL").toString());
+				}
+				if (soln.get("?labelPosition") != null){
+					tempPaletteElement.setLabelPosition(soln.get("?labelPosition").toString());
+				}
+				if (soln.get("?shape") != null){
+					tempPaletteElement.setShape(soln.get("?shape").toString());
+				}
+				if (soln.get("?thumbnailURL") != null){
+					tempPaletteElement.setThumbnailURL(soln.get("?thumbnailURL").toString());
+				}
+				if (soln.get("?width") != null){
+					tempPaletteElement.setWidth(soln.get("?width").toString());
 				}
 				
 				
@@ -149,12 +167,12 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteCategory> result = new ArrayList<PaletteCategory>();
 		
-		queryStr.append("SELECT ?category ?label ?orderNumber WHERE {");
-		queryStr.append("?category rdf:type* obme:PaletteCategory .");
+		queryStr.append("SELECT ?category ?label ?orderNumber ?hidden WHERE {");
+		queryStr.append("?category rdf:type* lo:PaletteCategory .");
 		queryStr.append("?category rdfs:label ?label .");
-		queryStr.append("OPTIONAL{");
-		queryStr.append("?category obme:paletteCategoryOrderNumber ?orderNumber .");
-		queryStr.append("}");
+		queryStr.append("OPTIONAL {?category lo:paletteCategoryOrderNumber ?orderNumber . }");
+		queryStr.append("OPTIONAL {?category lo:hiddenFromPalette ?hidden . }");
+		
 		queryStr.append("}");
 		queryStr.append("ORDER BY ?orderNumber");
 
@@ -170,7 +188,10 @@ public class ModellingEnvironment {
 				tempPaletteCategory.setLabel(soln.get("?label").toString());
 				
 				if (soln.get("?orderNumber") != null){
-					tempPaletteCategory.setOrderNumber(FormatConverter.ParseOntologyInteger(soln.get("?orderNumber").toString(),soln.get("?category").toString()));
+					tempPaletteCategory.setOrderNumber(FormatConverter.ParseOntologyInteger(soln.get("?orderNumber").toString()));
+				}
+				if (soln.get("?hidden") != null){
+					tempPaletteCategory.setHiddenFromPalette((FormatConverter.ParseOntologyBoolean(soln.get("?hidden").toString())));
 				}
 				
 				result.add(tempPaletteCategory);
@@ -190,6 +211,7 @@ public class ModellingEnvironment {
 	}
 	System.out.println("post: " + all_palette_elements.size());
 	System.out.println("Number of parents: " + parentList.size());
+	if (parentList.size() > 0){
 		for (int i = 0; i < parentList.size();i++){
 			if (parentList.get(i).getChildElements().size() == 0){
 				//System.out.println("=========");
@@ -197,6 +219,7 @@ public class ModellingEnvironment {
 				//System.out.println("1. Analysing " + all_palette_elements.get(i).getId());
 			}
 		}
+	}
 		return parentList;
 	}
 	
@@ -213,7 +236,7 @@ public class ModellingEnvironment {
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 		for (int i = 0; i < list.size(); i++){
 			if (list.get(i).getParentElement() != null &&
-			list.get(i).getParentElement().equals(parent.getId())){
+			list.get(i).getParentElement().equals(parent.getUuid())){
 				//System.out.println("2. Found a child of " + parent.getId() + " -> " + list.get(i).getId());
 				result.add(list.get(i));
 			}
@@ -225,19 +248,23 @@ public class ModellingEnvironment {
 	@Path("/createElement")
 	public Response getMsg(String json) {
 		
-		System.out.println("/paletteElement received: " +json);
+		System.out.println("/element received: " +json);
 		
 		Gson gson = new Gson();
-		PaletteElement pElement = gson.fromJson(json, PaletteElement.class);
+		MetamodelElement mElement = gson.fromJson(json, MetamodelElement.class);
 
 		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
-		
-		querStr.append("INSERT DATA{");
-		querStr.append("<"+pElement.getRepresentedClass() + "-" + pElement.getUuid()+">"  +" rdf:type " + "<"+pElement.getRepresentedClass()+">" + " ;");
-		System.out.println("    Element ID: " + pElement.getId() + pElement.getUuid());
-		System.out.println("    Element Type: " + pElement.getRepresentedClassLabel());
-		querStr.append("rdfs:label \"" + pElement.getTempLabel() +"\" ;");
-		System.out.println("    Element Label: "+ pElement.getTempLabel());
+		System.out.println("test: "+mElement.getUuid());
+		querStr.append("INSERT {");
+		querStr.append("<"+mElement.getUuid()+">"  +" rdf:type " + "<"+mElement.getClassType()+">" + " ;");
+		System.out.println("    Element ID: " + mElement.getUuid());
+		System.out.println("    Element Type: " + mElement.getClassType());
+		querStr.append("rdfs:label \"" + mElement.getTextLabel() +"\" ;");
+		System.out.println("    Element Label: "+ mElement.getTextLabel());
+		System.out.println("The following properties need to be defined in the ontology and added here:");
+		System.out.println("    [*]Element Top Position: "+ mElement.getTop());
+		System.out.println("    [*]Element Left Position: "+ mElement.getLeft());
+
 		querStr.append("}");
 		//Model modelTpl = ModelFactory.createDefaultModel();
 		ontology.insertQuery(querStr);
@@ -245,4 +272,27 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity("{}").build();
 
 	}
+	
+	@POST
+	@Path("/modifyElementLabel")
+	public Response modifyElementLabel(String json) {
+		
+		System.out.println("/Element received: " +json);
+		
+		Gson gson = new Gson();
+		PaletteElement element = gson.fromJson(json, PaletteElement.class);
+
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+		
+		querStr.append("DELETE {"+"<"+element.getUuid()+"> rdfs:label ?label}");
+		querStr.append("INSERT {"+"<"+element.getUuid()+"> rdfs:label "+element.getLabel());
+		
+		//Model modelTpl = ModelFactory.createDefaultModel();
+		ontology.insertQuery(querStr);
+	
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
+	
+
 }

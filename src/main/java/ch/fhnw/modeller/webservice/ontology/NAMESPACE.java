@@ -15,7 +15,8 @@ public enum NAMESPACE {
 	NCO(		ONTOLOGY.NCO.getPrefix(),		"http://ikm-group.ch/archiMEO/NCO#"),
 	BMM(		ONTOLOGY.BMM.getPrefix(),		"http://ikm-group.ch/archiMEO/BMM#"),
 	XSD(		"xsd",							"http://www.w3.org/2001/XMLSchema#"),
-	OBME(		"obme",							"http://ikm-group.ch/archiMEO/ontology-based-modelling-environment#"),
+	LO(		"lo",							"http://fhnw.ch/modelingEnvironment/LanguageOntology#"),
+	DO(		"do",							"http://fhnw.ch/modelingEnvironment/DomainOntology#"),
 	questionnaire (ONTOLOGY.questionnaire.getPrefix(), "http://ikm-group.ch/archiMEO/questionnaire#"),
 	questiondata (ONTOLOGY.questiondata.getPrefix(), "http://ikm-group.ch/archiMEO/questiondata#");
 	
