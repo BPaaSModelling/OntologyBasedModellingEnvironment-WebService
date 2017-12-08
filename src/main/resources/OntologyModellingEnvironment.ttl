@@ -153,7 +153,7 @@ lo:Gateway
   rdf:type lo:PaletteElement ;
   lo:hiddenFromPalette "false"^^xsd:boolean ;
   lo:paletteElementBackgroundColor "orange" ;
-  lo:paletteElementHeight 60 ;
+  lo:paletteElementHeight 80 ;
   lo:paletteElementIconPosition "top-left" ;
   lo:paletteElementIconURL "test.png" ;
   lo:paletteElementImageURL "test.png" ;
@@ -161,7 +161,7 @@ lo:Gateway
   lo:paletteElementShape "diamond" ;
   lo:paletteElementThumbnailURL "test.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 60 ;
+  lo:paletteElementWidth 80 ;
   lo:paletteModelHasPaletteCategory lo:Category_Gateways ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
   rdfs:label "Gateway" ;
