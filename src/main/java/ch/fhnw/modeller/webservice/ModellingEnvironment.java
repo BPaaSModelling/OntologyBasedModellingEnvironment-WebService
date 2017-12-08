@@ -103,7 +103,7 @@ public class ModellingEnvironment {
 				}
 				
 				if (soln.get("?height") != null){
-					tempPaletteElement.setHeight(soln.get("?height").toString());
+					tempPaletteElement.setHeight(FormatConverter.ParseOntologyInteger(soln.get("?height").toString()));
 				}
 				if (soln.get("?iconPosition") != null){
 					tempPaletteElement.setIconPosition(soln.get("?iconPosition").toString());
@@ -124,7 +124,7 @@ public class ModellingEnvironment {
 					tempPaletteElement.setThumbnailURL(soln.get("?thumbnailURL").toString());
 				}
 				if (soln.get("?width") != null){
-					tempPaletteElement.setWidth(soln.get("?width").toString());
+					tempPaletteElement.setWidth(FormatConverter.ParseOntologyInteger(soln.get("?width").toString()));
 				}
 				
 				

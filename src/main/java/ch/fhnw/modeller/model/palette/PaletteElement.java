@@ -6,8 +6,8 @@ public class PaletteElement extends PaletteModel {
 
 	private String shape;
 	private String backgroundColor;
-	private String height;
-	private String width;
+	private int height;
+	private int width;
 	private String labelPosition;
 	private String iconURL;
 	private String iconPosition;
@@ -32,19 +32,19 @@ public class PaletteElement extends PaletteModel {
 		this.backgroundColor = backgroundColor;
 	}
 
-	public String getHeight() {
+	public int getHeight() {
 		return height;
 	}
 
-	public void setHeight(String height) {
+	public void setHeight(int height) {
 		this.height = height;
 	}
 
-	public String getWidth() {
+	public int getWidth() {
 		return width;
 	}
 
-	public void setWidth(String width) {
+	public void setWidth(int width) {
 		this.width = width;
 	}
 
