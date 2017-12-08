@@ -14,8 +14,7 @@ public class PaletteElement extends PaletteModel {
 	private Boolean usesImages;
 	private String imageURL;
 	private String thumbnailURL;
-			
-	private String representedClass;		//might be bpmn:Task
+					
 
 	public String getShape() {
 		return shape;
@@ -97,13 +96,6 @@ public class PaletteElement extends PaletteModel {
 		this.thumbnailURL = thumbnailURL;
 	}
 
-	public String getRepresentedClass() {
-		return representedClass;
-	}
-
-	public void setRepresentedClass(String representedClass) {
-		this.representedClass = representedClass;
-	}
 
 	public PaletteElement() {
 		super();
