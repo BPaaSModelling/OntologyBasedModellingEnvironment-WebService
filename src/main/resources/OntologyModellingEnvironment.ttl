@@ -115,8 +115,8 @@ lo:Discretionary_Task
 lo:Event
   rdf:type lo:PaletteElement ;
   lo:hiddenFromPalette "false"^^xsd:boolean ;
-  lo:paletteElementBackgroundColor "green" ;
-  lo:paletteElementHeight 50 ;
+  lo:paletteElementBackgroundColor "#0aff00" ;
+  lo:paletteElementHeight 60 ;
   lo:paletteElementIconPosition "top-left" ;
   lo:paletteElementIconURL "test.png" ;
   lo:paletteElementImageURL "test.png" ;
@@ -124,7 +124,7 @@ lo:Event
   lo:paletteElementShape "circle" ;
   lo:paletteElementThumbnailURL "test.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 50 ;
+  lo:paletteElementWidth 60 ;
   lo:paletteModelHasPaletteCategory lo:Category_Events ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Event> ;
   rdfs:label "Event" ;
@@ -256,6 +256,10 @@ lo:Send_Task
   rdf:type lo:PaletteModel ;
   rdfs:label "Send Task" ;
 .
+lo:SequenceFlow
+  rdf:type lo:PaletteConnector ;
+  rdfs:label "Sequence Flow" ;
+.
 lo:Service_Task
   rdf:type lo:PaletteModel ;
   rdfs:label "Service Task" ;
@@ -285,7 +289,7 @@ lo:Task
   lo:paletteElementIconURL "test.png" ;
   lo:paletteElementImageURL "test.png" ;
   lo:paletteElementLabelPosition "inside" ;
-  lo:paletteElementShape "rectangular" ;
+  lo:paletteElementShape "roundrectangle" ;
   lo:paletteElementThumbnailURL "test.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
   lo:paletteElementWidth 75 ;
@@ -430,24 +434,6 @@ lo:paletteElementBackgroundColor
   rdf:type owl:DatatypeProperty ;
   rdfs:domain lo:PaletteElement ;
   rdfs:label "Background Color" ;
-  rdfs:range xsd:string ;
-.
-lo:paletteElementBorderColor
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain lo:PaletteElement ;
-  rdfs:label "palette element border color" ;
-  rdfs:range xsd:string ;
-.
-lo:paletteElementBorderThickness
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain lo:PaletteElement ;
-  rdfs:label "palette element border thickness" ;
-  rdfs:range xsd:string ;
-.
-lo:paletteElementBorderType
-  rdf:type owl:DatatypeProperty ;
-  rdfs:domain lo:PaletteElement ;
-  rdfs:label "Border style" ;
   rdfs:range xsd:string ;
 .
 lo:paletteElementHeight
