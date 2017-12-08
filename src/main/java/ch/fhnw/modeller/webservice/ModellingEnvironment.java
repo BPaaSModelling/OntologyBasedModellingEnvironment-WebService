@@ -94,9 +94,9 @@ public class ModellingEnvironment {
 				tempPaletteElement.setUuid(soln.get("?element").toString());
 				tempPaletteElement.setLabel(soln.get("?label").toString());
 				tempPaletteElement.setRepresentedLanguageClass(soln.get("?representedClass").toString());
-				tempPaletteElement.setHiddenFromPalette(Boolean.parseBoolean((soln.get("?hidden").toString())));
+				tempPaletteElement.setHiddenFromPalette(FormatConverter.ParseOntologyBoolean(soln.get("?hidden").toString()));
 				tempPaletteElement.setPaletteCategory(soln.get("?category").toString());
-				tempPaletteElement.setUsesImages(Boolean.parseBoolean((soln.get("?usesImage").toString())));
+				tempPaletteElement.setUsesImage(FormatConverter.ParseOntologyBoolean(soln.get("?usesImage").toString()));
 				
 				if (soln.get("?backgroundColor") != null){
 					tempPaletteElement.setBackgroundColor(soln.get("?backgroundColor").toString());

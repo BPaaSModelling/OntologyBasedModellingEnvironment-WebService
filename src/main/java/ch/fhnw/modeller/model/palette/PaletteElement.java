@@ -11,7 +11,7 @@ public class PaletteElement extends PaletteModel {
 	private String labelPosition;
 	private String iconURL;
 	private String iconPosition;
-	private Boolean usesImages;
+	private Boolean usesImage;
 	private String imageURL;
 	private String thumbnailURL;
 					
@@ -72,12 +72,12 @@ public class PaletteElement extends PaletteModel {
 		this.iconPosition = iconPosition;
 	}
 
-	public Boolean getUsesImages() {
-		return usesImages;
+	public Boolean getUsesImage() {
+		return usesImage;
 	}
 
-	public void setUsesImages(Boolean usesImages) {
-		this.usesImages = usesImages;
+	public void setUsesImage(Boolean usesImage) {
+		this.usesImage = usesImage;
 	}
 
 	public String getImageURL() {
