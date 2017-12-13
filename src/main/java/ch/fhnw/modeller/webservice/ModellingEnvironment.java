@@ -267,17 +267,19 @@ public class ModellingEnvironment {
 
 		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
 		System.out.println("test: "+gElement.getUuid());
-		querStr.append("INSERT {");
-		querStr.append("<"+gElement.getUuid()+">"  +" rdf:type " + "<"+gElement.getClassType()+">" + " ;");
+			querStr.append("INSERT {");
 		System.out.println("    Element ID: " + gElement.getUuid());
+			querStr.append("<"+gElement.getUuid()+">"  +" rdf:type " + "<"+gElement.getClassType()+">" + " ;");
 		System.out.println("    Element Type: " + gElement.getClassType());
-		querStr.append("rdfs:label \"" + gElement.getLabel() +"\" ;");
+			querStr.append("lo:graphicalElementClassType \"" + "<"+gElement.getClassType()+">" +"\" ;");
 		System.out.println("    Element Label: "+ gElement.getLabel());
-		System.out.println("The following properties need to be defined in the ontology and added here:");
-		System.out.println("    [*]Element Top Position: "+ gElement.getX());
-		System.out.println("    [*]Element Left Position: "+ gElement.getY());
+			querStr.append("rdfs:label \"" + gElement.getLabel() +"\" ;");
+		System.out.println("    Element X Position: "+ gElement.getX());
+			querStr.append("lo:graphicalElementX \"" + gElement.getX() +"\" ;");
+		System.out.println("    Element Y Position: "+ gElement.getY());
+			querStr.append("lo:graphicalElementY \"" + gElement.getY() +"\" ;");
 
-		querStr.append("}");
+			querStr.append("}");
 		//Model modelTpl = ModelFactory.createDefaultModel();
 		ontology.insertQuery(querStr);
 	
