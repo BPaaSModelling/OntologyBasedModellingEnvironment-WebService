@@ -286,7 +286,7 @@ lo:Task
   lo:paletteElementBackgroundColor "#c9dcf5" ;
   lo:paletteElementHeight 70 ;
   lo:paletteElementIconPosition "top-left" ;
-  lo:paletteElementIconURL "test.png" ;
+  lo:paletteElementIconURL "hand_ico.png" ;
   lo:paletteElementImageURL "test.png" ;
   lo:paletteElementLabelPosition "inside" ;
   lo:paletteElementShape "roundrectangle" ;
