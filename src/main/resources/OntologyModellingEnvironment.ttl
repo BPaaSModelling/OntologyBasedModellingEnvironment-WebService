@@ -19,29 +19,22 @@
   owl:imports <http://fhnw.ch/modelingEnvironment/DomainOntology> ;
   owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
 .
-lo:Activity_Task
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Activity Task" ;
-.
-lo:AdHoc_Subprocess
-  rdf:type lo:PaletteModel ;
-  rdfs:label "AdHoc Subprocess" ;
-.
-lo:Arrow1
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Arrow 1" ;
-.
-lo:Business_Rule_Task
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Business Rule Task" ;
-.
-lo:Call_Activity
-  rdf:type lo:PaletteModel ;
+lo:Activity
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Call_Activity.png" ;
+  lo:paletteElementImageURL "Call_Activity.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Thumbnail_Call_Activity.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
   rdfs:label "Call Activity" ;
-.
-lo:Call_Activity16aaa14c-86e9-4ebc-52ad-7b77b69d1cd9
-  rdf:type lo:Call_Activity ;
-  rdfs:label "New Call Activity text text" ;
 .
 lo:Category_Activities
   rdf:type lo:PaletteCategory ;
@@ -63,222 +56,339 @@ lo:Category_Gateways
   rdf:type lo:PaletteCategory ;
   rdfs:label "Gateways" ;
 .
-lo:CloseTransferCaseRecord
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Close Transfer Case Record" ;
-.
-lo:Collapsed_Subprocess
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Collapsed Subprocess" ;
-.
-lo:ConfirmTransfer
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Confirm Transfer" ;
-.
-lo:Connector
+lo:DataInput
   rdf:type lo:PaletteElement ;
   lo:hiddenFromPalette "false"^^xsd:boolean ;
-  lo:paletteElementBackgroundColor "black" ;
-  lo:paletteElementHeight 50 ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
   lo:paletteElementIconPosition "top-left" ;
-  lo:paletteElementIconURL "test.png" ;
-  lo:paletteElementImageURL "test.png" ;
+  lo:paletteElementIconURL "DataInput.png" ;
+  lo:paletteElementImageURL "DataInput.png" ;
   lo:paletteElementLabelPosition "inside" ;
-  lo:paletteElementShape "arrow" ;
-  lo:paletteElementThumbnailURL "test.png" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "DataInput.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 50 ;
-  lo:paletteModelHasPaletteCategory lo:Category_Connectors ;
-  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
-  rdfs:label "Connector" ;
-.
-lo:DataInput
-  rdf:type lo:PaletteModel ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Data ;
+  lo:paletteModelHasParentPaletteModel lo:DataObject ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
   rdfs:label "Data Input" ;
 .
 lo:DataObject
-  rdf:type lo:PaletteModel ;
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "DataObject.png" ;
+  lo:paletteElementImageURL "DataObject.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "DataObject.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Data ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
   rdfs:label "Data Object" ;
 .
 lo:DataOutput
-  rdf:type lo:PaletteModel ;
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "DataOutput.png" ;
+  lo:paletteElementImageURL "DataOutput.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "DataOutput.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Data ;
+  lo:paletteModelHasParentPaletteModel lo:DataObject ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Data> ;
   rdfs:label "Data Output" ;
 .
-lo:DataStore
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Data Store" ;
-.
-lo:Discretionary_Task
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Discretionary Task" ;
-.
-lo:Event
+lo:EventBasedGateway
   rdf:type lo:PaletteElement ;
   lo:hiddenFromPalette "false"^^xsd:boolean ;
-  lo:paletteElementBackgroundColor "#0aff00" ;
-  lo:paletteElementHeight 60 ;
+  lo:paletteElementBackgroundColor "Orange" ;
+  lo:paletteElementHeight 70 ;
   lo:paletteElementIconPosition "top-left" ;
-  lo:paletteElementIconURL "test.png" ;
-  lo:paletteElementImageURL "test.png" ;
+  lo:paletteElementIconURL "EventBased_Gateway.png" ;
+  lo:paletteElementImageURL "EventBased_Gateway.png" ;
   lo:paletteElementLabelPosition "inside" ;
-  lo:paletteElementShape "ellipse" ;
-  lo:paletteElementThumbnailURL "test.png" ;
+  lo:paletteElementShape "Diamond" ;
+  lo:paletteElementThumbnailURL "EventBased_Gateway.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 60 ;
-  lo:paletteModelHasPaletteCategory lo:Category_Events ;
-  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Event> ;
-  rdfs:label "Event" ;
-.
-lo:EventBased_Gateway
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Event Based Gateway" ;
-.
-lo:Event_Collapsed_Subprocess
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Event Collapsed Subprocess" ;
-.
-lo:Event_Subprocess
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Event Subprocess" ;
-.
-lo:Exclusive_Gateway
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Exclusive Gateway" ;
-.
-lo:FinalizeKoGu
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Finalize KoGu" ;
-.
-lo:Gateway
-  rdf:type lo:PaletteElement ;
-  lo:hiddenFromPalette "false"^^xsd:boolean ;
-  lo:paletteElementBackgroundColor "orange" ;
-  lo:paletteElementHeight 80 ;
-  lo:paletteElementIconPosition "top-left" ;
-  lo:paletteElementIconURL "test.png" ;
-  lo:paletteElementImageURL "test.png" ;
-  lo:paletteElementLabelPosition "inside" ;
-  lo:paletteElementShape "diamond" ;
-  lo:paletteElementThumbnailURL "test.png" ;
-  lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 80 ;
+  lo:paletteElementWidth 100 ;
   lo:paletteModelHasPaletteCategory lo:Category_Gateways ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
-  rdfs:label "Gateway" ;
+  rdfs:label "Event-based Gateway" ;
 .
-lo:KoGu
-  rdf:type lo:PaletteModel ;
-  rdfs:label "KoGu" ;
+lo:ExclusiveGateway
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "Orange" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Exclusive_Gateway.png" ;
+  lo:paletteElementImageURL "Exclusive_Gateway.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "Diamond" ;
+  lo:paletteElementThumbnailURL "Exclusive_Gateway.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Gateways ;
+  lo:paletteModelHasParentPaletteModel lo:SimpleGateway ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
+  rdfs:label "Exclusive Gatweay" ;
 .
-lo:KoGu_Orthopaedic
+lo:ManualTask
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
-  rdfs:label "KoGu Orthopaedic" ;
-.
-lo:KoGu_Paediatric
-  rdf:type lo:PaletteModel ;
-  rdfs:label "KoGu Paediatric" ;
-.
-lo:KoGu_Psychiatric
-  rdf:type lo:PaletteModel ;
-  rdfs:label "KoGu Psychiatric" ;
-.
-lo:KoGu_Stroke
-  rdf:type lo:PaletteModel ;
-  rdfs:label "KoGu Stroke" ;
-.
-lo:MakeDispositionOfCase
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Make Disposition Of Case" ;
-.
-lo:Manual_Task
-  rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Thumbnail_Manual_Task.png" ;
+  lo:paletteElementImageURL "Manual_Task.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Thumbnail_Manual_Task.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelHasParentPaletteModel lo:User_Task ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#ServiceTask> ;
   rdfs:label "Manual Task" ;
 .
-lo:Message_End
+lo:MessageIntermediate
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
-  rdfs:label "Message End" ;
-.
-lo:Message_Intermediate
-  rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "Green" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Message_Intermediate.png" ;
+  lo:paletteElementImageURL "Message_Intermediate.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "Circle" ;
+  lo:paletteElementThumbnailURL "Message_Intermediate.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Events ;
+  lo:paletteModelHasParentPaletteModel lo:SimpleIntermediate ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#IntermediateEvent> ;
   rdfs:label "Message Intermediate" ;
 .
-lo:Message_Start
+lo:MessageStart
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "Green" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Message_Start.png" ;
+  lo:paletteElementImageURL "Message_Start.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "Circle" ;
+  lo:paletteElementThumbnailURL "Message_Start.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Events ;
+  lo:paletteModelHasParentPaletteModel lo:SimpleStart ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#StartEvent> ;
   rdfs:label "Message Start" ;
-.
-lo:Message_Task
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Message Task" ;
 .
 lo:PaletteCategory
   rdf:type owl:Class ;
+  lo:excludeFromGraphicalSelection "true"^^xsd:boolean ;
   rdfs:subClassOf owl:Thing ;
 .
 lo:PaletteConnector
   rdf:type owl:Class ;
+  lo:excludeFromGraphicalSelection "true"^^xsd:boolean ;
   rdfs:label "Palette Connector" ;
   rdfs:subClassOf lo:PaletteModel ;
 .
 lo:PaletteElement
   rdf:type owl:Class ;
+  lo:excludeFromGraphicalSelection "true"^^xsd:boolean ;
   rdfs:label "Palette Element" ;
   rdfs:subClassOf lo:PaletteModel ;
 .
 lo:PaletteModel
   rdf:type owl:Class ;
+  lo:excludeFromGraphicalSelection "true"^^xsd:boolean ;
   rdfs:subClassOf owl:Thing ;
 .
-lo:Parallel_Gateway
-  rdf:type lo:PaletteModel ;
+lo:ParallelGateway
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "Orange" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Parallel_Gateway.png" ;
+  lo:paletteElementImageURL "Parallel_Gateway.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "Diamond" ;
+  lo:paletteElementThumbnailURL "Parallel_Gateway.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Gateways ;
+  lo:paletteModelHasParentPaletteModel lo:SimpleGateway ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#ParallelGateway> ;
   rdfs:label "Parallel Gateway" ;
 .
-lo:PrepareKoGu
+lo:ReceiveTask
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
-  rdfs:label "Prepare KoGu" ;
-.
-lo:PrepareMedicalRecordAdmission
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Prepare Medical Record Admission" ;
-.
-lo:PrepareRehabAdmission
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Prepare Rehab Admission" ;
-.
-lo:Receive_Task
-  rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Thumbnail_Receive_Task.png" ;
+  lo:paletteElementImageURL "Receive_Task.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Thumbnail_Receive_Task.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelHasParentPaletteModel lo:Task ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#SendTask> ;
   rdfs:label "Receive Task" ;
 .
-lo:RelaseTransferCase
+lo:SendTask
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
-  rdfs:label "Release Transfer Case" ;
-.
-lo:Send_Task
-  rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Thumbnail_Send_Task.png" ;
+  lo:paletteElementImageURL "Send_Task.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Thumbnail_Send_Task.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelHasParentPaletteModel lo:Task ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#SendTask> ;
   rdfs:label "Send Task" ;
 .
 lo:SequenceFlow
   rdf:type lo:PaletteConnector ;
   rdfs:label "Sequence Flow" ;
 .
-lo:Service_Task
+lo:ServiceTask
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Thumbnail_Service_Task.png" ;
+  lo:paletteElementImageURL "Service_Task.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Thumbnail_Service_Task.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelHasParentPaletteModel lo:Task ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#ServiceTask> ;
   rdfs:label "Service Task" ;
 .
-lo:Simple_End
+lo:SimpleEnd
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "Red" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Simple_End.png" ;
+  lo:paletteElementImageURL "Simple_End.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "Circle" ;
+  lo:paletteElementThumbnailURL "Simple_End.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Events ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#EndEvent> ;
   rdfs:label "Simple End" ;
 .
-lo:Simple_Gateway
-  rdf:type lo:PaletteModel ;
-  rdfs:label "Simple Gateway" ;
+lo:SimpleGateway
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "Orange" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Simple_Gateway.png" ;
+  lo:paletteElementImageURL "Simple_Gateway.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "Diamond" ;
+  lo:paletteElementThumbnailURL "Simple_Gateway.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Gateways ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
+  rdfs:label "Simple Gatweay" ;
 .
-lo:Simple_Intermediate
+lo:SimpleIntermediate
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Simple_Intermediate.png" ;
+  lo:paletteElementImageURL "Simple_Intermediate.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "Diamond" ;
+  lo:paletteElementThumbnailURL "Simple_Intermediate.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Events ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#IntermediateEvent> ;
   rdfs:label "Simple Intermediate" ;
 .
-lo:Simple_Start
+lo:SimpleStart
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#00AD5F" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Simple_Start.png" ;
+  lo:paletteElementImageURL "Simple_Start.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "Circle" ;
+  lo:paletteElementThumbnailURL "Simple_Start.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Events ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#StartEvent> ;
   rdfs:label "Simple Start" ;
+.
+lo:SupProcess
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Thumbnail_Subprocess.png" ;
+  lo:paletteElementImageURL "Subprocess.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Thumbnail_Subprocess.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#SubProcess> ;
+  rdfs:label "Subprocess" ;
 .
 lo:Task
   rdf:type lo:PaletteElement ;
@@ -286,27 +396,72 @@ lo:Task
   lo:paletteElementBackgroundColor "#c9dcf5" ;
   lo:paletteElementHeight 70 ;
   lo:paletteElementIconPosition "top-left" ;
-  lo:paletteElementIconURL "hand_ico.png" ;
-  lo:paletteElementImageURL "test.png" ;
+  lo:paletteElementIconURL "Thumbnail_Task.png" ;
+  lo:paletteElementImageURL "Task.png" ;
   lo:paletteElementLabelPosition "inside" ;
   lo:paletteElementShape "roundrectangle" ;
-  lo:paletteElementThumbnailURL "test.png" ;
+  lo:paletteElementThumbnailURL "Thumbnail_Task.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
   lo:paletteElementWidth 100 ;
   lo:paletteModelHasPaletteCategory lo:Category_Activities ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
   rdfs:label "Task" ;
 .
-lo:Timer_Intermediate
+lo:TimerIntermediate
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Timer_Intermediate.png" ;
+  lo:paletteElementImageURL "Timer_Intermediate.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Timer_Intermediate.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Events ;
+  lo:paletteModelHasParentPaletteModel lo:SimpleIntermediate ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#IntermediateEvent> ;
   rdfs:label "Timer Intermediate" ;
 .
-lo:Timer_Start
+lo:TimerStart
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Timer_Start.png" ;
+  lo:paletteElementImageURL "Timer_Start.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Timer_Start.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Events ;
+  lo:paletteModelHasParentPaletteModel lo:SimpleStart ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#StartEvent> ;
   rdfs:label "Timer Start" ;
 .
 lo:User_Task
+  rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "Thumbnail_Task.png" ;
+  lo:paletteElementImageURL "User_Task.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "Thumbnail_User_Task.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelHasParentPaletteModel lo:Task ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
   rdfs:label "User Task" ;
 .
 lo:graphicalElementClassType

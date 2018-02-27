@@ -1,0 +1,583 @@
+# baseURI: http://fhnw.ch/modelingEnvironment/LanguageOntology
+# imports: http://datashapes.org/dash
+# imports: http://fhnw.ch/modelingEnvironment/DomainOntology
+# imports: http://ikm-group.ch/archiMEO/BPMN
+# prefix: lo
+
+@prefix : <http://fhnw.ch/modelingEnvironment/LanguageOntology#> .
+@prefix do: <http://fhnw.ch/modelingEnvironment/DomainOntology#> .
+@prefix lo: <http://fhnw.ch/modelingEnvironment/LanguageOntology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix top: <http://ikm-group.ch/archiMEO/top#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://fhnw.ch/modelingEnvironment/LanguageOntology>
+  rdf:type owl:Ontology ;
+  owl:imports <http://datashapes.org/dash> ;
+  owl:imports <http://fhnw.ch/modelingEnvironment/DomainOntology> ;
+  owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
+.
+lo:Activity_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Activity Task" ;
+.
+lo:AdHoc_Subprocess
+  rdf:type lo:PaletteModel ;
+  rdfs:label "AdHoc Subprocess" ;
+.
+lo:Arrow1
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Arrow 1" ;
+.
+lo:Business_Rule_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Business Rule Task" ;
+.
+lo:Call_Activity
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Call Activity" ;
+.
+lo:Call_Activity16aaa14c-86e9-4ebc-52ad-7b77b69d1cd9
+  rdf:type lo:Call_Activity ;
+  rdfs:label "New Call Activity text text" ;
+.
+lo:Category_Activities
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Activities" ;
+.
+lo:Category_Connectors
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Connectors" ;
+.
+lo:Category_Data
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Data" ;
+.
+lo:Category_Events
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Events" ;
+.
+lo:Category_Gateways
+  rdf:type lo:PaletteCategory ;
+  rdfs:label "Gateways" ;
+.
+lo:CloseTransferCaseRecord
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Close Transfer Case Record" ;
+.
+lo:Collapsed_Subprocess
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Collapsed Subprocess" ;
+.
+lo:ConfirmTransfer
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Confirm Transfer" ;
+.
+lo:Connector
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "black" ;
+  lo:paletteElementHeight 50 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "test.png" ;
+  lo:paletteElementImageURL "test.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "arrow" ;
+  lo:paletteElementThumbnailURL "test.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 50 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Connectors ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
+  rdfs:label "Connector" ;
+.
+lo:DataInput
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Data Input" ;
+.
+lo:DataObject
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Data Object" ;
+.
+lo:DataOutput
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Data Output" ;
+.
+lo:DataStore
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Data Store" ;
+.
+lo:Discretionary_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Discretionary Task" ;
+.
+lo:Event
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#0aff00" ;
+  lo:paletteElementHeight 60 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "test.png" ;
+  lo:paletteElementImageURL "test.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "ellipse" ;
+  lo:paletteElementThumbnailURL "test.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 60 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Events ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Event> ;
+  rdfs:label "Event" ;
+.
+lo:EventBased_Gateway
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Event Based Gateway" ;
+.
+lo:Event_Collapsed_Subprocess
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Event Collapsed Subprocess" ;
+.
+lo:Event_Subprocess
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Event Subprocess" ;
+.
+lo:Exclusive_Gateway
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Exclusive Gateway" ;
+.
+lo:FinalizeKoGu
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Finalize KoGu" ;
+.
+lo:Gateway
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "orange" ;
+  lo:paletteElementHeight 80 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "test.png" ;
+  lo:paletteElementImageURL "test.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "diamond" ;
+  lo:paletteElementThumbnailURL "test.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 80 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Gateways ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
+  rdfs:label "Gateway" ;
+.
+lo:KoGu
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu" ;
+.
+lo:KoGu_Orthopaedic
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu Orthopaedic" ;
+.
+lo:KoGu_Paediatric
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu Paediatric" ;
+.
+lo:KoGu_Psychiatric
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu Psychiatric" ;
+.
+lo:KoGu_Stroke
+  rdf:type lo:PaletteModel ;
+  rdfs:label "KoGu Stroke" ;
+.
+lo:MakeDispositionOfCase
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Make Disposition Of Case" ;
+.
+lo:Manual_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Manual Task" ;
+.
+lo:Message_End
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Message End" ;
+.
+lo:Message_Intermediate
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Message Intermediate" ;
+.
+lo:Message_Start
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Message Start" ;
+.
+lo:Message_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Message Task" ;
+.
+lo:PaletteCategory
+  rdf:type owl:Class ;
+  rdfs:subClassOf owl:Thing ;
+.
+lo:PaletteConnector
+  rdf:type owl:Class ;
+  rdfs:label "Palette Connector" ;
+  rdfs:subClassOf lo:PaletteModel ;
+.
+lo:PaletteElement
+  rdf:type owl:Class ;
+  rdfs:label "Palette Element" ;
+  rdfs:subClassOf lo:PaletteModel ;
+.
+lo:PaletteModel
+  rdf:type owl:Class ;
+  rdfs:subClassOf owl:Thing ;
+.
+lo:Parallel_Gateway
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Parallel Gateway" ;
+.
+lo:PrepareKoGu
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Prepare KoGu" ;
+.
+lo:PrepareMedicalRecordAdmission
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Prepare Medical Record Admission" ;
+.
+lo:PrepareRehabAdmission
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Prepare Rehab Admission" ;
+.
+lo:Receive_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Receive Task" ;
+.
+lo:RelaseTransferCase
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Release Transfer Case" ;
+.
+lo:Send_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Send Task" ;
+.
+lo:SequenceFlow
+  rdf:type lo:PaletteConnector ;
+  rdfs:label "Sequence Flow" ;
+.
+lo:Service_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Service Task" ;
+.
+lo:Simple_End
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Simple End" ;
+.
+lo:Simple_Gateway
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Simple Gateway" ;
+.
+lo:Simple_Intermediate
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Simple Intermediate" ;
+.
+lo:Simple_Start
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Simple Start" ;
+.
+lo:Task
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false"^^xsd:boolean ;
+  lo:paletteElementBackgroundColor "#c9dcf5" ;
+  lo:paletteElementHeight 70 ;
+  lo:paletteElementIconPosition "top-left" ;
+  lo:paletteElementIconURL "hand_ico.png" ;
+  lo:paletteElementImageURL "test.png" ;
+  lo:paletteElementLabelPosition "inside" ;
+  lo:paletteElementShape "roundrectangle" ;
+  lo:paletteElementThumbnailURL "test.png" ;
+  lo:paletteElementUsesImage "false"^^xsd:boolean ;
+  lo:paletteElementWidth 100 ;
+  lo:paletteModelHasPaletteCategory lo:Category_Activities ;
+  lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Task> ;
+  rdfs:label "Task" ;
+.
+lo:Timer_Intermediate
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Timer Intermediate" ;
+.
+lo:Timer_Start
+  rdf:type lo:PaletteModel ;
+  rdfs:label "Timer Start" ;
+.
+lo:User_Task
+  rdf:type lo:PaletteModel ;
+  rdfs:label "User Task" ;
+.
+lo:graphicalElementClassType
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "Class Type" ;
+  rdfs:range xsd:string ;
+.
+lo:graphicalElementX
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "X coordinate" ;
+  rdfs:range xsd:string ;
+.
+lo:graphicalElementY
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "Y coordinate" ;
+  rdfs:range xsd:string ;
+.
+lo:hiddenFromPalette
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteCategory ;
+  rdfs:domain lo:PaletteModel ;
+  rdfs:label "Hide from Palette" ;
+  rdfs:range xsd:boolean ;
+.
+lo:languageElementIsRelatedToDomainElement
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:label "Domain Ontology Class" ;
+  rdfs:range owl:Thing ;
+.
+lo:paletteCategoryOrderNumber
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteCategory ;
+  rdfs:label "palette category order number" ;
+  rdfs:range xsd:integer ;
+.
+lo:paletteConnectorArrowBaseBorderColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Border Color of Arrow Base" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseBorderThickness
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Thickness of Arrow Base Border" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Color of Arrow Base" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseShape
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Shape of Arrow Base" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseURLImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "URL of Arrow Base Image" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowBaseUsesImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Use an Image for the Base Arrow" ;
+  rdfs:range xsd:boolean ;
+.
+lo:paletteConnectorArrowHeadBorderColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Border Color of Arrow Head" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadBorderThickness
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Thickness of Arrow Head Border" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Color of Arrow Head" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadShape
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Shape of Arrow Head" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadURLImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "URL of Arrow Head Image" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorArrowHeadUsesImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Use an Image for the Head Arrow" ;
+  rdfs:range xsd:boolean ;
+.
+lo:paletteConnectorLineColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Connector Line Color" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorLineThickness
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Palette Line Thickness" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteConnectorLineType
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteConnector ;
+  rdfs:label "Connector Line Type" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementBackgroundColor
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Background Color" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementHeight
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Height" ;
+  rdfs:range xsd:integer ;
+.
+lo:paletteElementIconPosition
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Icon Position" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementIconURL
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Icon URL" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementImageURL
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "URL of Icon Image" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementLabelPosition
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Label position" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementShape
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Shape of Palette Element" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementThumbnailURL
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "URL of palette image" ;
+  rdfs:range xsd:string ;
+.
+lo:paletteElementUsesImage
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Use Images instead of Shape" ;
+  rdfs:range xsd:boolean ;
+.
+lo:paletteElementWidth
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain lo:PaletteElement ;
+  rdfs:label "Width" ;
+  rdfs:range xsd:integer ;
+.
+lo:paletteModelHasPaletteCategory
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain lo:PaletteModel ;
+  rdfs:label "Palette Category" ;
+  rdfs:range lo:PaletteCategory ;
+.
+lo:paletteModelHasParentPaletteModel
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain lo:PaletteModel ;
+  rdfs:label "Parent Palette Model" ;
+  rdfs:range lo:PaletteModel ;
+.
+lo:paletteModelIsRelatedToLanguageElement
+  rdf:type owl:ObjectProperty ;
+  rdfs:domain lo:PaletteModel ;
+  rdfs:label "palette model is related to language element" ;
+  rdfs:range rdfs:Class ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#CloseTransferCaseRecord>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#ConfirmTransfer>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#Data>
+  rdfs:label "Data" ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#DataInput>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#Data> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#DataOutput>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#Data> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#FinalizeKoGu>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#MakeDispositionOfCase>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#PrepareKoGu>
+  rdf:type owl:Class ;
+  rdfs:label "Prepare KoGu" ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#PrepareMedicalRecordAdmission>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#PrepareRehabAdmission>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#ReleaseTransferCase>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGu>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#Data> ;
+.
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGuOrthopaedic>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu> ;
+.
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGuPaediatric>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu> ;
+.
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGuPsychiatric>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu> ;
+.
+<http://ikm-group.ch/archiMEO/dsml4ptm#KoGuStroke>
+  rdf:type owl:Class ;
+  rdfs:subClassOf <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu> ;
+.
+<http://ikm-group.ch/ontology-based-modelling-environment>
+  owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
+.

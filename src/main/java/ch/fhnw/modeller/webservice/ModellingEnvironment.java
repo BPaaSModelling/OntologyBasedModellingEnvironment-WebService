@@ -1,32 +1,34 @@
 package ch.fhnw.modeller.webservice;
 
 import java.util.ArrayList;
-import java.util.UUID;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+
 import com.google.gson.Gson;
 
+import ch.fhnw.modeller.model.graphEnvironment.Answer;
 import ch.fhnw.modeller.model.metamodel.GraphicalElement;
 import ch.fhnw.modeller.model.palette.PaletteCategory;
 import ch.fhnw.modeller.model.palette.PaletteElement;
-import ch.fhnw.modeller.persistence.GlobalVariables;
 import ch.fhnw.modeller.webservice.exception.NoResultsException;
-import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import ch.fhnw.modeller.webservice.ontology.FormatConverter;
+import ch.fhnw.modeller.webservice.ontology.OntologyManager;
+
 
 @Path("/ModEnv")
 public class ModellingEnvironment {
 	private Gson gson = new Gson();
 	private OntologyManager ontology = OntologyManager.getInstance();
 	private boolean debug_properties = false;
-
 
 	@GET
 	@Path("/getPaletteElements")
@@ -307,6 +309,65 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity("{}").build();
 
 	}
+	
+	@GET
+	@Path("/getDomainOntologyElements")
+	public Response getDomainOntologyElements() {
+		System.out.println("\n####################<start>####################");
+		System.out.println("/requested domain ontology elements" );
+		System.out.println("####################<end>####################");
+		ArrayList<Answer> all_do_elements = new ArrayList<Answer>();
+		
+		try {
+				all_do_elements = queryDOElements();
+
+				if (debug_properties){
+					for (int index = 0; index < all_do_elements.size(); index++){
+						System.out.println("Element "+index+": "+all_do_elements.get(index).getId());
+					}
+				}
+		} catch (NoResultsException e) {
+			e.printStackTrace();
+		}
+		
+		
+		String json = gson.toJson(all_do_elements);
+		System.out.println("\n####################<start>####################");
+		System.out.println("/search genereated json: " +json);
+		System.out.println("####################<end>####################");
+		return Response.status(Status.OK).entity(json).build();
+	}
+	
+	private ArrayList<Answer> queryDOElements() throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<Answer> result = new ArrayList<Answer>();
+		
+		queryStr.append("SELECT DISTINCT ?id ?label WHERE {");
+		queryStr.append("?id a ?type .");
+		queryStr.append("?id rdfs:label ?label .");
+		queryStr.append("FILTER(?type != 'rdf:class') .");
+		queryStr.append("FILTER(!STRSTARTS(STR(?id),STR(lo:))) .");
+		queryStr.append("}");
+		queryStr.append("ORDER BY ?label");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+		
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				Answer ans = new Answer();
+				
+				QuerySolution soln = results.next();
+				ans.setId(soln.get("?id").toString());
+				ans.setLabel(soln.get("?label").toString());
+				
+				result.add(ans);
+			}
+		}
+		qexec.close();
+		
+		return result;
+}
 	
 
 }
