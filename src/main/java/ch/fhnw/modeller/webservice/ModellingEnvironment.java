@@ -64,7 +64,7 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 		
-		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parentElement ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness WHERE {");
+		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness WHERE {");
 		queryStr.append("?element rdf:type* lo:PaletteElement .");
 		queryStr.append("?element rdfs:label ?label .");
 		queryStr.append("?element lo:paletteModelIsRelatedToLanguageElement ?representedClass .");
@@ -84,6 +84,7 @@ public class ModellingEnvironment {
 		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderColor ?borderColor }.");
 		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderThickness ?borderThickness }.");
 		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderType ?borderType }.");
+		queryStr.append("OPTIONAL{ ?element lo:paletteModelHasParentPaletteModel ?parent }.");
 		
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
@@ -96,7 +97,7 @@ public class ModellingEnvironment {
 				PaletteElement tempPaletteElement = new PaletteElement();
 				
 				QuerySolution soln = results.next();
-				tempPaletteElement.setUuid(soln.get("?element").toString());
+				tempPaletteElement.setId(soln.get("?element").toString());
 				tempPaletteElement.setLabel(soln.get("?label").toString());
 				tempPaletteElement.setRepresentedLanguageClass(soln.get("?representedClass").toString());
 				tempPaletteElement.setHiddenFromPalette(FormatConverter.ParseOntologyBoolean(soln.get("?hidden").toString()));
@@ -139,6 +140,9 @@ public class ModellingEnvironment {
 				}
 				if (soln.get("?borderType") != null){
 					tempPaletteElement.setBorderType(soln.get("?borderType").toString());
+				}
+				if (soln.get("?parent") != null){
+					tempPaletteElement.setParentElement(soln.get("?parent").toString());
 				}
 				
 				
@@ -250,7 +254,7 @@ public class ModellingEnvironment {
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 		for (int i = 0; i < list.size(); i++){
 			if (list.get(i).getParentElement() != null &&
-			list.get(i).getParentElement().equals(parent.getUuid())){
+			list.get(i).getParentElement().equals(parent.getId())){
 				//System.out.println("2. Found a child of " + parent.getId() + " -> " + list.get(i).getId());
 				result.add(list.get(i));
 			}
@@ -300,8 +304,8 @@ public class ModellingEnvironment {
 
 		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
 		
-		querStr.append("DELETE {"+"<"+element.getUuid()+"> rdfs:label ?label}");
-		querStr.append("INSERT {"+"<"+element.getUuid()+"> rdfs:label "+element.getLabel());
+		querStr.append("DELETE {"+"<"+element.getId()+"> rdfs:label ?label}");
+		querStr.append("INSERT {"+"<"+element.getId()+"> rdfs:label "+element.getLabel());
 		
 		//Model modelTpl = ModelFactory.createDefaultModel();
 		ontology.insertQuery(querStr);

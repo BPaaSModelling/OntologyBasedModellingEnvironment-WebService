@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class PaletteModel {
 
 	private String uuid;
+	private String id;
 	private String label;
 	private String paletteCategory; //points to the uuid of category
 	private String parentElement;	//point to the uuid of parent element
@@ -17,6 +18,12 @@ public class PaletteModel {
 	}
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
 	}
 	public String getLabel() {
 		return label;
