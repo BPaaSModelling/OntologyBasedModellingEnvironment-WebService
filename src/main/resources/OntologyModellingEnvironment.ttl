@@ -736,20 +736,3 @@ lo:paletteModelIsRelatedToLanguageElement
 <http://ikm-group.ch/ontology-based-modelling-environment>
   owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
 .
-lo:TestActivity  a                  lo:PaletteElement ;
-        rdfs:label                  "Test Activity" ;
-        lo:hiddenFromPalette        "false" ;
-        lo:paletteElementUsesImage  "null" ;
-        lo:paletteModelHasPaletteCategory
-                "lo:Category_Activities" ;
-        lo:paletteModelHasParentPaletteModel
-                "lo:ManualTask" .
- lo:SubReceiveActivity
-        a                           lo:PaletteElement ;
-        rdfs:label                  "Subtask Receive Activity" ;
-        lo:hiddenFromPalette        "false" ;
-        lo:paletteElementUsesImage  "null" ;
-        lo:paletteModelHasPaletteCategory
-                "lo:Category_Activities" ;
-        lo:paletteModelHasParentPaletteModel
-                "http://fhnw.ch/modelingEnvironment/LanguageOntology#ReceiveTask" .
