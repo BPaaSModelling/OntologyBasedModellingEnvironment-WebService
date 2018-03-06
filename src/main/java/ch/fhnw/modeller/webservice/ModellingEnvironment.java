@@ -263,8 +263,51 @@ public class ModellingEnvironment {
 	}
 	
 	@POST
-	@Path("/createElement")
-	public Response getMsg(String json) {
+	@Path("/createPalletteElement")
+	public Response insertPalletteElement(String json) {
+		
+		System.out.println("/element received: " +json);
+		
+		Gson gson = new Gson();
+		PaletteElement pElement = gson.fromJson(json, PaletteElement.class);
+		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
+
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+		System.out.println("test: "+pElement.getUuid());
+			querStr.append("INSERT DATA {");
+		System.out.println("    Element ID: " + pElement.getUuid());
+		querStr.append(pElement.getUuid()  +" rdf:type " + "<http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement>" + " ;");
+		/*System.out.println("    Element Type: " + pElement.getClassType());
+			querStr.append("lo:graphicalElementClassType \"" + "<"+pElement.getClassType()+">" +"\" ;");*/
+		System.out.println("    Element Label: "+ pElement.getLabel());
+			querStr.append("rdfs:label \"" +pElement.getLabel() +"\" ;");
+		System.out.println("    Element Hidden property: "+ pElement.getHiddenFromPalette());
+			querStr.append("lo:hiddenFromPalette \"" + pElement.getHiddenFromPalette() +"\" ;");
+		System.out.println("    Element Parent: "+ pElement.getParentElement());
+			querStr.append("lo:paletteModelHasParentPaletteModel \"" + pElement.getParentElement() +"\" ;");
+		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
+			querStr.append("lo:paletteModelHasPaletteCategory \"" + pElement.getPaletteCategory() +"\" ;");
+		System.out.println("    Element UsesImage property: "+ pElement.getImageURL());
+			querStr.append("lo:paletteElementUsesImage \"" + pElement.getImageURL() +"\" ;");
+		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
+			querStr.append("lo:paletteModelIsRelatedToLanguageElement \"" + pElement.getRepresentedLanguageClass() +"\" ;");
+		/*System.out.println("    Element X Position: "+ pElement.getX());
+			querStr.append("lo:graphicalElementX \"" + pElement.getX() +"\" ;");
+		System.out.println("    Element Y Position: "+ pElement.getY());
+			querStr.append("lo:graphicalElementY \"" + pElement.getY() +"\" ;");*/
+			
+
+			querStr.append("}");
+		//Model modelTpl = ModelFactory.createDefaultModel();
+		ontology.insertQuery(querStr);
+	
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
+	
+	@POST
+	@Path("/createCanvasInstance")
+	public Response insertCanvasInstance(String json) {
 		
 		System.out.println("/element received: " +json);
 		

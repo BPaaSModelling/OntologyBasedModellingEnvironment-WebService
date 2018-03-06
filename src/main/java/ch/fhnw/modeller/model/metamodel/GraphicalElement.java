@@ -6,6 +6,9 @@ public class GraphicalElement {
 	String uuid;
 	String label;
 	String classType;	//Defines the type of the class (i.e. bpmn:Task)
+	String hiddenFromPallette;
+	String parent;
+	String category;
 	double x;
 	double y;
 	public String getUuid() {
@@ -40,6 +43,18 @@ public class GraphicalElement {
 	}
 	public GraphicalElement() {
 		super();
+	}
+	public String getHiddenFromPallette() {
+		return hiddenFromPallette;
+	}
+	public void setHiddenFromPallette(String hiddenFromPallette) {
+		this.hiddenFromPallette = hiddenFromPallette;
+	}
+	public String getParent() {
+		return parent;
+	}
+	public void setParent(String parent) {
+		this.parent = parent;
 	}
 	
 	
