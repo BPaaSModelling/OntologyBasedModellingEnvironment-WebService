@@ -358,7 +358,7 @@ public class ModellingEnvironment {
 	}
 	
 	@GET
-	@Path("/getDomainOntologyElements")
+	@Path("/getDomainOntologyClasses")
 	public Response getDomainOntologyElements() {
 		System.out.println("\n####################<start>####################");
 		System.out.println("/requested domain ontology elements" );
