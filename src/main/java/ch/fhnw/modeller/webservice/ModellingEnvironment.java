@@ -287,8 +287,8 @@ public class ModellingEnvironment {
 			querStr.append("lo:paletteModelHasParentPaletteModel \"" + pElement.getParentElement() +"\" ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
 			querStr.append("lo:paletteModelHasPaletteCategory \"" + pElement.getPaletteCategory() +"\" ;");
-		System.out.println("    Element UsesImage property: "+ pElement.getImageURL());
-			querStr.append("lo:paletteElementUsesImage \"" + pElement.getImageURL() +"\" ;");
+		System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
+			querStr.append("lo:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
 			querStr.append("lo:paletteModelIsRelatedToLanguageElement \"" + pElement.getRepresentedLanguageClass() +"\" ;");
 		/*System.out.println("    Element X Position: "+ pElement.getX());
