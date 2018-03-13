@@ -10,9 +10,22 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix top: <http://ikm-group.ch/archiMEO/top#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+do:Task
+  rdf:type owl:Class ;
+  rdf:type sh:NodeShape ;
+  rdfs:label "Task" ;
+  rdfs:subClassOf do:Test ;
+.
+do:Test
+  rdf:type owl:Class ;
+  rdf:type sh:NodeShape ;
+  rdfs:label "Test" ;
+  rdfs:subClassOf owl:Thing ;
+.
 <http://fhnw.ch/modelingEnvironment/LanguageOntology>
   rdf:type owl:Ontology ;
   owl:imports <http://datashapes.org/dash> ;
