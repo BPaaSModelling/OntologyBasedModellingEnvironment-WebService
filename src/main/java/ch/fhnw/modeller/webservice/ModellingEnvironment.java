@@ -393,7 +393,7 @@ public class ModellingEnvironment {
 		queryStr.append("?id a ?type .");
 		queryStr.append("?id rdfs:label ?label .");
 		queryStr.append("FILTER(?type != 'rdf:class') .");
-		queryStr.append("FILTER(STRSTARTS(STR(?id),STR(\"http:\\/\\/fhnw.ch\\/modelingEnvironment\\/DomainOntology#\"))) .");
+		queryStr.append("FILTER(STRSTARTS(STR(?id),STR(\"http://fhnw.ch/modelingEnvironment/DomainOntology#\"))) .");
 		queryStr.append("}");
 		queryStr.append("ORDER BY ?label");
 
