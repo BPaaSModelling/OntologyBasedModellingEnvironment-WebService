@@ -276,7 +276,7 @@ public class ModellingEnvironment {
 		System.out.println("test: "+pElement.getUuid());
 			querStr.append("INSERT DATA {");
 		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr.append(pElement.getUuid()  +" rdf:type " + "<http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement>" + " ;");
+		querStr.append("lo:" + pElement.getUuid()  +" rdf:type " + "<http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement>" + " ;");
 		/*System.out.println("    Element Type: " + pElement.getClassType());
 			querStr.append("lo:graphicalElementClassType \"" + "<"+pElement.getClassType()+">" +"\" ;");*/
 		System.out.println("    Element Label: "+ pElement.getLabel());
@@ -284,7 +284,7 @@ public class ModellingEnvironment {
 		System.out.println("    Element Hidden property: "+ pElement.getHiddenFromPalette());
 			querStr.append("lo:hiddenFromPalette \"" + pElement.getHiddenFromPalette() +"\" ;");
 		System.out.println("    Element Parent: "+ pElement.getParentElement());
-			querStr.append("lo:paletteModelHasParentPaletteModel \"" + pElement.getParentElement() +"\" ;");
+			querStr.append("lo:paletteModelHasParentPaletteModel \"" + "http://fhnw.ch/modelingEnvironment/LanguageOntology#"+pElement.getParentElement() +"\" ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
 			querStr.append("lo:paletteModelHasPaletteCategory \"" + pElement.getPaletteCategory() +"\" ;");
 		System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
@@ -299,7 +299,25 @@ public class ModellingEnvironment {
 
 			querStr.append("}");
 		//Model modelTpl = ModelFactory.createDefaultModel();
+			try {
 		ontology.insertQuery(querStr);
+		
+		querStr.clearParams();
+		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+		querStr1.append("INSERT {");
+		querStr1.append("bpmn:" + pElement.getUuid() + " rdf:type <http://www.w3.org/2002/07/owl#Class> . ");
+		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#"+ pElement.getParentElement() + "> . ");
+		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" ");
+		querStr1.append("}");
+		querStr1.append(" WHERE { }");
+		
+		System.out.println("Create subclass in bpmn Ontology");
+		System.out.println(querStr1.toString());
+		ontology.insertQuery(querStr1);
+		
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 	
 		return Response.status(Status.OK).entity("{}").build();
 
