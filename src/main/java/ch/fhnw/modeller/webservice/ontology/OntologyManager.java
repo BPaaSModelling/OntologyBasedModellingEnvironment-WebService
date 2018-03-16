@@ -136,9 +136,33 @@ public final class OntologyManager {
 		addNamespacesToQuery(queryStr);
 		System.out.println("***Trying to insert***\n" + queryStr.toString() + "***End query***\n");
 		UpdateRequest update = UpdateFactory.create(queryStr.toString());
-		UpdateProcessor up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
+		UpdateProcessor up;
+		up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
 		up.execute();
+	}
+	
+	public boolean insertMultipleQueries(List<ParameterizedSparqlString> queryStrList) {
+		Model tempModel = ModelFactory.createOntologyModel();
+		tempModel.read(READENDPOINT);
 		
+		try {
+			//Try to execute queries in a temporary/local model
+			for (int i = 0; i < queryStrList.size(); i++){
+				addNamespacesToQuery(queryStrList.get(i));
+				System.out.println("***Trying to insert query on local repo***<query #"+(i+1)+" of "+queryStrList.size()+">\n" + queryStrList.get(i).toString() + "***End query*** <query #"+(i+1)+" of "+queryStrList.size()+">\n");
+				UpdateAction.parseExecute(queryStrList.get(i).toString(), tempModel);
+			}
+			//If no errors occur, I execute the queries on the online ontology
+			
+			for (int i = 0; i < queryStrList.size(); i++){
+				insertQuery(queryStrList.get(i));
+			}
+			
+		}catch (Exception e){
+			System.out.println("***Error while inserting multiple queries: aborted***");
+			return false;
+		}
+		return true;
 	}
 	
 	public boolean isLocalOntology() {
