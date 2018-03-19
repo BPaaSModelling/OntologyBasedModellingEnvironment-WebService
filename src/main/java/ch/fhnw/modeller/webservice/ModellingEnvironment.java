@@ -284,13 +284,13 @@ public class ModellingEnvironment {
 		System.out.println("    Element Hidden property: "+ pElement.getHiddenFromPalette());
 			querStr.append("lo:hiddenFromPalette \"" + pElement.getHiddenFromPalette() +"\" ;");
 		System.out.println("    Element Parent: "+ pElement.getParentElement());
-			querStr.append("lo:paletteModelHasParentPaletteModel \"" + "http://fhnw.ch/modelingEnvironment/LanguageOntology#"+pElement.getParentElement() +"\" ;");
+			querStr.append("lo:paletteModelHasParentPaletteModel <" + "http://fhnw.ch/modelingEnvironment/LanguageOntology#"+pElement.getParentElement() +"> ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
-			querStr.append("lo:paletteModelHasPaletteCategory \"" + pElement.getPaletteCategory() +"\" ;");
+			querStr.append("lo:paletteModelHasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
 		System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
 			querStr.append("lo:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
-			querStr.append("lo:paletteModelIsRelatedToLanguageElement \"" + pElement.getRepresentedLanguageClass() +"\" ;");
+			querStr.append("lo:paletteModelIsRelatedToLanguageElement <" + pElement.getRepresentedLanguageClass() +"> ;");
 		/*System.out.println("    Element X Position: "+ pElement.getX());
 			querStr.append("lo:graphicalElementX \"" + pElement.getX() +"\" ;");
 		System.out.println("    Element Y Position: "+ pElement.getY());
@@ -305,7 +305,7 @@ public class ModellingEnvironment {
 		querStr.clearParams();
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 		querStr1.append("INSERT {");
-		querStr1.append("bpmn:" + pElement.getUuid() + " rdf:type <http://www.w3.org/2002/07/owl#Class> . ");
+		querStr1.append("bpmn:" + pElement.getUuid() + " rdf:type rdfs:Class . ");
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#"+ pElement.getParentElement() + "> . ");
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" ");
 		querStr1.append("}");

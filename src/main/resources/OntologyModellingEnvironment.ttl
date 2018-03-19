@@ -765,3 +765,19 @@ lo:paletteModelIsRelatedToLanguageElement
 <http://ikm-group.ch/ontology-based-modelling-environment>
   owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
 .
+
+lo:TestSub  a                       lo:PaletteElement ;
+        rdfs:label                  "Test Sub" ;
+        lo:hiddenFromPalette        "false" ;
+        lo:paletteElementUsesImage  "null" ;
+        lo:paletteModelHasPaletteCategory
+                "http://fhnw.ch/modelingEnvironment/LanguageOntology#Category_Activities" ;
+        lo:paletteModelHasParentPaletteModel
+                "http://fhnw.ch/modelingEnvironment/LanguageOntology#Subprocess" ;
+        lo:paletteModelIsRelatedToLanguageElement
+                "bpmn:TestSub" .
+                
+               
+
+                
+ 
