@@ -299,8 +299,8 @@ public class ModellingEnvironment {
 
 			querStr.append("}");
 		//Model modelTpl = ModelFactory.createDefaultModel();
-			try {
-		ontology.insertQuery(querStr);
+			
+		//ontology.insertQuery(querStr);
 		
 		querStr.clearParams();
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
@@ -313,13 +313,13 @@ public class ModellingEnvironment {
 		
 		System.out.println("Create subclass in bpmn Ontology");
 		System.out.println(querStr1.toString());
-		ontology.insertQuery(querStr1);
+		//ontology.insertQuery(querStr1);
+		ArrayList<ParameterizedSparqlString> queryList = new ArrayList<ParameterizedSparqlString>();
+		queryList.add(querStr);
+		queryList.add(querStr1);
 		
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
 	
-		return Response.status(Status.OK).entity("{}").build();
+		return Response.status(Status.OK).entity(ontology.insertMultipleQueries(queryList)).build();
 
 	}
 	
