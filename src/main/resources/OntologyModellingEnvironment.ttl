@@ -14,6 +14,15 @@
 @prefix top: <http://ikm-group.ch/archiMEO/top#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+do:New_Domain
+  rdf:type rdfs:Class ;
+  rdfs:label "New Domain" ;
+.
+do:Sub_Domain
+  rdf:type rdfs:Class ;
+  rdfs:label "Sub Domain" ;
+  rdfs:subClassOf do:New_Domain ;
+.
 do:Task
   rdf:type owl:Class ;
   rdf:type sh:NodeShape ;
@@ -436,6 +445,15 @@ lo:TestActivity
   lo:paletteModelHasParentPaletteModel "lo:ManualTask" ;
   rdfs:label "Test Activity" ;
 .
+lo:TestSub
+  rdf:type lo:PaletteElement ;
+  lo:hiddenFromPalette "false" ;
+  lo:paletteElementUsesImage "null" ;
+  lo:paletteModelHasPaletteCategory "http://fhnw.ch/modelingEnvironment/LanguageOntology#Category_Activities" ;
+  lo:paletteModelHasParentPaletteModel "http://fhnw.ch/modelingEnvironment/LanguageOntology#Subprocess" ;
+  lo:paletteModelIsRelatedToLanguageElement "bpmn:TestSub" ;
+  rdfs:label "Test Sub" ;
+.
 lo:TimerIntermediate
   rdf:type lo:PaletteElement ;
   rdf:type lo:PaletteModel ;
@@ -765,19 +783,3 @@ lo:paletteModelIsRelatedToLanguageElement
 <http://ikm-group.ch/ontology-based-modelling-environment>
   owl:imports <http://ikm-group.ch/archiMEO/BPMN> ;
 .
-
-lo:TestSub  a                       lo:PaletteElement ;
-        rdfs:label                  "Test Sub" ;
-        lo:hiddenFromPalette        "false" ;
-        lo:paletteElementUsesImage  "null" ;
-        lo:paletteModelHasPaletteCategory
-                "http://fhnw.ch/modelingEnvironment/LanguageOntology#Category_Activities" ;
-        lo:paletteModelHasParentPaletteModel
-                "http://fhnw.ch/modelingEnvironment/LanguageOntology#Subprocess" ;
-        lo:paletteModelIsRelatedToLanguageElement
-                "bpmn:TestSub" .
-                
-               
-
-                
- 

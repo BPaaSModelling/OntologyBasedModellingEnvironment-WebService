@@ -375,6 +375,34 @@ public class ModellingEnvironment {
 
 	}
 	
+	@POST
+	@Path("/createDomainElement")
+	public Response insertDomainElement(String json) {
+		
+		System.out.println("/element received: " +json);
+		
+		Gson gson = new Gson();
+		Answer pElement = gson.fromJson(json, Answer.class);
+		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
+		
+		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+		querStr1.append("INSERT {");
+		querStr1.append("do:" + pElement.getId() + " rdf:type rdfs:Class . ");
+		if(pElement.getParentElement()!=null && !"".equals(pElement.getParentElement()))
+			querStr1.append("do:" + pElement.getId() + " rdfs:subClassOf do:"+ pElement.getParentElement() + " . ");
+		querStr1.append("do:" + pElement.getId() + " rdfs:label \"" + pElement.getLabel() + "\" ");
+		querStr1.append("}");
+		querStr1.append(" WHERE { }");
+		
+		System.out.println("Create subclass in Domain Ontology");
+		System.out.println(querStr1.toString());
+		ontology.insertQuery(querStr1);
+		
+	
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
+	
 	@GET
 	@Path("/getDomainOntologyClasses")
 	public Response getDomainOntologyElements() {

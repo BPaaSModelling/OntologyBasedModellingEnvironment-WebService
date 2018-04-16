@@ -1,11 +1,11 @@
-package ch.fhnw.modeller.model.graphEnvironment;
+package ch.fhnw.modeller.model.metamodel;
 
 public class Answer {
 private String id;
 private String label;
 private String parentElement;
 
-public Answer() {
+public DomainElement() {
 
 }
 
