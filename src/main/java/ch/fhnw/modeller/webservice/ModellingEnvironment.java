@@ -16,6 +16,7 @@ import org.apache.jena.query.ResultSet;
 import com.google.gson.Gson;
 
 import ch.fhnw.modeller.model.graphEnvironment.Answer;
+import ch.fhnw.modeller.model.metamodel.DomainElement;
 import ch.fhnw.modeller.model.metamodel.GraphicalElement;
 import ch.fhnw.modeller.model.palette.PaletteCategory;
 import ch.fhnw.modeller.model.palette.PaletteElement;
@@ -307,7 +308,9 @@ public class ModellingEnvironment {
 		querStr1.append("INSERT {");
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdf:type rdfs:Class . ");
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#"+ pElement.getParentElement() + "> . ");
-		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" ");
+		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" . ");
+		if(pElement.getRepresentedDomainClass()!=null && !"".equals(pElement.getRepresentedDomainClass()))
+			querStr1.append("bpmn:" + pElement.getUuid() + " lo:languageElementIsRelatedToDomainElement \"" + pElement.getRepresentedDomainClass() + "\" ");
 		querStr1.append("}");
 		querStr1.append(" WHERE { }");
 		
@@ -382,13 +385,13 @@ public class ModellingEnvironment {
 		System.out.println("/element received: " +json);
 		
 		Gson gson = new Gson();
-		Answer pElement = gson.fromJson(json, Answer.class);
+		DomainElement pElement = gson.fromJson(json, DomainElement.class);
 		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
 		
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 		querStr1.append("INSERT {");
 		querStr1.append("do:" + pElement.getId() + " rdf:type rdfs:Class . ");
-		if(pElement.getParentElement()!=null && !"".equals(pElement.getParentElement()))
+		if(pElement.isRoot() == true)
 			querStr1.append("do:" + pElement.getId() + " rdfs:subClassOf do:"+ pElement.getParentElement() + " . ");
 		querStr1.append("do:" + pElement.getId() + " rdfs:label \"" + pElement.getLabel() + "\" ");
 		querStr1.append("}");

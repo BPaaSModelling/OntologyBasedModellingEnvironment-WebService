@@ -1,9 +1,10 @@
 package ch.fhnw.modeller.model.metamodel;
 
-public class Answer {
+public class DomainElement {
 private String id;
 private String label;
 private String parentElement;
+private boolean isRoot;
 
 public DomainElement() {
 
@@ -28,6 +29,14 @@ public String getParentElement() {
 
 public void setParentElement(String parentElement) {
 	this.parentElement = parentElement;
+}
+
+public boolean isRoot() {
+	return isRoot;
+}
+
+public void setRoot(boolean isRoot) {
+	this.isRoot = isRoot;
 }
 
 }

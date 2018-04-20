@@ -12,6 +12,7 @@ public class PaletteModel {
 	private Boolean hiddenFromPalette;
 	private ArrayList<PaletteElement> childElements;
 	private String representedLanguageClass;
+	private String representedDomainClass;
 	
 	public String getUuid() {
 		return uuid;
@@ -65,6 +66,12 @@ public class PaletteModel {
 	public PaletteModel() {
 		super();
 		this.childElements = new ArrayList<PaletteElement>();
+	}
+	public String getRepresentedDomainClass() {
+		return representedDomainClass;
+	}
+	public void setRepresentedDomainClass(String representedDomainClass) {
+		this.representedDomainClass = representedDomainClass;
 	}
 	
 	
