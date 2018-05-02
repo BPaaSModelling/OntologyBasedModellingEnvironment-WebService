@@ -406,6 +406,38 @@ public class ModellingEnvironment {
 
 	}
 	
+	@POST
+	@Path("/createDatatypeProperty")
+	public Response insertObjectProperty(String json) {
+		
+		System.out.println("/element received: " +json);
+		
+		Gson gson = new Gson();
+		PaletteElement pElement = gson.fromJson(json, PaletteElement.class);
+		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
+		
+		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+		querStr1.append("INSERT {");
+		System.out.println("    Property ID: " + pElement.getDatatypePropertyId());
+		querStr1.append("bpmn:" + pElement.getDatatypePropertyId() + " rdf:type owl:DataTypeProperty . ");
+		System.out.println("    Language Class: " + pElement.getRepresentedLanguageClass());
+		querStr1.append("bpmn:" + pElement.getDatatypePropertyId() + " rdfs:domain "+ "<" + pElement.getRepresentedLanguageClass() + "> . ");
+		System.out.println("    Property Label: " + pElement.getDatatypePropertyLabel());
+		querStr1.append("bpmn:" + pElement.getDatatypePropertyId() + " rdfs:label \"" + pElement.getDatatypePropertyLabel() + "\" . ");
+		System.out.println("    Property Range: " + pElement.getDatatypePropertyValue());
+		querStr1.append("bpmn:" + pElement.getDatatypePropertyId() + " rdfs:range \"" + pElement.getDatatypePropertyValue() + "\" ");
+		querStr1.append("}");
+		querStr1.append(" WHERE { }");
+		
+		System.out.println("Create Datatype property");
+		System.out.println(querStr1.toString());
+		ontology.insertQuery(querStr1);
+		
+	
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
+	
 	@GET
 	@Path("/getDomainOntologyClasses")
 	public Response getDomainOntologyElements() {

@@ -735,6 +735,22 @@ lo:paletteModelIsRelatedToLanguageElement
   rdf:type owl:Class ;
   rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#Data> ;
 .
+<http://ikm-group.ch/archiMEO/BPMN#DateOfBirth>
+  rdf:type owl:DataTypeProperty ;
+  rdfs:domain <http://ikm-group.ch/archiMEO/BPMN#NewSubprocess> ;
+  rdfs:label "Date of Birth" ;
+  rdfs:range xsd:date ;
+  rdfs:range xsd:dateTime ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#DateOfBirth1>
+  rdf:type owl:DataTypeProperty ;
+  rdfs:range xsd:date ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#DoB>
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain <http://ikm-group.ch/archiMEO/BPMN#NewSubprocess> ;
+  rdfs:range xsd:date ;
+.
 <http://ikm-group.ch/archiMEO/BPMN#FinalizeKoGu>
   rdf:type owl:Class ;
   rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
@@ -742,6 +758,9 @@ lo:paletteModelIsRelatedToLanguageElement
 <http://ikm-group.ch/archiMEO/BPMN#MakeDispositionOfCase>
   rdf:type owl:Class ;
   rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#UserTask> ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#NewSubprocess>
+  rdf:type rdfs:Class ;
 .
 <http://ikm-group.ch/archiMEO/BPMN#PrepareKoGu>
   rdf:type owl:Class ;

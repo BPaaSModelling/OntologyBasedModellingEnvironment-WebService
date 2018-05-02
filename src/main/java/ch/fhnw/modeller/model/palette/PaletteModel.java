@@ -13,6 +13,9 @@ public class PaletteModel {
 	private ArrayList<PaletteElement> childElements;
 	private String representedLanguageClass;
 	private String representedDomainClass;
+	private String datatypePropertyId;
+	private String datatypePropertyLabel;
+	private String datatypePropertyValue;
 	
 	public String getUuid() {
 		return uuid;
@@ -72,6 +75,24 @@ public class PaletteModel {
 	}
 	public void setRepresentedDomainClass(String representedDomainClass) {
 		this.representedDomainClass = representedDomainClass;
+	}
+	public String getDatatypePropertyLabel() {
+		return datatypePropertyLabel;
+	}
+	public void setDatatypePropertyLabel(String datatypePropertyLabel) {
+		this.datatypePropertyLabel = datatypePropertyLabel;
+	}
+	public String getDatatypePropertyId() {
+		return datatypePropertyId;
+	}
+	public void setDatatypePropertyId(String datatypePropertyId) {
+		this.datatypePropertyId = datatypePropertyId;
+	}
+	public String getDatatypePropertyValue() {
+		return datatypePropertyValue;
+	}
+	public void setDatatypePropertyValue(String datatypePropertyValue) {
+		this.datatypePropertyValue = datatypePropertyValue;
 	}
 	
 	
