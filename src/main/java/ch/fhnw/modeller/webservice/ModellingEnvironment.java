@@ -7,6 +7,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.PathParam;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
@@ -20,6 +21,7 @@ import ch.fhnw.modeller.model.metamodel.DomainElement;
 import ch.fhnw.modeller.model.metamodel.GraphicalElement;
 import ch.fhnw.modeller.model.palette.PaletteCategory;
 import ch.fhnw.modeller.model.palette.PaletteElement;
+import ch.fhnw.modeller.model.metamodel.DatatypeProperty;
 import ch.fhnw.modeller.webservice.exception.NoResultsException;
 import ch.fhnw.modeller.webservice.ontology.FormatConverter;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
@@ -413,19 +415,19 @@ public class ModellingEnvironment {
 		System.out.println("/element received: " +json);
 		
 		Gson gson = new Gson();
-		PaletteElement pElement = gson.fromJson(json, PaletteElement.class);
+		DatatypeProperty datatypeProperty = gson.fromJson(json, DatatypeProperty.class);
 		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
 		
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 		querStr1.append("INSERT {");
-		System.out.println("    Property ID: " + pElement.getDatatypePropertyId());
-		querStr1.append("bpmn:" + pElement.getDatatypePropertyId() + " rdf:type owl:DataTypeProperty . ");
-		System.out.println("    Language Class: " + pElement.getRepresentedLanguageClass());
-		querStr1.append("bpmn:" + pElement.getDatatypePropertyId() + " rdfs:domain "+ "<" + pElement.getRepresentedLanguageClass() + "> . ");
-		System.out.println("    Property Label: " + pElement.getDatatypePropertyLabel());
-		querStr1.append("bpmn:" + pElement.getDatatypePropertyId() + " rdfs:label \"" + pElement.getDatatypePropertyLabel() + "\" . ");
-		System.out.println("    Property Range: " + pElement.getDatatypePropertyValue());
-		querStr1.append("bpmn:" + pElement.getDatatypePropertyId() + " rdfs:range \"" + pElement.getDatatypePropertyValue() + "\" ");
+		System.out.println("    Property ID: " + datatypeProperty.getId());
+		querStr1.append("bpmn:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
+		System.out.println("    Language Class: " + datatypeProperty.getDomainName());
+		querStr1.append("bpmn:" + datatypeProperty.getId() + " rdfs:domain "+ "<" + datatypeProperty.getDomainName() + "> . ");
+		System.out.println("    Property Label: " + datatypeProperty.getLabel());
+		querStr1.append("bpmn:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
+		System.out.println("    Property Range: " + datatypeProperty.getRange());
+		querStr1.append("bpmn:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
 		querStr1.append("}");
 		querStr1.append(" WHERE { }");
 		
@@ -494,6 +496,67 @@ public class ModellingEnvironment {
 		}
 		qexec.close();
 		
+		return result;
+}
+	
+	@GET
+	@Path("/getDatatypeProperties/{domainName}")
+	public Response getDatatypeProperties(@PathParam("domainName") String domainName) {
+		System.out.println("\n####################<start>####################");
+		System.out.println("/requested datatype properties for " +domainName);
+		System.out.println("####################<end>####################");
+		ArrayList<DatatypeProperty> datatype_properties = new ArrayList<DatatypeProperty>();
+		
+		try {
+				datatype_properties = queryAllDatatypeProperties(domainName);
+
+				if (debug_properties){
+					for (int index = 0; index < datatype_properties.size(); index++){
+						System.out.println("Domain "+index+": ");
+					}
+				}
+		} catch (NoResultsException e) {
+			e.printStackTrace();
+		}
+		
+		
+		String json = gson.toJson(datatype_properties);
+		System.out.println("\n####################<start>####################");
+		System.out.println("/search genereated json: " +json);
+		System.out.println("####################<end>####################");
+		return Response.status(Status.OK).entity(json).build();
+	}
+	
+	private ArrayList<DatatypeProperty> queryAllDatatypeProperties(String domainName) throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<DatatypeProperty> result = new ArrayList<DatatypeProperty>();
+		
+		queryStr.append("SELECT ?domain ?range ?label WHERE {");
+		queryStr.append("?domain rdfs:domain " + domainName + " . ");
+		queryStr.append("?domain rdfs:label ?label . ");
+		queryStr.append("?domain rdfs:range ?range . ");
+		queryStr.append("OPTIONAL {?domain rdf:type owl:DataTypeProperty} ");
+		
+		queryStr.append("} ");
+		queryStr.append("ORDER BY ?label");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+		
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				DatatypeProperty datatypeProperty = new DatatypeProperty();
+				
+				QuerySolution soln = results.next();
+				//datatypeProperty.setId(soln.get("?type").toString());
+				datatypeProperty.setLabel(soln.get("?label").toString());
+				datatypeProperty.setDomainName(domainName);
+				datatypeProperty.setRange(soln.get("?range").toString());
+				
+				result.add(datatypeProperty);
+			}
+		}
+		qexec.close();
 		return result;
 }
 	

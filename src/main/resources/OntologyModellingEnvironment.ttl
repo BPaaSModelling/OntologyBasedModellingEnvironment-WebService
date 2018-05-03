@@ -749,6 +749,7 @@ lo:paletteModelIsRelatedToLanguageElement
 <http://ikm-group.ch/archiMEO/BPMN#DoB>
   rdf:type owl:DatatypeProperty ;
   rdfs:domain <http://ikm-group.ch/archiMEO/BPMN#NewSubprocess> ;
+  rdfs:label "DoB" ;
   rdfs:range xsd:date ;
 .
 <http://ikm-group.ch/archiMEO/BPMN#FinalizeKoGu>
@@ -781,6 +782,12 @@ lo:paletteModelIsRelatedToLanguageElement
 .
 <http://ikm-group.ch/archiMEO/BPMN#SubProcess>
   lo:languageElementIsRelatedToDomainElement do:Sub_Domain ;
+.
+<http://ikm-group.ch/archiMEO/BPMN#isCold>
+  rdf:type owl:DatatypeProperty ;
+  rdfs:domain <http://ikm-group.ch/archiMEO/BPMN#NewSubprocess> ;
+  rdfs:label "isItColdToday" ;
+  rdfs:range xsd:boolean ;
 .
 <http://ikm-group.ch/archiMEO/dsml4ptm#KoGu>
   rdf:type owl:Class ;
