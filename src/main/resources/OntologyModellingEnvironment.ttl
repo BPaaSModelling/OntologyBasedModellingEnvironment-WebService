@@ -23,17 +23,16 @@ do:Sub_Domain
   rdfs:label "Sub Domain" ;
   rdfs:subClassOf do:New_Domain ;
 .
-do:Task
-  rdf:type owl:Class ;
-  rdf:type sh:NodeShape ;
-  rdfs:label "Task" ;
-  rdfs:subClassOf do:Test ;
-.
 do:Test
-  rdf:type owl:Class ;
+  rdf:type rdfs:Class ;
   rdf:type sh:NodeShape ;
   rdfs:label "Test" ;
-  rdfs:subClassOf owl:Thing ;
+  rdfs:subClassOf rdfs:Resource ;
+.
+do:Trial
+  rdf:type sh:NodeShape ;
+  rdfs:label "Trial" ;
+  rdfs:subClassOf do:Test ;
 .
 <http://fhnw.ch/modelingEnvironment/LanguageOntology>
   rdf:type owl:Ontology ;
@@ -337,7 +336,7 @@ lo:SimpleEnd
   lo:paletteElementShape "Circle" ;
   lo:paletteElementThumbnailURL "Simple_End.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 100 ;
+  lo:paletteElementWidth 70 ;
   lo:paletteModelHasPaletteCategory lo:Category_Events ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#EndEvent> ;
   rdfs:label "Simple End" ;
@@ -448,6 +447,7 @@ lo:TestActivity
 lo:TestSub
   rdf:type lo:PaletteElement ;
   lo:hiddenFromPalette "false" ;
+  lo:paletteElementImageURL "Task.png" ;
   lo:paletteElementUsesImage "null" ;
   lo:paletteModelHasPaletteCategory "http://fhnw.ch/modelingEnvironment/LanguageOntology#Category_Activities" ;
   lo:paletteModelHasParentPaletteModel "http://fhnw.ch/modelingEnvironment/LanguageOntology#Subprocess" ;
@@ -491,6 +491,9 @@ lo:TimerStart
   lo:paletteModelHasParentPaletteModel lo:SimpleStart ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#StartEvent> ;
   rdfs:label "Timer Start" ;
+.
+lo:TrialInstance
+  rdfs:label "TrialInstance" ;
 .
 lo:User_Task
   rdf:type lo:PaletteElement ;

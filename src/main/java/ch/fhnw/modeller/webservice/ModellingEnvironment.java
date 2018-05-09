@@ -292,6 +292,14 @@ public class ModellingEnvironment {
 			querStr.append("lo:paletteModelHasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
 		System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
 			querStr.append("lo:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;");
+		System.out.println("    Element Palette Image : "+ pElement.getThumbnailURL());
+			querStr.append("lo:paletteElementThumbnailURL \"" + pElement.getThumbnailURL() +"\" ;");
+		System.out.println("    Element Canvas Image: "+ pElement.getImageURL());
+			querStr.append("lo:paletteElementImageURL \"" + pElement.getImageURL() +"\" ;");
+		System.out.println("    Element Image width: "+ pElement.getWidth());
+			querStr.append("lo:paletteElementWidth \"" + pElement.getWidth() +"\" ;");
+		System.out.println("    Element Image height: "+ pElement.getHeight());
+			querStr.append("lo:paletteElementHeight \"" + pElement.getHeight() +"\" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
 			querStr.append("lo:paletteModelIsRelatedToLanguageElement <" + pElement.getRepresentedLanguageClass() +"> ;");
 		/*System.out.println("    Element X Position: "+ pElement.getX());
