@@ -353,7 +353,7 @@ lo:SimpleGateway
   lo:paletteElementShape "Diamond" ;
   lo:paletteElementThumbnailURL "Simple_Gateway.png" ;
   lo:paletteElementUsesImage "false"^^xsd:boolean ;
-  lo:paletteElementWidth 100 ;
+  lo:paletteElementWidth 70 ;
   lo:paletteModelHasPaletteCategory lo:Category_Gateways ;
   lo:paletteModelIsRelatedToLanguageElement <http://ikm-group.ch/archiMEO/BPMN#Gateway> ;
   rdfs:label "Simple Gatweay" ;
@@ -448,6 +448,7 @@ lo:TestSub
   rdf:type lo:PaletteElement ;
   lo:hiddenFromPalette "false" ;
   lo:paletteElementImageURL "Task.png" ;
+  lo:paletteElementThumbnailURL "Thumbnail_Task.png" ;
   lo:paletteElementUsesImage "null" ;
   lo:paletteModelHasPaletteCategory "http://fhnw.ch/modelingEnvironment/LanguageOntology#Category_Activities" ;
   lo:paletteModelHasParentPaletteModel "http://fhnw.ch/modelingEnvironment/LanguageOntology#Subprocess" ;

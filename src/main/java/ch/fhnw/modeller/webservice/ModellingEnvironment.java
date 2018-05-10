@@ -337,6 +337,41 @@ public class ModellingEnvironment {
 	}
 	
 	@POST
+	@Path("/deletePaletteElement")
+	public Response deletePaletteElement(String json) {
+		
+		System.out.println("/Element received: " +json);
+		
+		Gson gson = new Gson();
+		PaletteElement element = gson.fromJson(json, PaletteElement.class);
+
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+		
+		/**
+		 * Delete a class and all its predicates and values
+		 * DELETE
+		 * WHERE {bpmn:NewSubprocess ?predicate  ?object .}
+		 */
+		querStr.append("DELETE ");
+		querStr.append("WHERE { "+ element.getRepresentedLanguageClass() +" ?object ?predicate . } ");
+		//querStr.append("INSERT {"+"<"+element.getId()+"> rdfs:label "+element.getLabel());
+		
+		System.out.println(querStr.toString());
+		//Model modelTpl = ModelFactory.createDefaultModel();
+		ontology.insertQuery(querStr);
+		
+		querStr1.append("DELETE ");
+		querStr1.append("WHERE { <"+ element.getId() +"> ?object ?predicate . } ");
+		
+		System.out.println(querStr1.toString());
+		ontology.insertQuery(querStr1);
+	
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
+	
+	@POST
 	@Path("/createCanvasInstance")
 	public Response insertCanvasInstance(String json) {
 		
