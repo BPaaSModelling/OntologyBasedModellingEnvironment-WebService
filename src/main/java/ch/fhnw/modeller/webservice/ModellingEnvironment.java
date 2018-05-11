@@ -68,26 +68,26 @@ public class ModellingEnvironment {
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 		
 		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness WHERE {");
-		queryStr.append("?element rdf:type* lo:PaletteElement .");
+		queryStr.append("?element rdf:type* po:PaletteElement .");
 		queryStr.append("?element rdfs:label ?label .");
-		queryStr.append("?element lo:paletteModelIsRelatedToLanguageElement ?representedClass .");
-		queryStr.append("?element lo:hiddenFromPalette ?hidden .");
-		queryStr.append("?element lo:paletteModelHasPaletteCategory ?category .");
-		queryStr.append("?element lo:paletteElementUsesImage ?usesImage .");
+		queryStr.append("?element po:paletteModelIsRelatedToModelingLanguageConstruct ?representedClass .");
+		queryStr.append("?element po:hiddenFromPalette ?hidden .");
+		queryStr.append("?element po:paletteModelHasPaletteCategory ?category .");
+		queryStr.append("?element po:paletteElementUsesImage ?usesImage .");
 		
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementBackgroundColor ?backgroundColor }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementHeight ?height }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementIconPosition ?iconPosition }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementIconURL ?iconURL}.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementImageURL ?imageURL }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementLabelPosition ?labelPosition }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementShape ?shape }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementThumbnailURL ?thumbnailURL }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementWidth ?width }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderColor ?borderColor }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderThickness ?borderThickness }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteElementBorderType ?borderType }.");
-		queryStr.append("OPTIONAL{ ?element lo:paletteModelHasParentPaletteModel ?parent }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementBackgroundColor ?backgroundColor }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementHeight ?height }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementIconPosition ?iconPosition }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementIconURL ?iconURL}.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementImageURL ?imageURL }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementLabelPosition ?labelPosition }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementShape ?shape }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementThumbnailURL ?thumbnailURL }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementWidth ?width }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderColor ?borderColor }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderThickness ?borderThickness }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderType ?borderType }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteModelHasParentPaletteModel ?parent }.");
 		
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
@@ -189,10 +189,10 @@ public class ModellingEnvironment {
 		ArrayList<PaletteCategory> result = new ArrayList<PaletteCategory>();
 		
 		queryStr.append("SELECT ?category ?label ?orderNumber ?hidden WHERE {");
-		queryStr.append("?category rdf:type* lo:PaletteCategory .");
+		queryStr.append("?category rdf:type* po:PaletteCategory .");
 		queryStr.append("?category rdfs:label ?label .");
-		queryStr.append("OPTIONAL {?category lo:paletteCategoryOrderNumber ?orderNumber . }");
-		queryStr.append("OPTIONAL {?category lo:hiddenFromPalette ?hidden . }");
+		queryStr.append("OPTIONAL {?category po:paletteCategoryOrderNumber ?orderNumber . }");
+		queryStr.append("OPTIONAL {?category po:hiddenFromPalette ?hidden . }");
 		
 		queryStr.append("}");
 		queryStr.append("ORDER BY ?orderNumber");
@@ -279,29 +279,29 @@ public class ModellingEnvironment {
 		System.out.println("test: "+pElement.getUuid());
 			querStr.append("INSERT DATA {");
 		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr.append("lo:" + pElement.getUuid()  +" rdf:type " + "<http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement>" + " ;");
+		querStr.append("po:" + pElement.getUuid()  +" rdf:type " + "<http://fhnw.ch/modelingEnvironment/PaletteOntology#PaletteElement>" + " ;");
 		/*System.out.println("    Element Type: " + pElement.getClassType());
 			querStr.append("lo:graphicalElementClassType \"" + "<"+pElement.getClassType()+">" +"\" ;");*/
 		System.out.println("    Element Label: "+ pElement.getLabel());
 			querStr.append("rdfs:label \"" +pElement.getLabel() +"\" ;");
 		System.out.println("    Element Hidden property: "+ pElement.getHiddenFromPalette());
-			querStr.append("lo:hiddenFromPalette \"" + pElement.getHiddenFromPalette() +"\" ;");
+			querStr.append("po:hiddenFromPalette \"" + pElement.getHiddenFromPalette() +"\" ;");
 		System.out.println("    Element Parent: "+ pElement.getParentElement());
-			querStr.append("lo:paletteModelHasParentPaletteModel <" + "http://fhnw.ch/modelingEnvironment/LanguageOntology#"+pElement.getParentElement() +"> ;");
+			querStr.append("po:paletteModelHasParentPaletteModel <" + "http://fhnw.ch/modelingEnvironment/PaletteOntology#"+pElement.getParentElement() +"> ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
-			querStr.append("lo:paletteModelHasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
+			querStr.append("po:paletteModelHasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
 		System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
-			querStr.append("lo:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;");
+			querStr.append("po:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;");
 		System.out.println("    Element Palette Image : "+ pElement.getThumbnailURL());
-			querStr.append("lo:paletteElementThumbnailURL \"" + pElement.getThumbnailURL() +"\" ;");
+			querStr.append("po:paletteElementThumbnailURL \"" + pElement.getThumbnailURL() +"\" ;");
 		System.out.println("    Element Canvas Image: "+ pElement.getImageURL());
-			querStr.append("lo:paletteElementImageURL \"" + pElement.getImageURL() +"\" ;");
+			querStr.append("po:paletteElementImageURL \"" + pElement.getImageURL() +"\" ;");
 		System.out.println("    Element Image width: "+ pElement.getWidth());
-			querStr.append("lo:paletteElementWidth \"" + pElement.getWidth() +"\" ;");
+			querStr.append("po:paletteElementWidth \"" + pElement.getWidth() +"\" ;");
 		System.out.println("    Element Image height: "+ pElement.getHeight());
-			querStr.append("lo:paletteElementHeight \"" + pElement.getHeight() +"\" ;");
+			querStr.append("po:paletteElementHeight \"" + pElement.getHeight() +"\" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
-			querStr.append("lo:paletteModelIsRelatedToLanguageElement <" + pElement.getRepresentedLanguageClass() +"> ;");
+			querStr.append("po:paletteModelIsRelatedToModelingLanguageConstruct " + pElement.getRepresentedLanguageClass() +" ;");
 		/*System.out.println("    Element X Position: "+ pElement.getX());
 			querStr.append("lo:graphicalElementX \"" + pElement.getX() +"\" ;");
 		System.out.println("    Element Y Position: "+ pElement.getY());
@@ -320,7 +320,7 @@ public class ModellingEnvironment {
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#"+ pElement.getParentElement() + "> . ");
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" . ");
 		if(pElement.getRepresentedDomainClass()!=null && !"".equals(pElement.getRepresentedDomainClass()))
-			querStr1.append("bpmn:" + pElement.getUuid() + " lo:languageElementIsRelatedToDomainElement \"" + pElement.getRepresentedDomainClass() + "\" ");
+			querStr1.append("bpmn:" + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement \"" + pElement.getRepresentedDomainClass() + "\" ");
 		querStr1.append("}");
 		querStr1.append(" WHERE { }");
 		
@@ -354,7 +354,7 @@ public class ModellingEnvironment {
 		 * WHERE {bpmn:NewSubprocess ?predicate  ?object .}
 		 */
 		querStr.append("DELETE ");
-		querStr.append("WHERE { "+ element.getRepresentedLanguageClass() +" ?object ?predicate . } ");
+		querStr.append("WHERE { <"+ element.getRepresentedLanguageClass() +"> ?object ?predicate . } ");
 		//querStr.append("INSERT {"+"<"+element.getId()+"> rdfs:label "+element.getLabel());
 		
 		System.out.println(querStr.toString());
@@ -386,13 +386,13 @@ public class ModellingEnvironment {
 		System.out.println("    Element ID: " + gElement.getUuid());
 			querStr.append("<"+gElement.getUuid()+">"  +" rdf:type " + "<"+gElement.getClassType()+">" + " ;");
 		System.out.println("    Element Type: " + gElement.getClassType());
-			querStr.append("lo:graphicalElementClassType \"" + "<"+gElement.getClassType()+">" +"\" ;");
+			querStr.append("po:graphicalElementClassType \"" + "<"+gElement.getClassType()+">" +"\" ;");
 		System.out.println("    Element Label: "+ gElement.getLabel());
 			querStr.append("rdfs:label \"" + gElement.getLabel() +"\" ;");
 		System.out.println("    Element X Position: "+ gElement.getX());
-			querStr.append("lo:graphicalElementX \"" + gElement.getX() +"\" ;");
+			querStr.append("po:graphicalElementX \"" + gElement.getX() +"\" ;");
 		System.out.println("    Element Y Position: "+ gElement.getY());
-			querStr.append("lo:graphicalElementY \"" + gElement.getY() +"\" ;");
+			querStr.append("po:graphicalElementY \"" + gElement.getY() +"\" ;");
 
 			querStr.append("}");
 		//Model modelTpl = ModelFactory.createDefaultModel();
