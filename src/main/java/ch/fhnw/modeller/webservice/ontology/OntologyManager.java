@@ -3,6 +3,8 @@ package ch.fhnw.modeller.webservice.ontology;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -133,13 +135,22 @@ public final class OntologyManager {
 	
 
 	public void insertQuery(ParameterizedSparqlString queryStr) {
+		try{
 		addNamespacesToQuery(queryStr);
 		System.out.println("***Trying to insert***\n" + queryStr.toString() + "***End query***\n");
 		UpdateRequest update = UpdateFactory.create(queryStr.toString());
 		UpdateProcessor up;
 		up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
 		up.execute();
+		}catch(Exception e){
+		}finally{
+	
+		Date date = new Date();
+		System.out.println(new Timestamp(date.getTime()));
+		
+		}
 	}
+	
 	
 	public boolean insertMultipleQueries(List<ParameterizedSparqlString> queryStrList) {
 		Model tempModel = ModelFactory.createOntologyModel();
@@ -161,6 +172,9 @@ public final class OntologyManager {
 		}catch (Exception e){
 			System.out.println("***Error while inserting multiple queries: aborted***");
 			return false;
+		}finally{
+			Date date = new Date();
+			System.out.println(new Timestamp(date.getTime()));
 		}
 		return true;
 	}
