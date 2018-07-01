@@ -543,6 +543,65 @@ public class ModellingEnvironment {
 }
 	
 	@GET
+	@Path("/getModelingLanguageOntologyElements")
+	public Response getModelingLanguageOntologyElements() {
+		System.out.println("\n####################<start>####################");
+		System.out.println("/requested modeling language ontology elements" );
+		System.out.println("####################<end>####################");
+		ArrayList<Answer> all_ml_elements = new ArrayList<Answer>();
+		
+		try {
+			all_ml_elements = queryMLElements();
+
+				if (debug_properties){
+					for (int index = 0; index < all_ml_elements.size(); index++){
+						System.out.println("Element "+index+": "+all_ml_elements.get(index).getId());
+					}
+				}
+		} catch (NoResultsException e) {
+			e.printStackTrace();
+		}
+		
+		
+		String json = gson.toJson(all_ml_elements);
+		System.out.println("\n####################<start>####################");
+		System.out.println("/search genereated json: " +json);
+		System.out.println("####################<end>####################");
+		return Response.status(Status.OK).entity(json).build();
+	}
+	
+	private ArrayList<Answer> queryMLElements() throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<Answer> result = new ArrayList<Answer>();
+		
+		queryStr.append("SELECT DISTINCT ?id ?label WHERE {");
+		queryStr.append("?id a ?type .");
+		queryStr.append("?id rdfs:label ?label .");
+		queryStr.append("?id rdfs:subClassOf* lo:ModelingElement .");
+		//queryStr.append("FILTER(STRSTARTS(STR(?id),STR(\"http://fhnw.ch/modelingEnvironment/DomainOntology#\"))) .");
+		queryStr.append("}");
+		queryStr.append("ORDER BY ?id");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+		
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				Answer ans = new Answer();
+				
+				QuerySolution soln = results.next();
+				ans.setId(soln.get("?id").toString());
+				ans.setLabel(soln.get("?label").toString());
+				
+				result.add(ans);
+			}
+		}
+		qexec.close();
+		
+		return result;
+}
+	
+	@GET
 	@Path("/getDatatypeProperties/{domainName}")
 	public Response getDatatypeProperties(@PathParam("domainName") String domainName) {
 		System.out.println("\n####################<start>####################");
