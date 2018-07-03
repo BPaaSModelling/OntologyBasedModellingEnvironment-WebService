@@ -315,12 +315,21 @@ public class ModellingEnvironment {
 		
 		querStr.clearParams();
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+		
+		/**
+		 * Map multiple domain concepts to the modeling language concept (new element)
+		 */
 		querStr1.append("INSERT {");
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdf:type rdfs:Class . ");
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#"+ pElement.getParentElement() + "> . ");
 		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" . ");
-		if(pElement.getRepresentedDomainClass()!=null && !"".equals(pElement.getRepresentedDomainClass()))
-			querStr1.append("bpmn:" + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement \"" + pElement.getRepresentedDomainClass() + "\" ");
+		if(pElement.getRepresentedDomainClass()!=null && pElement.getRepresentedDomainClass().size()!=0) {
+			for(String repDomainClass: pElement.getRepresentedDomainClass()) {
+				System.out.println("The selected domain class is : "+repDomainClass);
+				if(repDomainClass!=null && !"".equals(repDomainClass))
+					querStr1.append("bpmn:" + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement \"" + repDomainClass + "\" . ");
+			}
+		}
 		querStr1.append("}");
 		querStr1.append(" WHERE { }");
 		

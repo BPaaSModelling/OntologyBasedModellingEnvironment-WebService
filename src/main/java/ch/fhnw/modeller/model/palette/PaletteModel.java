@@ -12,7 +12,7 @@ public class PaletteModel {
 	private Boolean hiddenFromPalette;
 	private ArrayList<PaletteElement> childElements;
 	private String representedLanguageClass;
-	private String representedDomainClass;
+	private ArrayList<String> representedDomainClass;
 	private String datatypePropertyId;
 	private String datatypePropertyLabel;
 	private String datatypePropertyValue;
@@ -70,10 +70,10 @@ public class PaletteModel {
 		super();
 		this.childElements = new ArrayList<PaletteElement>();
 	}
-	public String getRepresentedDomainClass() {
+	public ArrayList<String> getRepresentedDomainClass() {
 		return representedDomainClass;
 	}
-	public void setRepresentedDomainClass(String representedDomainClass) {
+	public void setRepresentedDomainClass(ArrayList<String> representedDomainClass) {
 		this.representedDomainClass = representedDomainClass;
 	}
 	public String getDatatypePropertyLabel() {
