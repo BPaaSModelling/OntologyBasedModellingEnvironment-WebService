@@ -266,6 +266,33 @@ public class ModellingEnvironment {
 	}
 	
 	@POST
+	@Path("/hidePaletteElement")
+	public Response hidePalletteElement(String json) {
+		System.out.println("/element received: " +json);
+		
+		Gson gson = new Gson();
+		PaletteElement pElement = gson.fromJson(json, PaletteElement.class);
+		
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+			querStr.append("DELETE DATA {");
+		System.out.println("    Element ID: " + pElement.getUuid());
+			querStr.append("po:" + pElement.getUuid() + " po:hiddenFromPalette false;");
+			querStr.append("}");
+			
+		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+		querStr1.append("INSERT DATA {");
+		System.out.println("    Element ID: " + pElement.getUuid());
+			querStr1.append("po:" + pElement.getUuid() + " po:hiddenFromPalette true;");
+			querStr1.append("}");
+		
+		ArrayList<ParameterizedSparqlString> queryList = new ArrayList<ParameterizedSparqlString>();
+		queryList.add(querStr);
+		queryList.add(querStr1);
+		
+		return Response.status(Status.OK).entity(ontology.insertMultipleQueries(queryList)).build();
+	}
+	
+	@POST
 	@Path("/createPalletteElement")
 	public Response insertPalletteElement(String json) {
 		
@@ -343,6 +370,43 @@ public class ModellingEnvironment {
 	
 		return Response.status(Status.OK).entity(ontology.insertMultipleQueries(queryList)).build();
 
+	}
+	
+	@POST
+	@Path("/createModelingLanguageSubclasses")
+	public Response createModelingLanguageSubclasses(String json) {
+System.out.println("/Element received: " +json);
+		
+		Gson gson = new Gson();
+		PaletteElement element = gson.fromJson(json, PaletteElement.class);
+
+		ParameterizedSparqlString querStr = null;
+		
+		if(element.getLanguageSubclasses()!=null && element.getLanguageSubclasses().size()!=0) {
+			for(String languageSubclass: element.getLanguageSubclasses()) {
+				querStr = new ParameterizedSparqlString();
+				System.out.println("The selected language class is : "+languageSubclass);
+				querStr.append("INSERT {");		
+				querStr.append("<" + languageSubclass + "> rdf:type rdfs:Class . ");
+
+				querStr.append("<" + languageSubclass + "> rdfs:subClassOf <"+ element.getRepresentedLanguageClass() + "> . ");				
+				/**
+				 * Find out if each subclass should be linked to a group of domain concepts or just the parent or not needed here at all
+				 */
+				/*if(element.getRepresentedDomainClass()!=null && element.getRepresentedDomainClass().size()!=0) {
+					for(String repDomainClass: element.getRepresentedDomainClass()) {
+						System.out.println("The selected domain class is : "+repDomainClass);
+						if(repDomainClass!=null && !"".equals(repDomainClass))
+							querStr.append("bpmn:" + element.getUuid() + " po:languageElementIsRelatedToDomainElement \"" + repDomainClass + "\" . ");
+					}
+				}*/
+				querStr.append("}");
+				querStr.append(" WHERE { }");
+				ontology.insertQuery(querStr);
+			}
+		}
+		
+		return Response.status(Status.OK).entity("{}").build();
 	}
 	
 	@POST

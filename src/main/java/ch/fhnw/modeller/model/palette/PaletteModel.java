@@ -12,6 +12,7 @@ public class PaletteModel {
 	private Boolean hiddenFromPalette;
 	private ArrayList<PaletteElement> childElements;
 	private String representedLanguageClass;
+	private ArrayList<String> languageSubclasses;
 	private ArrayList<String> representedDomainClass;
 	private String datatypePropertyId;
 	private String datatypePropertyLabel;
@@ -94,6 +95,11 @@ public class PaletteModel {
 	public void setDatatypePropertyValue(String datatypePropertyValue) {
 		this.datatypePropertyValue = datatypePropertyValue;
 	}
-	
+	public ArrayList<String> getLanguageSubclasses() {
+		return languageSubclasses;
+	}
+	public void setLanguageSubclasses(ArrayList<String> languageSubclasses) {
+		this.languageSubclasses = languageSubclasses;
+	}
 	
 }
