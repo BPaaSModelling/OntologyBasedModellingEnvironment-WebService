@@ -8,6 +8,7 @@ public enum ONTOLOGY {
 	ARCHIMATE		("archi",		"TTL",		"ARCHIMEO/ARCHIMATE/ArchiMate.ttl"),
 	BMM				("bmm",			"TTL", 		"ARCHIMEO/BMM/BMM.ttl"),
 	BPMN			("bpmn",		"TTL", 		"ARCHIMEO/BPMN/BPMN.ttl"),
+	CMMN			("cmmn",		"TTL",		"ARCHIMEO/CMMN/CMMN.ttl"),		
 	EMO				("emo",			"TTL",	 	"ARCHIMEO/EMO/EMO.ttl"),
 	EO				("eo",			"TTL",	 	"ARCHIMEO/EO/EO.ttl"),
 	NCO				("nco",			"TTL",	 	"ARCHIMEO/NCO/NCO.ttl"),

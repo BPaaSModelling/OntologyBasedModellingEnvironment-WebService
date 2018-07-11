@@ -1,6 +1,8 @@
 package ch.fhnw.modeller.webservice;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -24,8 +26,9 @@ import ch.fhnw.modeller.model.palette.PaletteElement;
 import ch.fhnw.modeller.model.metamodel.DatatypeProperty;
 import ch.fhnw.modeller.webservice.exception.NoResultsException;
 import ch.fhnw.modeller.webservice.ontology.FormatConverter;
+import ch.fhnw.modeller.webservice.ontology.NAMESPACE;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
-
+import ch.fhnw.modeller.persistence.GlobalVariables;
 
 @Path("/ModEnv")
 public class ModellingEnvironment {
@@ -312,7 +315,7 @@ public class ModellingEnvironment {
 		System.out.println("    Element Label: "+ pElement.getLabel());
 			querStr.append("rdfs:label \"" +pElement.getLabel() +"\" ;");
 		System.out.println("    Element Hidden property: "+ pElement.getHiddenFromPalette());
-			querStr.append("po:hiddenFromPalette \"" + pElement.getHiddenFromPalette() +"\" ;");
+			querStr.append("po:hiddenFromPalette " + pElement.getHiddenFromPalette() +" ;");
 		System.out.println("    Element Parent: "+ pElement.getParentElement());
 			querStr.append("po:paletteModelHasParentPaletteModel <" + "http://fhnw.ch/modelingEnvironment/PaletteOntology#"+pElement.getParentElement() +"> ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
@@ -324,9 +327,9 @@ public class ModellingEnvironment {
 		System.out.println("    Element Canvas Image: "+ pElement.getImageURL());
 			querStr.append("po:paletteElementImageURL \"" + pElement.getImageURL() +"\" ;");
 		System.out.println("    Element Image width: "+ pElement.getWidth());
-			querStr.append("po:paletteElementWidth \"" + pElement.getWidth() +"\" ;");
+			querStr.append("po:paletteElementWidth " + pElement.getWidth() +" ;");
 		System.out.println("    Element Image height: "+ pElement.getHeight());
-			querStr.append("po:paletteElementHeight \"" + pElement.getHeight() +"\" ;");
+			querStr.append("po:paletteElementHeight " + pElement.getHeight() +" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
 			querStr.append("po:paletteModelIsRelatedToModelingLanguageConstruct " + pElement.getRepresentedLanguageClass() +" ;");
 		/*System.out.println("    Element X Position: "+ pElement.getX());
@@ -347,16 +350,19 @@ public class ModellingEnvironment {
 		 * Map multiple domain concepts to the modeling language concept (new element)
 		 */
 		querStr1.append("INSERT {");
-		querStr1.append("bpmn:" + pElement.getUuid() + " rdf:type rdfs:Class . ");
-		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:subClassOf <http://ikm-group.ch/archiMEO/BPMN#"+ pElement.getParentElement() + "> . ");
-		querStr1.append("bpmn:" + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type rdfs:Class . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:subClassOf <"+ pElement.getParentLanguageClass() + "> . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" . ");
 		if(pElement.getRepresentedDomainClass()!=null && pElement.getRepresentedDomainClass().size()!=0) {
 			for(String repDomainClass: pElement.getRepresentedDomainClass()) {
 				System.out.println("The selected domain class is : "+repDomainClass);
 				if(repDomainClass!=null && !"".equals(repDomainClass))
-					querStr1.append("bpmn:" + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement \"" + repDomainClass + "\" . ");
+					querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement \"" + repDomainClass + "\" . ");
 			}
 		}
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type <http://fhnw.ch/modelingEnvironment/PaletteOntology#PaletteElement> . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:paletteModelHasParentPaletteModel <http://fhnw.ch/modelingEnvironment/PaletteOntology#" + pElement.getParentElement() +"> . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:paletteModelIsRelatedToModelingLanguageConstruct " + pElement.getLanguagePrefix() + pElement.getUuid() + " . ");
 		querStr1.append("}");
 		querStr1.append(" WHERE { }");
 		
@@ -381,30 +387,22 @@ System.out.println("/Element received: " +json);
 		PaletteElement element = gson.fromJson(json, PaletteElement.class);
 
 		ParameterizedSparqlString querStr = null;
-		
+		querStr = new ParameterizedSparqlString();
+		querStr.append("INSERT {");	
 		if(element.getLanguageSubclasses()!=null && element.getLanguageSubclasses().size()!=0) {
-			for(String languageSubclass: element.getLanguageSubclasses()) {
-				querStr = new ParameterizedSparqlString();
+			for(String languageSubclass: element.getLanguageSubclasses()) {			
 				System.out.println("The selected language class is : "+languageSubclass);
-				querStr.append("INSERT {");		
-				querStr.append("<" + languageSubclass + "> rdf:type rdfs:Class . ");
-
-				querStr.append("<" + languageSubclass + "> rdfs:subClassOf <"+ element.getRepresentedLanguageClass() + "> . ");				
-				/**
-				 * Find out if each subclass should be linked to a group of domain concepts or just the parent or not needed here at all
-				 */
-				/*if(element.getRepresentedDomainClass()!=null && element.getRepresentedDomainClass().size()!=0) {
-					for(String repDomainClass: element.getRepresentedDomainClass()) {
-						System.out.println("The selected domain class is : "+repDomainClass);
-						if(repDomainClass!=null && !"".equals(repDomainClass))
-							querStr.append("bpmn:" + element.getUuid() + " po:languageElementIsRelatedToDomainElement \"" + repDomainClass + "\" . ");
-					}
-				}*/
-				querStr.append("}");
-				querStr.append(" WHERE { }");
-				ontology.insertQuery(querStr);
+					
+				//querStr.append("<" + languageSubclass + "> rdf:type rdfs:Class . ");
+				String uuid = languageSubclass.split("#")[1];
+				System.out.println("uuid: " + uuid);
+				querStr.append("<" + languageSubclass + "> rdfs:subClassOf <"+ element.getRepresentedLanguageClass() + "> . ");		
+				querStr.append("<http://fhnw.ch/modelingEnvironment/PaletteOntology#" + uuid + "> po:paletteModelHasParentPaletteModel <http://fhnw.ch/modelingEnvironment/PaletteOntology#"+ element.getParentElement() + "> . ");								
 			}
 		}
+		querStr.append("}");
+		querStr.append(" WHERE { }");
+		ontology.insertQuery(querStr);
 		
 		return Response.status(Status.OK).entity("{}").build();
 	}
@@ -664,7 +662,9 @@ System.out.println("/Element received: " +json);
 				
 				QuerySolution soln = results.next();
 				ans.setId(soln.get("?id").toString());
-				ans.setLabel(soln.get("?label").toString());
+				String namespace = soln.get("?id").toString().split("#")[0] + "#";
+				//System.out.println("namespace :"+namespace);
+				ans.setLabel(GlobalVariables.getNamespaceMap().get(namespace) + ":" + soln.get("?label").toString());
 				
 				result.add(ans);
 			}
@@ -734,6 +734,17 @@ System.out.println("/Element received: " +json);
 		qexec.close();
 		return result;
 }
+	
+	@GET
+	@Path("/getAllNamespacePrefixes")
+	public Response getAllNamespacePrefixes() {
+		ArrayList<String> prefixList = new ArrayList<String>();
+		for (NAMESPACE ns : NAMESPACE.values()) {
+			prefixList.add(ns.getPrefix()+":");
+		}
+		Collections.sort(prefixList);
+		return Response.status(Status.OK).entity(gson.toJson(prefixList)).build();
+	}
 	
 
 }

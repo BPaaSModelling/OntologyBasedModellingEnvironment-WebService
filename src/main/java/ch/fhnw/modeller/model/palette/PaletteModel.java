@@ -9,11 +9,13 @@ public class PaletteModel {
 	private String label;
 	private String paletteCategory; //points to the uuid of category
 	private String parentElement;	//point to the uuid of parent element
+	private String parentLanguageClass; //point to the language concept of the parent
 	private Boolean hiddenFromPalette;
 	private ArrayList<PaletteElement> childElements;
 	private String representedLanguageClass;
 	private ArrayList<String> languageSubclasses;
 	private ArrayList<String> representedDomainClass;
+	private String languagePrefix;
 	private String datatypePropertyId;
 	private String datatypePropertyLabel;
 	private String datatypePropertyValue;
@@ -100,6 +102,18 @@ public class PaletteModel {
 	}
 	public void setLanguageSubclasses(ArrayList<String> languageSubclasses) {
 		this.languageSubclasses = languageSubclasses;
+	}
+	public String getLanguagePrefix() {
+		return languagePrefix;
+	}
+	public void setLanguagePrefix(String languagePrefix) {
+		this.languagePrefix = languagePrefix;
+	}
+	public String getParentLanguageClass() {
+		return parentLanguageClass;
+	}
+	public void setParentLanguageClass(String parentLanguageClass) {
+		this.parentLanguageClass = parentLanguageClass;
 	}
 	
 }
