@@ -3,7 +3,10 @@ package ch.fhnw.modeller.webservice;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -74,6 +77,7 @@ public class ModellingEnvironment {
 		queryStr.append("?element rdf:type ?type . FILTER(?type IN (po:PaletteElement, po:PaletteConnector)) .");
 		queryStr.append("?element rdfs:label ?label .");
 		queryStr.append("?element po:paletteModelIsRelatedToModelingLanguageConstruct ?representedClass .");
+		//queryStr.append("?element po:languageElementIsRelatedToDomainElement ?representedDomainClasses ."); //not sure how to read multiple values
 		queryStr.append("?element po:hiddenFromPalette ?hidden .");
 		queryStr.append("?element po:paletteModelHasPaletteCategory ?category .");
 		queryStr.append("?element po:paletteElementUsesImage ?usesImage .");
@@ -332,6 +336,20 @@ public class ModellingEnvironment {
 			querStr.append("po:paletteElementHeight " + pElement.getHeight() +" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
 			querStr.append("po:paletteModelIsRelatedToModelingLanguageConstruct " + pElement.getRepresentedLanguageClass() +" ;");
+		if(pElement.getRepresentedDomainClass()!=null) {
+			querStr.append("po:languageElementIsRelatedToDomainElement ");
+			if (pElement.getRepresentedDomainClass().size()!=0) {				
+				String repDomainClasses = pElement.getRepresentedDomainClass().stream()
+											.map(s -> "<" +s+ ">")
+											.collect(Collectors.joining(", "));
+						
+				System.out.println("Comma separated domain classes: " + repDomainClasses);
+				querStr.append(repDomainClasses + " ;");
+			}
+			else 
+				querStr.append(" <" + pElement.getRepresentedDomainClass().get(0) +"> ");
+		}
+		querStr.append(" ;");
 		/*System.out.println("    Element X Position: "+ pElement.getX());
 			querStr.append("lo:graphicalElementX \"" + pElement.getX() +"\" ;");
 		System.out.println("    Element Y Position: "+ pElement.getY());
@@ -342,7 +360,6 @@ public class ModellingEnvironment {
 		//Model modelTpl = ModelFactory.createDefaultModel();
 			
 		//ontology.insertQuery(querStr);
-		
 		querStr.clearParams();
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 		
@@ -357,7 +374,7 @@ public class ModellingEnvironment {
 			for(String repDomainClass: pElement.getRepresentedDomainClass()) {
 				System.out.println("The selected domain class is : "+repDomainClass);
 				if(repDomainClass!=null && !"".equals(repDomainClass))
-					querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement \"" + repDomainClass + "\" . ");
+					querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement <" + repDomainClass + "> . ");
 			}
 		}
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type <http://fhnw.ch/modelingEnvironment/PaletteOntology#PaletteElement> . ");
@@ -424,6 +441,7 @@ System.out.println("/Element received: " +json);
 		 * DELETE
 		 * WHERE {bpmn:NewSubprocess ?predicate  ?object .}
 		 */
+		
 		querStr.append("DELETE ");
 		querStr.append("WHERE { <"+ element.getRepresentedLanguageClass() +"> ?object ?predicate . } ");
 		//querStr.append("INSERT {"+"<"+element.getId()+"> rdfs:label "+element.getLabel());
@@ -474,25 +492,95 @@ System.out.println("/Element received: " +json);
 	}
 	
 	@POST
-	@Path("/modifyElementLabel")
-	public Response modifyElementLabel(String json) {
+	@Path("/modifyElement")
+	public Response modifyElementLabel(@FormParam("element") String json, @FormParam("modifiedElement") String modifiedJson) {
 		
 		System.out.println("/Element received: " +json);
+		System.out.println("/Modifed element: " + modifiedJson);
 		
 		Gson gson = new Gson();
 		PaletteElement element = gson.fromJson(json, PaletteElement.class);
+		PaletteElement modifiedElement = gson.fromJson(modifiedJson, PaletteElement.class);
 
 		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 		
-		querStr.append("DELETE {"+"<"+element.getId()+"> rdfs:label ?label}");
-		querStr.append("INSERT {"+"<"+element.getId()+"> rdfs:label "+element.getLabel());
+		querStr.append("DELETE DATA { ");
+		querStr.append("<"+element.getId()+"> rdfs:label \"" +element.getLabel()+ "\" . ");
+		querStr.append("<"+element.getId()+"> po:paletteElementImageURL \"" +element.getImageURL()+ "\" . ");
+		querStr.append("<"+element.getId()+"> po:paletteElementThumbnailURL \"" +element.getThumbnailURL()+ "\" . ");
+		querStr.append(" }");
+		querStr1.append("INSERT DATA { ");
+		querStr1.append("<"+element.getId()+"> rdfs:label \""+modifiedElement.getLabel()+ "\" . ");
+		querStr1.append("<"+element.getId()+"> po:paletteElementImageURL \""+modifiedElement.getImageURL()+ "\" . ");
+		querStr1.append("<"+element.getId()+"> po:paletteElementThumbnailURL \"" +modifiedElement.getThumbnailURL()+ "\" . ");
+		querStr1.append(" }");
 		
 		//Model modelTpl = ModelFactory.createDefaultModel();
 		ontology.insertQuery(querStr);
+		ontology.insertQuery(querStr1);
 	
 		return Response.status(Status.OK).entity("{}").build();
 
 	}
+	
+	@POST
+	@Path("/editDatatypeProperty")
+	public Response editDatatypeProperty(@FormParam("property") String json, @FormParam("editedProperty") String modifiedJson) {
+		
+		System.out.println("/datatypeProperty received: " +json);
+		System.out.println("/Modifed datatypeProperty: " + modifiedJson);
+		
+		Gson gson = new Gson();
+		DatatypeProperty datatypeProperty = gson.fromJson(json, DatatypeProperty.class);
+		DatatypeProperty modifiedDatatypeProperty = gson.fromJson(modifiedJson, DatatypeProperty.class);
+
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+		
+		querStr.append("DELETE DATA { ");
+		//querStr.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
+		querStr.append("<"+datatypeProperty.getId() + "> rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
+		querStr.append("<"+datatypeProperty.getId() + "> rdfs:range \"" + datatypeProperty.getRange() + "\" . ");
+		querStr.append(" }");
+		querStr1.append("INSERT DATA { ");
+		//querStr1.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
+		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:label \"" + modifiedDatatypeProperty.getLabel() + "\" . ");
+		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:range \"" + modifiedDatatypeProperty.getRange() + "\" . ");
+		querStr1.append(" }");
+		
+		//Model modelTpl = ModelFactory.createDefaultModel();
+		ontology.insertQuery(querStr);
+		ontology.insertQuery(querStr1);
+	
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
+	
+	@POST
+	@Path("/deleteDatatypeProperty")
+	public Response deleteDatatypeProperty(String json) {
+
+		System.out.println("/Element received: " +json);
+		
+		Gson gson = new Gson();
+		DatatypeProperty property = gson.fromJson(json, DatatypeProperty.class);
+
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+		
+		/**
+		 * Delete a class and all its predicates and values
+		 * DELETE
+		 * WHERE {bpmn:NewSubprocess ?predicate  ?object .}
+		 */
+		
+		querStr.append("DELETE ");
+		querStr.append("WHERE { <"+ property.getId() +"> ?object ?predicate . } ");
+		
+		ontology.insertQuery(querStr);
+		return Response.status(Status.OK).entity("{}").build();
+	}
+	
 	
 	@POST
 	@Path("/createDomainElement")
@@ -535,13 +623,13 @@ System.out.println("/Element received: " +json);
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 		querStr1.append("INSERT {");
 		System.out.println("    Property ID: " + datatypeProperty.getId());
-		querStr1.append("bpmn:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
+		querStr1.append("po:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
 		System.out.println("    Language Class: " + datatypeProperty.getDomainName());
-		querStr1.append("bpmn:" + datatypeProperty.getId() + " rdfs:domain "+ "<" + datatypeProperty.getDomainName() + "> . ");
+		querStr1.append("po:" + datatypeProperty.getId() + " rdfs:domain "+ "<" + datatypeProperty.getDomainName() + "> . ");
 		System.out.println("    Property Label: " + datatypeProperty.getLabel());
-		querStr1.append("bpmn:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
+		querStr1.append("po:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
 		System.out.println("    Property Range: " + datatypeProperty.getRange());
-		querStr1.append("bpmn:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
+		querStr1.append("po:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
 		querStr1.append("}");
 		querStr1.append(" WHERE { }");
 		
@@ -706,11 +794,13 @@ System.out.println("/Element received: " +json);
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<DatatypeProperty> result = new ArrayList<DatatypeProperty>();
 		
-		queryStr.append("SELECT ?domain ?range ?label WHERE {");
-		queryStr.append("?domain rdfs:domain " + domainName + " . ");
-		queryStr.append("?domain rdfs:label ?label . ");
-		queryStr.append("?domain rdfs:range ?range . ");
-		queryStr.append("OPTIONAL {?domain rdf:type owl:DataTypeProperty} ");
+		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label WHERE {");
+		queryStr.append("?id a ?type . FILTER(?type IN (owl:DataTypeProperty)) . ");
+		queryStr.append("?id rdfs:domain ?domain . ");
+		queryStr.append("FILTER(?domain IN (" + domainName + ")) . ");
+		queryStr.append("?id rdfs:label ?label . ");
+		queryStr.append("?id rdfs:range ?range . ");
+		//queryStr.append("OPTIONAL {?domain rdf:type owl:DataTypeProperty} ");
 		
 		queryStr.append("} ");
 		queryStr.append("ORDER BY ?label");
@@ -723,7 +813,7 @@ System.out.println("/Element received: " +json);
 				DatatypeProperty datatypeProperty = new DatatypeProperty();
 				
 				QuerySolution soln = results.next();
-				//datatypeProperty.setId(soln.get("?type").toString());
+				datatypeProperty.setId(soln.get("?id").toString());
 				datatypeProperty.setLabel(soln.get("?label").toString());
 				datatypeProperty.setDomainName(domainName);
 				datatypeProperty.setRange(soln.get("?range").toString());
