@@ -9,6 +9,7 @@ public class GlobalVariables {
 	public static final String BOOLEAN_TRUE_URI = "true^^http://www.w3.org/2001/XMLSchema#boolean";
 	public static final String BOOLEAN_FALSE_URI = "false^^http://www.w3.org/2001/XMLSchema#boolean";
 	private static final HashMap<String, String> NAMESPACE_MAP = new HashMap<String, String>();
+	private static final HashMap<String, String> PREFIX_MAP = new HashMap<String, String>();
 	
 	public static HashMap<String, String> getNamespaceMap() {
 		for (NAMESPACE ns : NAMESPACE.values()) {
@@ -16,6 +17,14 @@ public class GlobalVariables {
 		}
 		
 		return NAMESPACE_MAP;
+	}
+	
+	public static HashMap<String, String> getPrefixMap() {
+		for (NAMESPACE ns : NAMESPACE.values()) {
+			PREFIX_MAP.put(ns.getPrefix(), ns.getURI()); 
+		}
+		
+		return PREFIX_MAP;
 	}
 	
 }

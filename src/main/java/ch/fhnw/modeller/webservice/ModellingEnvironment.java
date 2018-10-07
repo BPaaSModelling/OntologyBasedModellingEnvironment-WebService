@@ -797,7 +797,7 @@ System.out.println("/Element received: " +json);
 		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label WHERE {");
 		queryStr.append("?id a ?type . FILTER(?type IN (owl:DataTypeProperty)) . ");
 		queryStr.append("?id rdfs:domain ?domain . ");
-		queryStr.append("FILTER(?domain IN (" + domainName + ")) . ");
+		queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
 		queryStr.append("?id rdfs:label ?label . ");
 		queryStr.append("?id rdfs:range ?range . ");
 		//queryStr.append("OPTIONAL {?domain rdf:type owl:DataTypeProperty} ");
@@ -836,5 +836,9 @@ System.out.println("/Element received: " +json);
 		return Response.status(Status.OK).entity(gson.toJson(prefixList)).build();
 	}
 	
-
+	@GET
+	@Path("/getNamespaceMap")
+	public Response getNamespaceMap() {
+		return Response.status(Status.OK).entity(gson.toJson(GlobalVariables.getNamespaceMap())).build();
+	}
 }
