@@ -11,9 +11,11 @@ public class GlobalVariables {
 	private static final HashMap<String, String> NAMESPACE_MAP = new HashMap<String, String>();
 	private static final HashMap<String, String> PREFIX_MAP = new HashMap<String, String>();
 	
-	public static HashMap<String, String> getNamespaceMap() {
+	public static HashMap<String, String> getNamespaceMap() { // this is a dual hashmap to get prefix from uri and vice versa
 		for (NAMESPACE ns : NAMESPACE.values()) {
-			NAMESPACE_MAP.put(ns.getURI(), ns.getPrefix());
+			String namespace = ns.getURI().split("#")[0];
+			NAMESPACE_MAP.put(namespace, ns.getPrefix());
+			NAMESPACE_MAP.put(ns.getPrefix(), namespace);
 		}
 		
 		return NAMESPACE_MAP;

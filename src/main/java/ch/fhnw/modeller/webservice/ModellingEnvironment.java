@@ -620,22 +620,34 @@ System.out.println("/Element received: " +json);
 		DatatypeProperty datatypeProperty = gson.fromJson(json, DatatypeProperty.class);
 		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
 		
-		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
-		querStr1.append("INSERT {");
-		System.out.println("    Property ID: " + datatypeProperty.getId());
-		querStr1.append("po:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
-		System.out.println("    Language Class: " + datatypeProperty.getDomainName());
-		querStr1.append("po:" + datatypeProperty.getId() + " rdfs:domain "+ "<" + datatypeProperty.getDomainName() + "> . ");
-		System.out.println("    Property Label: " + datatypeProperty.getLabel());
-		querStr1.append("po:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
-		System.out.println("    Property Range: " + datatypeProperty.getRange());
-		querStr1.append("po:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
-		querStr1.append("}");
-		querStr1.append(" WHERE { }");
+		if(datatypeProperty.getDomainName()!=null) {
+			String domainName = datatypeProperty.getDomainName();
 		
-		System.out.println("Create Datatype property");
-		System.out.println(querStr1.toString());
-		ontology.insertQuery(querStr1);
+			if(!domainName.contains("#")) {
+				String[] domainArr = domainName.split(":");
+				domainName = GlobalVariables.getNamespaceMap().get(domainArr[0]) + "#" + domainArr[1];
+				System.out.println("Domain range to insert :" +domainName);
+			}
+			
+
+			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+			querStr1.append("INSERT {");
+			System.out.println("    Property ID: " + datatypeProperty.getId());
+			querStr1.append("po:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
+			System.out.println("    Language Class: " + datatypeProperty.getDomainName());
+			querStr1.append("po:" + datatypeProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
+			System.out.println("    Property Label: " + datatypeProperty.getLabel());
+			querStr1.append("po:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
+			System.out.println("    Property Range: " + datatypeProperty.getRange());
+			querStr1.append("po:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
+			querStr1.append("}");
+			querStr1.append(" WHERE { }");
+
+			System.out.println("Create Datatype property");
+			System.out.println(querStr1.toString());
+			ontology.insertQuery(querStr1);
+		}
+		
 		
 	
 		return Response.status(Status.OK).entity("{}").build();
@@ -750,7 +762,7 @@ System.out.println("/Element received: " +json);
 				
 				QuerySolution soln = results.next();
 				ans.setId(soln.get("?id").toString());
-				String namespace = soln.get("?id").toString().split("#")[0] + "#";
+				String namespace = soln.get("?id").toString().split("#")[0];
 				//System.out.println("namespace :"+namespace);
 				ans.setLabel(GlobalVariables.getNamespaceMap().get(namespace) + ":" + soln.get("?label").toString());
 				
@@ -771,6 +783,10 @@ System.out.println("/Element received: " +json);
 		ArrayList<DatatypeProperty> datatype_properties = new ArrayList<DatatypeProperty>();
 		
 		try {
+			if(domainName != null) {
+				String[] domainNameArr = domainName.split(":");
+				domainName = GlobalVariables.getNamespaceMap().get(domainNameArr[0].toLowerCase()) + "#" + domainNameArr[1];
+				System.out.println("domain range for query is : " +domainName);
 				datatype_properties = queryAllDatatypeProperties(domainName);
 
 				if (debug_properties){
@@ -778,6 +794,7 @@ System.out.println("/Element received: " +json);
 						System.out.println("Domain "+index+": ");
 					}
 				}
+			}
 		} catch (NoResultsException e) {
 			e.printStackTrace();
 		}
@@ -839,6 +856,7 @@ System.out.println("/Element received: " +json);
 	@GET
 	@Path("/getNamespaceMap")
 	public Response getNamespaceMap() {
+		System.out.println("Returning namespace map: " + gson.toJson(GlobalVariables.getNamespaceMap()));
 		return Response.status(Status.OK).entity(gson.toJson(GlobalVariables.getNamespaceMap())).build();
 	}
 }
