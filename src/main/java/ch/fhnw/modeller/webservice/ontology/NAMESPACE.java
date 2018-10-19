@@ -13,7 +13,7 @@ public enum NAMESPACE {
 	EO(			ONTOLOGY.EO.getPrefix(), 		"http://ikm-group.ch/archiMEO/eo#"),
 	//FBPDO(		ONTOLOGY.FBPDO.getPrefix(),		"http://ikm-group.ch/archimeo/fbpdo#"),
 	TOP(		ONTOLOGY.TOP.getPrefix(),		"http://ikm-group.ch/archiMEO/top#"),
-	NCO(		ONTOLOGY.NCO.getPrefix(),		"http://ikm-group.ch/archiMEO/NCO#"),
+	NCO(		ONTOLOGY.NCO.getPrefix(),		"http://ikm-group.ch/archiMEO/nco#"),
 	BMM(		ONTOLOGY.BMM.getPrefix(),		"http://ikm-group.ch/archiMEO/BMM#"),
 	XSD(		"xsd",							"http://www.w3.org/2001/XMLSchema#"),
 	LO(		"lo",								"http://fhnw.ch/modelingEnvironment/LanguageOntology#"),
@@ -34,7 +34,8 @@ public enum NAMESPACE {
 	ELEMENTS( "elements",						"http://purl.org/dc/elements/1.1#"),
 	DCMI( "dcmi-type-vocabulary",				"http://dublincore.org/documents/2000/07/11/dcmi-type-vocabulary#"),
 	PO( "po",									"http://fhnw.ch/modelingEnvironment/PaletteOntology#"),
-	DC( "dc",									"http://purl.org/dc/elements/1.1/");
+	DC( "dc",									"http://purl.org/dc/elements/1.1/"),
+	APQC( "apqc",								"http://ikm-group.ch/archimeo/apqc#");
 	
 	private String prefix;
 	private String url;

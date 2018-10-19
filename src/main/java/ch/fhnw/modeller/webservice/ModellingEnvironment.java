@@ -690,7 +690,9 @@ System.out.println("/Element received: " +json);
 		queryStr.append("?id a ?type .");
 		queryStr.append("?id rdfs:label ?label .");
 		queryStr.append("FILTER(?type != 'rdf:class') .");
-		queryStr.append("FILTER(STRSTARTS(STR(?id),STR(\"http://fhnw.ch/modelingEnvironment/DomainOntology#\"))) .");
+		//queryStr.append("FILTER(STRSTARTS(STR(?id),STR(\"http://fhnw.ch/modelingEnvironment/DomainOntology#\"))) .");
+		queryStr.append("?id rdfs:subClassOf* do:DomainOntologyConcept .");
+		queryStr.append("FILTER(?id != do:DomainOntologyConcept) .");
 		queryStr.append("}");
 		queryStr.append("ORDER BY ?label");
 
@@ -702,8 +704,10 @@ System.out.println("/Element received: " +json);
 				Answer ans = new Answer();
 				
 				QuerySolution soln = results.next();
+				String nm = soln.get("?id").toString().split("#")[0];
+				//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
 				ans.setId(soln.get("?id").toString());
-				ans.setLabel(soln.get("?label").toString());
+				ans.setLabel(GlobalVariables.getNamespaceMap().get(nm) + ":" + soln.get("?label").toString());
 				
 				result.add(ans);
 			}
