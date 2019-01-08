@@ -557,6 +557,39 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity("{}").build();
 
 	}
+	
+	@POST
+	@Path("/editObjectProperty")
+	public Response editObjectProperty(@FormParam("property") String json, @FormParam("editedProperty") String modifiedJson) {
+
+		System.out.println("/objectProperty received: " +json);
+		System.out.println("/Modifed objectProperty: " + modifiedJson);
+
+		Gson gson = new Gson();
+		ObjectProperty objectProperty = gson.fromJson(json, ObjectProperty.class);
+		ObjectProperty modifiedObjectProperty = gson.fromJson(modifiedJson, ObjectProperty.class);
+
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+
+		querStr.append("DELETE DATA { ");
+		//querStr.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
+		querStr.append("<"+objectProperty.getId() + "> rdfs:label \"" + objectProperty.getLabel() + "\" . ");
+		querStr.append("<"+objectProperty.getId() + "> rdfs:range <" + objectProperty.getRange() + "> . ");
+		querStr.append(" }");
+		querStr1.append("INSERT DATA { ");
+		//querStr1.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
+		querStr1.append("<"+objectProperty.getId() + "> rdfs:label \"" + modifiedObjectProperty.getLabel() + "\" . ");
+		querStr1.append("<"+objectProperty.getId() + "> rdfs:range <" + modifiedObjectProperty.getRange() + "> . ");
+		querStr1.append(" }");
+
+		//Model modelTpl = ModelFactory.createDefaultModel();
+		ontology.insertQuery(querStr);
+		ontology.insertQuery(querStr1);
+
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
 
 	@POST
 	@Path("/deleteDatatypeProperty")
