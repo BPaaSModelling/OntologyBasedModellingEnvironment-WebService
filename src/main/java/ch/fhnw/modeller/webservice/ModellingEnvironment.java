@@ -339,16 +339,16 @@ public class ModellingEnvironment {
 		querStr.append("po:paletteModelIsRelatedToModelingLanguageConstruct " + pElement.getRepresentedLanguageClass() +" ;");
 		if(pElement.getRepresentedDomainClass()!=null) {
 			querStr.append("po:languageElementIsRelatedToDomainElement ");
-			if (pElement.getRepresentedDomainClass().size()!=0) {				
+			if (pElement.getRepresentedDomainClass().size()!=0) {	
 				String repDomainClasses = pElement.getRepresentedDomainClass().stream()
-						.map(s -> "<" +s+ ">")
+						.map(s -> "<" +s.getId()+ ">")
 						.collect(Collectors.joining(", "));
 
 				System.out.println("Comma separated domain classes: " + repDomainClasses);
 				querStr.append(repDomainClasses + " ;");
 			}
 			else 
-				querStr.append(" <" + pElement.getRepresentedDomainClass().get(0) +"> ");
+				querStr.append(" <" + pElement.getRepresentedDomainClass().get(0).getId() +"> ");
 		}
 		querStr.append(" ;");
 		/*System.out.println("    Element X Position: "+ pElement.getX());
@@ -372,8 +372,8 @@ public class ModellingEnvironment {
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:subClassOf <"+ pElement.getParentLanguageClass() + "> . ");
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" . ");
 		if(pElement.getRepresentedDomainClass()!=null && pElement.getRepresentedDomainClass().size()!=0) {
-			for(String repDomainClass: pElement.getRepresentedDomainClass()) {
-				System.out.println("The selected domain class is : "+repDomainClass);
+			for(DomainElement repDomainClass: pElement.getRepresentedDomainClass()) {
+				System.out.println("The selected domain class is : "+repDomainClass.getId());
 				if(repDomainClass!=null && !"".equals(repDomainClass))
 					querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement <" + repDomainClass + "> . ");
 			}

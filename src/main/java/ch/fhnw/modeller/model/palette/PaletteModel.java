@@ -1,6 +1,7 @@
 package ch.fhnw.modeller.model.palette;
 
 import java.util.ArrayList;
+import ch.fhnw.modeller.model.metamodel.DomainElement;
 
 public class PaletteModel {
 
@@ -14,7 +15,7 @@ public class PaletteModel {
 	private ArrayList<PaletteElement> childElements;
 	private String representedLanguageClass;
 	private ArrayList<String> languageSubclasses;
-	private ArrayList<String> representedDomainClass;
+	private ArrayList<DomainElement> representedDomainClass;
 	private String languagePrefix;
 	private String datatypePropertyId;
 	private String datatypePropertyLabel;
@@ -73,10 +74,10 @@ public class PaletteModel {
 		super();
 		this.childElements = new ArrayList<PaletteElement>();
 	}
-	public ArrayList<String> getRepresentedDomainClass() {
+	public ArrayList<DomainElement> getRepresentedDomainClass() {
 		return representedDomainClass;
 	}
-	public void setRepresentedDomainClass(ArrayList<String> representedDomainClass) {
+	public void setRepresentedDomainClass(ArrayList<DomainElement> representedDomainClass) {
 		this.representedDomainClass = representedDomainClass;
 	}
 	public String getDatatypePropertyLabel() {
