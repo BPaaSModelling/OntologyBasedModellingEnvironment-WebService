@@ -15,7 +15,7 @@ public class PaletteModel {
 	private ArrayList<PaletteElement> childElements;
 	private String representedLanguageClass;
 	private ArrayList<String> languageSubclasses;
-	private ArrayList<DomainElement> representedDomainClass;
+	private ArrayList<String> representedDomainClass;
 	private String languagePrefix;
 	private String datatypePropertyId;
 	private String datatypePropertyLabel;
@@ -74,10 +74,10 @@ public class PaletteModel {
 		super();
 		this.childElements = new ArrayList<PaletteElement>();
 	}
-	public ArrayList<DomainElement> getRepresentedDomainClass() {
+	public ArrayList<String> getRepresentedDomainClass() {
 		return representedDomainClass;
 	}
-	public void setRepresentedDomainClass(ArrayList<DomainElement> representedDomainClass) {
+	public void setRepresentedDomainClass(ArrayList<String> representedDomainClass) {
 		this.representedDomainClass = representedDomainClass;
 	}
 	public String getDatatypePropertyLabel() {
