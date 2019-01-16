@@ -156,6 +156,10 @@ public class ModellingEnvironment {
 					tempPaletteElement.setParentElement(soln.get("?parent").toString());
 				}
 
+				String prefix = GlobalVariables.getNamespaceMap().get(tempPaletteElement.getRepresentedLanguageClass().split("#")[0]);
+				tempPaletteElement.setLanguagePrefix(prefix);
+				//System.out.println("language class: "+tempPaletteElement.getRepresentedLanguageClass());
+				//System.out.println("prefix: "+prefix);
 
 				result.add(tempPaletteElement);
 			}
