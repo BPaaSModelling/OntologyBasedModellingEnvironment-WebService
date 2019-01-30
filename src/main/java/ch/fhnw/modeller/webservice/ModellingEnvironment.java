@@ -470,7 +470,7 @@ public class ModellingEnvironment {
 
 	@POST
 	@Path("/createCanvasInstance")
-	public Response insertCanvasInstance(String json) {
+	public Response insertCanvasInstance(String json) { //Not being used in webapp
 
 		System.out.println("/element received: " +json);
 
@@ -658,13 +658,13 @@ public class ModellingEnvironment {
 		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
 
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
-		querStr1.append("INSERT {");
+		querStr1.append("INSERT DATA {");
 		querStr1.append("do:" + pElement.getId() + " rdf:type rdfs:Class . ");
-		if(pElement.isRoot() == true)
+		if(pElement.isRoot() == false)
 			querStr1.append("do:" + pElement.getId() + " rdfs:subClassOf do:"+ pElement.getParentElement() + " . ");
 		querStr1.append("do:" + pElement.getId() + " rdfs:label \"" + pElement.getLabel() + "\" ");
 		querStr1.append("}");
-		querStr1.append(" WHERE { }");
+		//querStr1.append(" WHERE { }");
 
 		System.out.println("Create subclass in Domain Ontology");
 		System.out.println(querStr1.toString());
