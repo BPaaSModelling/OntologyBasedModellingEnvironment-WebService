@@ -80,7 +80,7 @@ public class ModellingEnvironment {
 		queryStr.append("?element po:paletteModelIsRelatedToModelingLanguageConstruct ?representedClass .");
 		//queryStr.append("?element po:languageElementIsRelatedToDomainElement ?representedDomainClasses ."); //not sure how to read multiple values
 		queryStr.append("?element po:hiddenFromPalette ?hidden .");
-		queryStr.append("?element po:paletteModelHasPaletteCategory ?category .");
+		queryStr.append("?element po:paletteConstructHasPaletteCategory ?category .");
 		queryStr.append("?element po:paletteElementUsesImage ?usesImage .");
 
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBackgroundColor ?backgroundColor }.");
@@ -328,7 +328,7 @@ public class ModellingEnvironment {
 		System.out.println("    Element Parent: "+ pElement.getParentElement());
 		querStr.append("po:paletteModelHasParentPaletteModel <" + "http://fhnw.ch/modelingEnvironment/PaletteOntology#"+pElement.getParentElement() +"> ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
-		querStr.append("po:paletteModelHasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
+		querStr.append("po:paletteConstructHasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
 		System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
 		querStr.append("po:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;");
 		System.out.println("    Element Palette Image : "+ pElement.getThumbnailURL());
@@ -371,7 +371,7 @@ public class ModellingEnvironment {
 		/**
 		 * Map multiple domain concepts to the modeling language concept (new element)
 		 */
-		querStr1.append("INSERT {");
+		querStr1.append("INSERT DATA {");
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type rdfs:Class . ");
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:subClassOf <"+ pElement.getParentLanguageClass() + "> . ");
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" . ");
@@ -386,7 +386,7 @@ public class ModellingEnvironment {
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:paletteModelHasParentPaletteModel <http://fhnw.ch/modelingEnvironment/PaletteOntology#" + pElement.getParentElement() +"> . ");
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:paletteModelIsRelatedToModelingLanguageConstruct " + pElement.getLanguagePrefix() + pElement.getUuid() + " . ");
 		querStr1.append("}");
-		querStr1.append(" WHERE { }");
+		//querStr1.append(" WHERE { }");
 
 		System.out.println("Create subclass in bpmn Ontology");
 		System.out.println(querStr1.toString());
