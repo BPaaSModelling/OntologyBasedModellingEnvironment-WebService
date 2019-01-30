@@ -410,20 +410,23 @@ public class ModellingEnvironment {
 
 		ParameterizedSparqlString querStr = null;
 		querStr = new ParameterizedSparqlString();
-		querStr.append("INSERT {");	
+		querStr.append("INSERT DATA {");	
 		if(element.getLanguageSubclasses()!=null && element.getLanguageSubclasses().size()!=0) {
-			for(String languageSubclass: element.getLanguageSubclasses()) {			
-				System.out.println("The selected language class is : "+languageSubclass);
+			for(Answer languageSubclass: element.getLanguageSubclasses()) {			
+				System.out.println("The selected language class is : "+languageSubclass.getLabel());
 
 				//querStr.append("<" + languageSubclass + "> rdf:type rdfs:Class . ");
-				String uuid = languageSubclass.split("#")[1];
+				String uuid = languageSubclass.getId().split("#")[1];
+				//String uuid = element.getUuid();
 				System.out.println("uuid: " + uuid);
-				querStr.append("<" + languageSubclass + "> rdfs:subClassOf <"+ element.getRepresentedLanguageClass() + "> . ");		
+				querStr.append("<" + languageSubclass.getId() + "> rdfs:subClassOf <"+ element.getRepresentedLanguageClass() + "> . ");		
+				/** The assumption is that the palette element should be already available before creating a language subclass. 
+				 * The below clause creates a parent-child relationship between the existing element and the element to be integrated **/
 				querStr.append("<http://fhnw.ch/modelingEnvironment/PaletteOntology#" + uuid + "> po:paletteModelHasParentPaletteModel <http://fhnw.ch/modelingEnvironment/PaletteOntology#"+ element.getParentElement() + "> . ");								
 			}
 		}
 		querStr.append("}");
-		querStr.append(" WHERE { }");
+		//querStr.append(" WHERE { }");
 		ontology.insertQuery(querStr);
 
 		return Response.status(Status.OK).entity("{}").build();

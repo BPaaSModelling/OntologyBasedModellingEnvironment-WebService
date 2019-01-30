@@ -1,6 +1,8 @@
 package ch.fhnw.modeller.model.palette;
 
 import java.util.ArrayList;
+
+import ch.fhnw.modeller.model.graphEnvironment.Answer;
 import ch.fhnw.modeller.model.metamodel.DomainElement;
 
 public class PaletteModel {
@@ -14,7 +16,7 @@ public class PaletteModel {
 	private Boolean hiddenFromPalette;
 	private ArrayList<PaletteElement> childElements;
 	private String representedLanguageClass;
-	private ArrayList<String> languageSubclasses;
+	private ArrayList<Answer> languageSubclasses;
 	private ArrayList<String> representedDomainClass;
 	private String languagePrefix;
 	private String datatypePropertyId;
@@ -98,10 +100,10 @@ public class PaletteModel {
 	public void setDatatypePropertyValue(String datatypePropertyValue) {
 		this.datatypePropertyValue = datatypePropertyValue;
 	}
-	public ArrayList<String> getLanguageSubclasses() {
+	public ArrayList<Answer> getLanguageSubclasses() {
 		return languageSubclasses;
 	}
-	public void setLanguageSubclasses(ArrayList<String> languageSubclasses) {
+	public void setLanguageSubclasses(ArrayList<Answer> languageSubclasses) {
 		this.languageSubclasses = languageSubclasses;
 	}
 	public String getLanguagePrefix() {
