@@ -696,7 +696,7 @@ public class ModellingEnvironment {
 
 
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
-			querStr1.append("INSERT {");
+			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + datatypeProperty.getId());
 			querStr1.append("po:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
 			System.out.println("    Language Class: " + datatypeProperty.getDomainName());
@@ -706,7 +706,7 @@ public class ModellingEnvironment {
 			System.out.println("    Property Range: " + datatypeProperty.getRange());
 			querStr1.append("po:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
 			querStr1.append("}");
-			querStr1.append(" WHERE { }");
+			//querStr1.append(" WHERE { }");
 
 			System.out.println("Create Datatype property");
 			System.out.println(querStr1.toString());
@@ -740,7 +740,7 @@ public class ModellingEnvironment {
 
 
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
-			querStr1.append("INSERT {");
+			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + objectProperty.getId());
 			querStr1.append("po:" + objectProperty.getId() + " rdf:type owl:ObjectProperty . ");
 			System.out.println("    Language Class: " + objectProperty.getDomainName());
@@ -750,7 +750,7 @@ public class ModellingEnvironment {
 			System.out.println("    Property Range: " + objectProperty.getRange());
 			querStr1.append("po:" + objectProperty.getId() + " rdfs:range <" + objectProperty.getRange() + "> ");
 			querStr1.append("}");
-			querStr1.append(" WHERE { }");
+			//querStr1.append(" WHERE { }");
 
 			System.out.println("Create Object property");
 			System.out.println(querStr1.toString());
