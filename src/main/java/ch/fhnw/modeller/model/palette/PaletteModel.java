@@ -3,6 +3,7 @@ package ch.fhnw.modeller.model.palette;
 import java.util.ArrayList;
 
 import ch.fhnw.modeller.model.graphEnvironment.Answer;
+import ch.fhnw.modeller.model.metamodel.DatatypeProperty;
 import ch.fhnw.modeller.model.metamodel.DomainElement;
 
 public class PaletteModel {
@@ -19,9 +20,10 @@ public class PaletteModel {
 	private ArrayList<Answer> languageSubclasses;
 	private ArrayList<String> representedDomainClass;
 	private String languagePrefix;
-	private String datatypePropertyId;
+	private ArrayList<DatatypeProperty> inheritedProperties;
+	/*private String datatypePropertyId;
 	private String datatypePropertyLabel;
-	private String datatypePropertyValue;
+	private String datatypePropertyValue;*/
 	
 	public String getUuid() {
 		return uuid;
@@ -82,7 +84,7 @@ public class PaletteModel {
 	public void setRepresentedDomainClass(ArrayList<String> representedDomainClass) {
 		this.representedDomainClass = representedDomainClass;
 	}
-	public String getDatatypePropertyLabel() {
+	/*public String getDatatypePropertyLabel() {
 		return datatypePropertyLabel;
 	}
 	public void setDatatypePropertyLabel(String datatypePropertyLabel) {
@@ -99,7 +101,7 @@ public class PaletteModel {
 	}
 	public void setDatatypePropertyValue(String datatypePropertyValue) {
 		this.datatypePropertyValue = datatypePropertyValue;
-	}
+	}*/
 	public ArrayList<Answer> getLanguageSubclasses() {
 		return languageSubclasses;
 	}
@@ -117,6 +119,12 @@ public class PaletteModel {
 	}
 	public void setParentLanguageClass(String parentLanguageClass) {
 		this.parentLanguageClass = parentLanguageClass;
+	}
+	public ArrayList<DatatypeProperty> getInheritedProperties() {
+		return inheritedProperties;
+	}
+	public void setInheritedProperties(ArrayList<DatatypeProperty> inheritedProperties) {
+		this.inheritedProperties = inheritedProperties;
 	}
 	
 }

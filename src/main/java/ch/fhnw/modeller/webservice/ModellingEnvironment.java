@@ -77,25 +77,25 @@ public class ModellingEnvironment {
 		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness ?type WHERE {");
 		queryStr.append("?element rdf:type ?type . FILTER(?type IN (po:PaletteElement, po:PaletteConnector)) .");
 		queryStr.append("?element rdfs:label ?label .");
-		queryStr.append("?element po:paletteModelIsRelatedToModelingLanguageConstruct ?representedClass .");
+		queryStr.append("?element po:isRelatedToModelingConstruct ?representedClass .");
 		//queryStr.append("?element po:languageElementIsRelatedToDomainElement ?representedDomainClasses ."); //not sure how to read multiple values
 		queryStr.append("?element po:hiddenFromPalette ?hidden .");
-		queryStr.append("?element po:paletteConstructHasPaletteCategory ?category .");
+		queryStr.append("?element po:hasPaletteCategory ?category .");
 		queryStr.append("?element po:paletteElementUsesImage ?usesImage .");
 
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBackgroundColor ?backgroundColor }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementHeight ?height }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasHeight ?height }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementIconPosition ?iconPosition }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementIconURL ?iconURL}.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementImageURL ?imageURL }.");
+		queryStr.append("OPTIONAL{ ?element po:hasModelThumbnail ?imageURL }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementLabelPosition ?labelPosition }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementShape ?shape }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementThumbnailURL ?thumbnailURL }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementWidth ?width }.");
+		queryStr.append("OPTIONAL{ ?element po:hasPaletteThumbnail ?thumbnailURL }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasWidth ?width }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderColor ?borderColor }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderThickness ?borderThickness }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderType ?borderType }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteModelHasParentPaletteModel ?parent }.");
+		queryStr.append("OPTIONAL{ ?element po:hasParentPaletteConstruct ?parent }.");
 
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
@@ -154,6 +154,7 @@ public class ModellingEnvironment {
 				}
 				if (soln.get("?parent") != null){
 					tempPaletteElement.setParentElement(soln.get("?parent").toString());
+					//Read properties of the parent element here
 				}
 
 				String prefix = GlobalVariables.getNamespaceMap().get(tempPaletteElement.getRepresentedLanguageClass().split("#")[0]);
@@ -326,21 +327,21 @@ public class ModellingEnvironment {
 		System.out.println("    Element Hidden property: "+ pElement.getHiddenFromPalette());
 		querStr.append("po:hiddenFromPalette " + pElement.getHiddenFromPalette() +" ;");
 		System.out.println("    Element Parent: "+ pElement.getParentElement());
-		querStr.append("po:paletteModelHasParentPaletteModel <" + "http://fhnw.ch/modelingEnvironment/PaletteOntology#"+pElement.getParentElement() +"> ;");
+		querStr.append("po:hasParentPaletteConstruct <" + "http://fhnw.ch/modelingEnvironment/PaletteOntology#"+pElement.getParentElement() +"> ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
-		querStr.append("po:paletteConstructHasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
+		querStr.append("po:hasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
 		System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
 		querStr.append("po:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;");
 		System.out.println("    Element Palette Image : "+ pElement.getThumbnailURL());
-		querStr.append("po:paletteElementThumbnailURL \"" + pElement.getThumbnailURL() +"\" ;");
+		querStr.append("po:hasPaletteThumbnail \"" + pElement.getThumbnailURL() +"\" ;");
 		System.out.println("    Element Canvas Image: "+ pElement.getImageURL());
-		querStr.append("po:paletteElementImageURL \"" + pElement.getImageURL() +"\" ;");
+		querStr.append("po:hasModelThumbnail \"" + pElement.getImageURL() +"\" ;");
 		System.out.println("    Element Image width: "+ pElement.getWidth());
-		querStr.append("po:paletteElementWidth " + pElement.getWidth() +" ;");
+		querStr.append("po:paletteConstructHasWidth " + pElement.getWidth() +" ;");
 		System.out.println("    Element Image height: "+ pElement.getHeight());
-		querStr.append("po:paletteElementHeight " + pElement.getHeight() +" ;");
+		querStr.append("po:paletteConstructHasHeight " + pElement.getHeight() +" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
-		querStr.append("po:paletteModelIsRelatedToModelingLanguageConstruct " + pElement.getRepresentedLanguageClass() +" ;");
+		querStr.append("po:isRelatedToModelingConstruct " + pElement.getRepresentedLanguageClass() +" ;");
 		if(pElement.getRepresentedDomainClass()!=null) {
 			querStr.append("po:languageElementIsRelatedToDomainElement ");
 			if (pElement.getRepresentedDomainClass().size()!=0) {	
@@ -383,8 +384,8 @@ public class ModellingEnvironment {
 			}
 		}
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type <http://fhnw.ch/modelingEnvironment/PaletteOntology#PaletteElement> . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:paletteModelHasParentPaletteModel <http://fhnw.ch/modelingEnvironment/PaletteOntology#" + pElement.getParentElement() +"> . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:paletteModelIsRelatedToModelingLanguageConstruct " + pElement.getLanguagePrefix() + pElement.getUuid() + " . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:hasParentPaletteConstruct <http://fhnw.ch/modelingEnvironment/PaletteOntology#" + pElement.getParentElement() +"> . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:isRelatedToModelingConstruct " + pElement.getLanguagePrefix() + pElement.getUuid() + " . ");
 		querStr1.append("}");
 		//querStr1.append(" WHERE { }");
 
@@ -422,7 +423,7 @@ public class ModellingEnvironment {
 				querStr.append("<" + languageSubclass.getId() + "> rdfs:subClassOf <"+ element.getRepresentedLanguageClass() + "> . ");		
 				/** The assumption is that the palette element should be already available before creating a language subclass. 
 				 * The below clause creates a parent-child relationship between the existing element and the element to be integrated **/
-				querStr.append("<http://fhnw.ch/modelingEnvironment/PaletteOntology#" + uuid + "> po:paletteModelHasParentPaletteModel <http://fhnw.ch/modelingEnvironment/PaletteOntology#"+ element.getParentElement() + "> . ");								
+				querStr.append("<http://fhnw.ch/modelingEnvironment/PaletteOntology#" + uuid + "> po:hasParentPaletteConstruct <http://fhnw.ch/modelingEnvironment/PaletteOntology#"+ element.getParentElement() + "> . ");								
 			}
 		}
 		querStr.append("}");
@@ -469,8 +470,8 @@ public class ModellingEnvironment {
 	}
 
 	@POST
-	@Path("/createCanvasInstance")
-	public Response insertCanvasInstance(String json) { //Not being used in webapp
+	@Path("/createCanvasInstance")//Not being used in webapp
+	public Response insertCanvasInstance(String json) { 
 
 		System.out.println("/element received: " +json);
 
@@ -515,13 +516,13 @@ public class ModellingEnvironment {
 
 		querStr.append("DELETE DATA { ");
 		querStr.append("<"+element.getId()+"> rdfs:label \"" +element.getLabel()+ "\" . ");
-		querStr.append("<"+element.getId()+"> po:paletteElementImageURL \"" +element.getImageURL()+ "\" . ");
-		querStr.append("<"+element.getId()+"> po:paletteElementThumbnailURL \"" +element.getThumbnailURL()+ "\" . ");
+		querStr.append("<"+element.getId()+"> po:hasModelThumbnail \"" +element.getImageURL()+ "\" . ");
+		querStr.append("<"+element.getId()+"> po:hasPaletteThumbnail \"" +element.getThumbnailURL()+ "\" . ");
 		querStr.append(" }");
 		querStr1.append("INSERT DATA { ");
 		querStr1.append("<"+element.getId()+"> rdfs:label \""+modifiedElement.getLabel()+ "\" . ");
-		querStr1.append("<"+element.getId()+"> po:paletteElementImageURL \""+modifiedElement.getImageURL()+ "\" . ");
-		querStr1.append("<"+element.getId()+"> po:paletteElementThumbnailURL \"" +modifiedElement.getThumbnailURL()+ "\" . ");
+		querStr1.append("<"+element.getId()+"> po:hasModelThumbnail \""+modifiedElement.getImageURL()+ "\" . ");
+		querStr1.append("<"+element.getId()+"> po:hasPaletteThumbnail \"" +modifiedElement.getThumbnailURL()+ "\" . ");
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
@@ -615,7 +616,7 @@ public class ModellingEnvironment {
 		 * WHERE {bpmn:NewSubprocess ?predicate  ?object .}
 		 */
 
-		querStr.append("DELETE ");
+		querStr.append("DELETE "); //Does not work with DELETE DATA
 		querStr.append("WHERE { <"+ property.getId() +"> ?object ?predicate . } ");
 
 		ontology.insertQuery(querStr);
