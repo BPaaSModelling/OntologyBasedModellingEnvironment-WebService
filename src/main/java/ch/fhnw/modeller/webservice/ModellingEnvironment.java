@@ -452,7 +452,7 @@ public class ModellingEnvironment {
 		 */
 
 		querStr.append("DELETE ");
-		querStr.append("WHERE { <"+ element.getRepresentedLanguageClass() +"> ?object ?predicate . } ");
+		querStr.append("WHERE { <"+ element.getRepresentedLanguageClass() +"> ?predicate ?object . } ");
 		//querStr.append("INSERT {"+"<"+element.getId()+"> rdfs:label "+element.getLabel());
 
 		System.out.println(querStr.toString());
@@ -460,7 +460,7 @@ public class ModellingEnvironment {
 		ontology.insertQuery(querStr);
 
 		querStr1.append("DELETE ");
-		querStr1.append("WHERE { <"+ element.getId() +"> ?object ?predicate . } ");
+		querStr1.append("WHERE { <"+ element.getId() +"> ?predicate ?object . } ");
 
 		System.out.println(querStr1.toString());
 		ontology.insertQuery(querStr1);
@@ -617,7 +617,7 @@ public class ModellingEnvironment {
 		 */
 
 		querStr.append("DELETE "); //Does not work with DELETE DATA
-		querStr.append("WHERE { <"+ property.getId() +"> ?object ?predicate . } ");
+		querStr.append("WHERE { <"+ property.getId() +"> ?predicate ?object . } ");
 
 		ontology.insertQuery(querStr);
 		return Response.status(Status.OK).entity("{}").build();
@@ -641,7 +641,7 @@ public class ModellingEnvironment {
 		 */
 
 		querStr.append("DELETE ");
-		querStr.append("WHERE { <"+ property.getId() +"> ?object ?predicate . } ");
+		querStr.append("WHERE { <"+ property.getId() +"> ?predicate ?object . } ");
 
 		ontology.insertQuery(querStr);
 		return Response.status(Status.OK).entity("{}").build();
