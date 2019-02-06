@@ -20,6 +20,7 @@ public class PaletteModel {
 	private ArrayList<Answer> languageSubclasses;
 	private ArrayList<String> representedDomainClass;
 	private String languagePrefix;
+	private String comment;
 	private ArrayList<DatatypeProperty> inheritedProperties;
 	/*private String datatypePropertyId;
 	private String datatypePropertyLabel;
@@ -119,6 +120,12 @@ public class PaletteModel {
 	}
 	public void setParentLanguageClass(String parentLanguageClass) {
 		this.parentLanguageClass = parentLanguageClass;
+	}
+	public String getComment() {
+		return comment;
+	}
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 	public ArrayList<DatatypeProperty> getInheritedProperties() {
 		return inheritedProperties;

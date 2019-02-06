@@ -74,7 +74,7 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 
-		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness ?type WHERE {");
+		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness ?comment ?type WHERE {");
 		queryStr.append("?element rdf:type ?type . FILTER(?type IN (po:PaletteElement, po:PaletteConnector)) .");
 		queryStr.append("?element rdfs:label ?label .");
 		queryStr.append("?element po:isRelatedToModelingConstruct ?representedClass .");
@@ -95,6 +95,7 @@ public class ModellingEnvironment {
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderColor ?borderColor }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderThickness ?borderThickness }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderType ?borderType }.");
+		queryStr.append("OPTIONAL{ ?representedClass rdfs:comment ?comment }.");
 		queryStr.append("OPTIONAL{ ?element po:hasParentPaletteConstruct ?parent }.");
 
 		queryStr.append("}");
@@ -151,6 +152,9 @@ public class ModellingEnvironment {
 				}
 				if (soln.get("?borderType") != null){
 					tempPaletteElement.setBorderType(soln.get("?borderType").toString());
+				}
+				if (soln.get("?comment") != null){
+					tempPaletteElement.setComment(soln.get("?comment").toString());
 				}
 				if (soln.get("?parent") != null){
 					tempPaletteElement.setParentElement(soln.get("?parent").toString());
@@ -342,7 +346,8 @@ public class ModellingEnvironment {
 		querStr.append("po:paletteConstructHasHeight " + pElement.getHeight() +" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
 		querStr.append("po:isRelatedToModelingConstruct " + pElement.getRepresentedLanguageClass() +" ;");
-		if(pElement.getRepresentedDomainClass()!=null) {
+		//The below property is not needed any more as object properties will be added separately
+		/*if(pElement.getRepresentedDomainClass()!=null) {
 			querStr.append("po:languageElementIsRelatedToDomainElement ");
 			if (pElement.getRepresentedDomainClass().size()!=0) {	
 				String repDomainClasses = pElement.getRepresentedDomainClass().stream()
@@ -354,7 +359,7 @@ public class ModellingEnvironment {
 			}
 			else 
 				querStr.append(" <" + pElement.getRepresentedDomainClass().get(0) +"> ");
-		}
+		}*/
 		querStr.append(" ;");
 		/*System.out.println("    Element X Position: "+ pElement.getX());
 			querStr.append("lo:graphicalElementX \"" + pElement.getX() +"\" ;");
@@ -375,17 +380,22 @@ public class ModellingEnvironment {
 		querStr1.append("INSERT DATA {");
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type rdfs:Class . ");
 		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:subClassOf <"+ pElement.getParentLanguageClass() + "> . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:label \"" + pElement.getUuid() + "\" . ");
-		if(pElement.getRepresentedDomainClass()!=null && pElement.getRepresentedDomainClass().size()!=0) {
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:label \"" + pElement.getLabel() + "\" . ");
+		if(pElement.getComment()!=null && !"".equals(pElement.getComment()))
+			querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:comment \"" + pElement.getComment() + "\" . ");
+		//The below property is not needed any more as object properties will be added separately
+		/*if(pElement.getRepresentedDomainClass()!=null && pElement.getRepresentedDomainClass().size()!=0) {
 			for(String repDomainClass: pElement.getRepresentedDomainClass()) {
 				System.out.println("The selected domain class is : "+repDomainClass);
 				if(repDomainClass!=null && !"".equals(repDomainClass))
 					querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:languageElementIsRelatedToDomainElement <" + repDomainClass + "> . ");
 			}
-		}
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type <http://fhnw.ch/modelingEnvironment/PaletteOntology#PaletteElement> . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:hasParentPaletteConstruct <http://fhnw.ch/modelingEnvironment/PaletteOntology#" + pElement.getParentElement() +"> . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:isRelatedToModelingConstruct " + pElement.getLanguagePrefix() + pElement.getUuid() + " . ");
+		}*/
+		
+		//Verify the below properties!!! They should not be a part of the modeling language construct - verify with Emanuele
+		//querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type <http://fhnw.ch/modelingEnvironment/PaletteOntology#PaletteElement> . ");
+		//querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:hasParentPaletteConstruct <http://fhnw.ch/modelingEnvironment/PaletteOntology#" + pElement.getParentElement() +"> . ");
+		//querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " po:isRelatedToModelingConstruct " + pElement.getLanguagePrefix() + pElement.getUuid() + " . ");
 		querStr1.append("}");
 		//querStr1.append(" WHERE { }");
 
@@ -523,6 +533,23 @@ public class ModellingEnvironment {
 		querStr1.append("<"+element.getId()+"> rdfs:label \""+modifiedElement.getLabel()+ "\" . ");
 		querStr1.append("<"+element.getId()+"> po:hasModelThumbnail \""+modifiedElement.getImageURL()+ "\" . ");
 		querStr1.append("<"+element.getId()+"> po:hasPaletteThumbnail \"" +modifiedElement.getThumbnailURL()+ "\" . ");
+		querStr1.append(" }");
+
+		//Model modelTpl = ModelFactory.createDefaultModel();
+		ontology.insertQuery(querStr);
+		ontology.insertQuery(querStr1);
+		
+		//Edit the corresponding modeling language construct
+		querStr = new ParameterizedSparqlString();
+		querStr1 = new ParameterizedSparqlString();
+
+		querStr.append("DELETE DATA { ");
+		querStr.append("<"+element.getRepresentedLanguageClass()+"> rdfs:label \"" +element.getLabel()+ "\" . ");
+		querStr.append("<"+element.getRepresentedLanguageClass()+"> rdfs:comment \"" +element.getComment()+ "\" . ");
+		querStr.append(" }");
+		querStr1.append("INSERT DATA { ");
+		querStr1.append("<"+element.getRepresentedLanguageClass()+"> rdfs:label \""+modifiedElement.getLabel()+ "\" . ");
+		querStr1.append("<"+element.getRepresentedLanguageClass()+"> rdfs:comment \""+modifiedElement.getComment()+ "\" . ");
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
