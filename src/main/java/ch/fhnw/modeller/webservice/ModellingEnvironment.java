@@ -689,7 +689,9 @@ public class ModellingEnvironment {
 		querStr1.append("INSERT DATA {");
 		querStr1.append("do:" + pElement.getId() + " rdf:type rdfs:Class . ");
 		if(pElement.isRoot() == false)
-			querStr1.append("do:" + pElement.getId() + " rdfs:subClassOf do:"+ pElement.getParentElement() + " . ");
+			querStr1.append("do:" + pElement.getId() + " rdfs:subClassOf <"+ pElement.getParentElement() + "> . ");
+		else
+			querStr1.append("do:" + pElement.getId() + " rdfs:subClassOf do:DomainOntologyConcept . ");
 		querStr1.append("do:" + pElement.getId() + " rdfs:label \"" + pElement.getLabel() + "\" ");
 		querStr1.append("}");
 		//querStr1.append(" WHERE { }");
