@@ -77,26 +77,26 @@ public class ModellingEnvironment {
 		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness ?comment ?type WHERE {");
 		queryStr.append("?element rdf:type ?type . FILTER(?type IN (po:PaletteElement, po:PaletteConnector)) .");
 		queryStr.append("?element rdfs:label ?label .");
-		queryStr.append("?element po:isRelatedToModelingConstruct ?representedClass .");
+		queryStr.append("?element po:paletteConstructIsRelatedToModelingLanguageConstruct ?representedClass .");
 		//queryStr.append("?element po:languageElementIsRelatedToDomainElement ?representedDomainClasses ."); //not sure how to read multiple values
-		queryStr.append("?element po:hiddenFromPalette ?hidden .");
-		queryStr.append("?element po:hasPaletteCategory ?category .");
-		queryStr.append("?element po:paletteElementUsesImage ?usesImage .");
+		queryStr.append("?element po:paletteConstructIsHiddenFromPalette ?hidden .");
+		queryStr.append("?element po:paletteConstructIsGroupedInPaletteCategory ?category .");
+		//queryStr.append("?element po:paletteElementUsesImage ?usesImage ."); //currently not used as every element uses an image
 
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBackgroundColor ?backgroundColor }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasHeight ?height }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementIconPosition ?iconPosition }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementIconURL ?iconURL}.");
-		queryStr.append("OPTIONAL{ ?element po:hasModelThumbnail ?imageURL }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementLabelPosition ?labelPosition }.");
+		//queryStr.append("OPTIONAL{ ?element po:paletteElementIconPosition ?iconPosition }."); //future use
+		//queryStr.append("OPTIONAL{ ?element po:paletteElementIconURL ?iconURL}."); //future use
+		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasModelImage ?imageURL }.");
+		//queryStr.append("OPTIONAL{ ?element po:paletteElementLabelPosition ?labelPosition }."); //future use
 		queryStr.append("OPTIONAL{ ?element po:paletteElementShape ?shape }.");
-		queryStr.append("OPTIONAL{ ?element po:hasPaletteThumbnail ?thumbnailURL }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasPaletteThumbnail ?thumbnailURL }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasWidth ?width }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderColor ?borderColor }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderThickness ?borderThickness }.");
-		queryStr.append("OPTIONAL{ ?element po:paletteElementBorderType ?borderType }.");
+		//queryStr.append("OPTIONAL{ ?element po:paletteElementBorderColor ?borderColor }."); //future use
+		//queryStr.append("OPTIONAL{ ?element po:paletteElementBorderThickness ?borderThickness }."); //future use
+		//queryStr.append("OPTIONAL{ ?element po:paletteElementBorderType ?borderType }."); //future use
 		queryStr.append("OPTIONAL{ ?representedClass rdfs:comment ?comment }.");
-		queryStr.append("OPTIONAL{ ?element po:hasParentPaletteConstruct ?parent }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasParentPaletteConstruct ?parent }.");
 
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
@@ -114,7 +114,7 @@ public class ModellingEnvironment {
 				tempPaletteElement.setRepresentedLanguageClass(soln.get("?representedClass").toString());
 				tempPaletteElement.setHiddenFromPalette(FormatConverter.ParseOntologyBoolean(soln.get("?hidden").toString()));
 				tempPaletteElement.setPaletteCategory(soln.get("?category").toString());
-				tempPaletteElement.setUsesImage(FormatConverter.ParseOntologyBoolean(soln.get("?usesImage").toString()));
+				//tempPaletteElement.setUsesImage(FormatConverter.ParseOntologyBoolean(soln.get("?usesImage").toString()));
 
 				if (soln.get("?backgroundColor") != null){
 					tempPaletteElement.setBackgroundColor(soln.get("?backgroundColor").toString());
@@ -123,18 +123,18 @@ public class ModellingEnvironment {
 				if (soln.get("?height") != null){
 					tempPaletteElement.setHeight(FormatConverter.ParseOntologyInteger(soln.get("?height").toString()));
 				}
-				if (soln.get("?iconPosition") != null){
+				/*if (soln.get("?iconPosition") != null){
 					tempPaletteElement.setIconPosition(soln.get("?iconPosition").toString());
 				}
 				if (soln.get("?iconURL") != null){
 					tempPaletteElement.setIconURL(soln.get("?iconURL").toString());
-				}
+				}*/
 				if (soln.get("?imageURL") != null){
 					tempPaletteElement.setImageURL(soln.get("?imageURL").toString());
 				}
-				if (soln.get("?labelPosition") != null){
+				/*if (soln.get("?labelPosition") != null){
 					tempPaletteElement.setLabelPosition(soln.get("?labelPosition").toString());
-				}
+				}*/
 				if (soln.get("?shape") != null){
 					tempPaletteElement.setShape(soln.get("?shape").toString());
 				}
@@ -144,7 +144,7 @@ public class ModellingEnvironment {
 				if (soln.get("?width") != null){
 					tempPaletteElement.setWidth(FormatConverter.ParseOntologyInteger(soln.get("?width").toString()));
 				}
-				if (soln.get("?borderColor") != null){
+				/*if (soln.get("?borderColor") != null){
 					tempPaletteElement.setBorderColor(soln.get("?borderColor").toString());
 				}
 				if (soln.get("?borderThickness") != null){
@@ -152,7 +152,7 @@ public class ModellingEnvironment {
 				}
 				if (soln.get("?borderType") != null){
 					tempPaletteElement.setBorderType(soln.get("?borderType").toString());
-				}
+				}*/
 				if (soln.get("?comment") != null){
 					tempPaletteElement.setComment(soln.get("?comment").toString());
 				}
@@ -293,13 +293,13 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
 		querStr.append("DELETE DATA {");
 		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr.append("po:" + pElement.getUuid() + " po:hiddenFromPalette false;");
+		querStr.append("po:" + pElement.getUuid() + " po:paletteConstructIsHiddenFromPalette false;");
 		querStr.append("}");
 
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 		querStr1.append("INSERT DATA {");
 		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr1.append("po:" + pElement.getUuid() + " po:hiddenFromPalette true;");
+		querStr1.append("po:" + pElement.getUuid() + " po:paletteConstructIsHiddenFromPalette true;");
 		querStr1.append("}");
 
 		ArrayList<ParameterizedSparqlString> queryList = new ArrayList<ParameterizedSparqlString>();
@@ -329,23 +329,23 @@ public class ModellingEnvironment {
 		System.out.println("    Element Label: "+ pElement.getLabel());
 		querStr.append("rdfs:label \"" +pElement.getLabel() +"\" ;");
 		System.out.println("    Element Hidden property: "+ pElement.getHiddenFromPalette());
-		querStr.append("po:hiddenFromPalette " + pElement.getHiddenFromPalette() +" ;");
+		querStr.append("po:paletteConstructIsHiddenFromPalette " + pElement.getHiddenFromPalette() +" ;");
 		System.out.println("    Element Parent: "+ pElement.getParentElement());
-		querStr.append("po:hasParentPaletteConstruct <" + "http://fhnw.ch/modelingEnvironment/PaletteOntology#"+pElement.getParentElement() +"> ;");
+		querStr.append("po:paletteConstructHasParentPaletteConstruct <" + "http://fhnw.ch/modelingEnvironment/PaletteOntology#"+pElement.getParentElement() +"> ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
-		querStr.append("po:hasPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
-		System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
-		querStr.append("po:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;");
+		querStr.append("po:paletteConstructIsGroupedInPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
+		//System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
+		//querStr.append("po:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;"); //currently not used
 		System.out.println("    Element Palette Image : "+ pElement.getThumbnailURL());
-		querStr.append("po:hasPaletteThumbnail \"" + pElement.getThumbnailURL() +"\" ;");
+		querStr.append("po:paletteConstructHasPaletteThumbnail \"" + pElement.getThumbnailURL() +"\" ;");
 		System.out.println("    Element Canvas Image: "+ pElement.getImageURL());
-		querStr.append("po:hasModelThumbnail \"" + pElement.getImageURL() +"\" ;");
+		querStr.append("po:paletteConstructHasModelImage \"" + pElement.getImageURL() +"\" ;");
 		System.out.println("    Element Image width: "+ pElement.getWidth());
 		querStr.append("po:paletteConstructHasWidth " + pElement.getWidth() +" ;");
 		System.out.println("    Element Image height: "+ pElement.getHeight());
 		querStr.append("po:paletteConstructHasHeight " + pElement.getHeight() +" ;");
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
-		querStr.append("po:isRelatedToModelingConstruct " + pElement.getRepresentedLanguageClass() +" ;");
+		querStr.append("po:paletteConstructIsRelatedToModelingLanguageConstruct " + pElement.getRepresentedLanguageClass() +" ;");
 		//The below property is not needed any more as object properties will be added separately
 		/*if(pElement.getRepresentedDomainClass()!=null) {
 			querStr.append("po:languageElementIsRelatedToDomainElement ");
@@ -526,13 +526,13 @@ public class ModellingEnvironment {
 
 		querStr.append("DELETE DATA { ");
 		querStr.append("<"+element.getId()+"> rdfs:label \"" +element.getLabel()+ "\" . ");
-		querStr.append("<"+element.getId()+"> po:hasModelThumbnail \"" +element.getImageURL()+ "\" . ");
-		querStr.append("<"+element.getId()+"> po:hasPaletteThumbnail \"" +element.getThumbnailURL()+ "\" . ");
+		querStr.append("<"+element.getId()+"> po:paletteConstructHasModelImage \"" +element.getImageURL()+ "\" . ");
+		querStr.append("<"+element.getId()+"> po:paletteConstructHasPaletteThumbnail \"" +element.getThumbnailURL()+ "\" . ");
 		querStr.append(" }");
 		querStr1.append("INSERT DATA { ");
 		querStr1.append("<"+element.getId()+"> rdfs:label \""+modifiedElement.getLabel()+ "\" . ");
-		querStr1.append("<"+element.getId()+"> po:hasModelThumbnail \""+modifiedElement.getImageURL()+ "\" . ");
-		querStr1.append("<"+element.getId()+"> po:hasPaletteThumbnail \"" +modifiedElement.getThumbnailURL()+ "\" . ");
+		querStr1.append("<"+element.getId()+"> po:paletteConstructHasModelImage \""+modifiedElement.getImageURL()+ "\" . ");
+		querStr1.append("<"+element.getId()+"> po:paletteConstructHasPaletteThumbnail \"" +modifiedElement.getThumbnailURL()+ "\" . ");
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
@@ -728,13 +728,13 @@ public class ModellingEnvironment {
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + datatypeProperty.getId());
-			querStr1.append("po:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
+			querStr1.append("lo:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
 			System.out.println("    Language Class: " + datatypeProperty.getDomainName());
-			querStr1.append("po:" + datatypeProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
+			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
 			System.out.println("    Property Label: " + datatypeProperty.getLabel());
-			querStr1.append("po:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
+			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
 			System.out.println("    Property Range: " + datatypeProperty.getRange());
-			querStr1.append("po:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
+			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
 			querStr1.append("}");
 			//querStr1.append(" WHERE { }");
 
@@ -750,8 +750,8 @@ public class ModellingEnvironment {
 	}
 
 	@POST
-	@Path("/createObjectProperty")
-	public Response insertObjectProperty(String json) {
+	@Path("/createBridgeConnector")
+	public Response insertBCObjectProperty(String json) {
 
 		System.out.println("/element received: " +json);
 
@@ -772,13 +772,57 @@ public class ModellingEnvironment {
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + objectProperty.getId());
-			querStr1.append("po:" + objectProperty.getId() + " rdf:type owl:ObjectProperty . ");
+			querStr1.append("lo:" + objectProperty.getId() + " rdf:type lo:hasBridgingConcept . ");
 			System.out.println("    Language Class: " + objectProperty.getDomainName());
-			querStr1.append("po:" + objectProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
+			querStr1.append("lo:" + objectProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
 			System.out.println("    Property Label: " + objectProperty.getLabel());
-			querStr1.append("po:" + objectProperty.getId() + " rdfs:label \"" + objectProperty.getLabel() + "\" . ");
+			querStr1.append("lo:" + objectProperty.getId() + " rdfs:label \"" + objectProperty.getLabel() + "\" . ");
 			System.out.println("    Property Range: " + objectProperty.getRange());
-			querStr1.append("po:" + objectProperty.getId() + " rdfs:range <" + objectProperty.getRange() + "> ");
+			querStr1.append("lo:" + objectProperty.getId() + " rdfs:range <" + objectProperty.getRange() + "> ");
+			querStr1.append("}");
+			//querStr1.append(" WHERE { }");
+
+			System.out.println("Create Object property");
+			System.out.println(querStr1.toString());
+			ontology.insertQuery(querStr1);
+		}
+
+
+
+		return Response.status(Status.OK).entity("{}").build();
+
+	}
+	
+	@POST
+	@Path("/createSemanticMapping")
+	public Response insertSMObjectProperty(String json) {
+
+		System.out.println("/element received: " +json);
+
+		Gson gson = new Gson();
+		ObjectProperty objectProperty = gson.fromJson(json, ObjectProperty.class);
+		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
+
+		if(objectProperty.getDomainName()!=null) {
+			String domainName = objectProperty.getDomainName();
+
+			if(!domainName.contains("#")) {
+				String[] domainArr = domainName.split(":");
+				domainName = GlobalVariables.getNamespaceMap().get(domainArr[0]) + "#" + domainArr[1];
+				System.out.println("Domain range to insert :" +domainName);
+			}
+
+
+			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
+			querStr1.append("INSERT DATA {");
+			System.out.println("    Property ID: " + objectProperty.getId());
+			querStr1.append("lo:" + objectProperty.getId() + " rdf:type lo:elementIsMappedWithDOConcept . ");
+			System.out.println("    Language Class: " + objectProperty.getDomainName());
+			querStr1.append("lo:" + objectProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
+			System.out.println("    Property Label: " + objectProperty.getLabel());
+			querStr1.append("lo:" + objectProperty.getId() + " rdfs:label \"" + objectProperty.getLabel() + "\" . ");
+			System.out.println("    Property Range: " + objectProperty.getRange());
+			querStr1.append("lo:" + objectProperty.getId() + " rdfs:range <" + objectProperty.getRange() + "> ");
 			querStr1.append("}");
 			//querStr1.append(" WHERE { }");
 
@@ -986,8 +1030,75 @@ public class ModellingEnvironment {
 	}
 
 	@GET
-	@Path("/getObjectProperties/{domainName}")
-	public Response getObjectProperties(@PathParam("domainName") String domainName) {
+	@Path("/getBridgeConnectors/{domainName}")
+	public Response getBCObjectProperties(@PathParam("domainName") String domainName) {
+		System.out.println("\n####################<start>####################");
+		System.out.println("/requested datatype properties for " +domainName);
+		System.out.println("####################<end>####################");
+		ArrayList<ObjectProperty> object_properties = new ArrayList<ObjectProperty>();
+
+		try {
+			if(domainName != null) {
+				String[] domainNameArr = domainName.split(":");
+				domainName = GlobalVariables.getNamespaceMap().get(domainNameArr[0].toLowerCase()) + "#" + domainNameArr[1];
+				System.out.println("domain range for query is : " +domainName);
+				object_properties = queryAllBCObjectProperties(domainName);
+
+				if (debug_properties){
+					for (int index = 0; index < object_properties.size(); index++){
+						System.out.println("Domain "+index+": ");
+					}
+				}
+			}
+		} catch (NoResultsException e) {
+			e.printStackTrace();
+		}
+
+
+		String json = gson.toJson(object_properties);
+		System.out.println("\n####################<start>####################");
+		System.out.println("/search genereated json: " +json);
+		System.out.println("####################<end>####################");
+		return Response.status(Status.OK).entity(json).build();
+	}
+
+	private ArrayList<ObjectProperty> queryAllBCObjectProperties(String domainName) throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<ObjectProperty> result = new ArrayList<ObjectProperty>();
+
+		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label WHERE {");
+		queryStr.append("?id a ?type . FILTER(?type IN (lo:hasBridgingConcept)) . "); //lo:elementIsMappedWithDOConcept, lo:hasBridgingConcept
+		queryStr.append("?id rdfs:domain ?domain . ");
+		queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
+		queryStr.append("?id rdfs:label ?label . ");
+		queryStr.append("?id rdfs:range ?range . ");
+
+		queryStr.append("} ");
+		queryStr.append("ORDER BY ?label");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				ObjectProperty objectProperty = new ObjectProperty();
+
+				QuerySolution soln = results.next();
+				objectProperty.setId(soln.get("?id").toString());
+				objectProperty.setLabel(soln.get("?label").toString());
+				objectProperty.setDomainName(domainName);
+				objectProperty.setRange(soln.get("?range").toString());
+
+				result.add(objectProperty);
+			}
+		}
+		qexec.close();
+		return result;
+	}
+	
+	@GET
+	@Path("/getSemanticMappings/{domainName}")
+	public Response getSMObjectProperties(@PathParam("domainName") String domainName) {
 		System.out.println("\n####################<start>####################");
 		System.out.println("/requested datatype properties for " +domainName);
 		System.out.println("####################<end>####################");
@@ -1023,7 +1134,7 @@ public class ModellingEnvironment {
 		ArrayList<ObjectProperty> result = new ArrayList<ObjectProperty>();
 
 		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label WHERE {");
-		queryStr.append("?id a ?type . FILTER(?type IN (owl:ObjectProperty)) . ");
+		queryStr.append("?id a ?type . FILTER(?type IN (lo:elementIsMappedWithDOConcept)) . "); //lo:elementIsMappedWithDOConcept, lo:hasBridgingConcept
 		queryStr.append("?id rdfs:domain ?domain . ");
 		queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
 		queryStr.append("?id rdfs:label ?label . ");
