@@ -750,7 +750,7 @@ public class ModellingEnvironment {
 	}
 
 	@POST
-	@Path("/createBridgeConnector")
+	@Path("/createBridgingConnector")
 	public Response insertBCObjectProperty(String json) {
 
 		System.out.println("/element received: " +json);
