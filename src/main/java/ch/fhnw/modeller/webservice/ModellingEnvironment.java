@@ -24,6 +24,8 @@ import com.google.gson.Gson;
 import ch.fhnw.modeller.model.graphEnvironment.Answer;
 import ch.fhnw.modeller.model.metamodel.DomainElement;
 import ch.fhnw.modeller.model.metamodel.GraphicalElement;
+import ch.fhnw.modeller.model.metamodel.ModelingLanguage;
+import ch.fhnw.modeller.model.metamodel.ModelingView;
 import ch.fhnw.modeller.model.palette.PaletteCategory;
 import ch.fhnw.modeller.model.palette.PaletteElement;
 import ch.fhnw.modeller.model.metamodel.DatatypeProperty;
@@ -39,6 +41,145 @@ public class ModellingEnvironment {
 	private Gson gson = new Gson();
 	private OntologyManager ontology = OntologyManager.getInstance();
 	private boolean debug_properties = false;
+	
+	@GET
+	@Path("/getModelingLanguages")
+	public Response getModelingLanguages() {
+		System.out.println("\n####################<start>####################");
+		System.out.println("/requested modeling languages" );
+		System.out.println("####################<end>####################");
+		ArrayList<ModelingLanguage> all_modeling_languages = new ArrayList<ModelingLanguage>();
+
+		try {
+			all_modeling_languages = queryAllModelingLangugages();
+
+			if (debug_properties){
+				for (int index = 0; index < all_modeling_languages.size(); index++){
+					System.out.println("Langugage "+index+": ");
+				}
+			}
+		} catch (NoResultsException e) {
+			e.printStackTrace();
+		}
+
+
+
+
+		String json = gson.toJson(all_modeling_languages);
+		System.out.println("\n####################<start>####################");
+		System.out.println("/search genereated json: " +json);
+		System.out.println("####################<end>####################");
+		return Response.status(Status.OK).entity(json).build();
+	}
+
+	private ArrayList<ModelingLanguage> queryAllModelingLangugages() throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<ModelingLanguage> result = new ArrayList<ModelingLanguage>();
+
+		queryStr.append("SELECT ?element ?label ?hasModelingView ?viewIsPartOfModelingLanguage ?type WHERE {");
+		queryStr.append("?element rdf:type ?type . FILTER(?type IN (lo:ModelingLanguage)) .");
+		queryStr.append("?element rdfs:label ?label .");
+		queryStr.append("OPTIONAL {?element lo:hasModelingView ?hasModelingView }.");	//not needed, remove	
+		queryStr.append("OPTIONAL {?element lo:viewIsPartOfModelingLanguage ?viewIsPartOfModelingLanguage }.");//not needed, remove
+
+		queryStr.append("}");
+		//queryStr.append("ORDER BY ?domain ?field");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				ModelingLanguage tempModelingLanguage = new ModelingLanguage();
+
+				QuerySolution soln = results.next();
+				String[] id = (soln.get("?element").toString()).split("#"); //eg. http://fhnw.ch/modelingEnvironment/LanguageOntology#DMN_1.1
+				String prefix = GlobalVariables.getNamespaceMap().get(id[0]); //eg. lo
+				String simpleId = prefix + ":" + id[1]; //eg. lo:DMN_1.1
+				tempModelingLanguage.setId(simpleId);
+				tempModelingLanguage.setLabel(soln.get("?label").toString());
+				if (soln.get("?hasModelingView") != null){
+					tempModelingLanguage.setHasModelingView(FormatConverter.ParseOntologyBoolean(soln.get("?hasModelingView").toString()));
+				}
+				if (soln.get("?viewIsPartOfModelingLanguage") != null){
+					tempModelingLanguage.setViewIsPartOfModelingLanguage(soln.get("?viewIsPartOfModelingLanguage").toString());
+				}
+
+
+				result.add(tempModelingLanguage);
+			}
+		}
+		qexec.close();
+		return result;
+	}
+	
+	@GET
+	@Path("/getModelingViews/{langId}")
+	public Response getModelingViews(@PathParam("langId") String langId) {
+		System.out.println("\n####################<start>####################");
+		System.out.println("/requested modeling languages" );
+		System.out.println("####################<end>####################");
+		ArrayList<ModelingView> all_modeling_views = new ArrayList<ModelingView>();
+
+		try {
+			all_modeling_views = queryAllModelingViews(langId);
+
+			if (debug_properties){
+				for (int index = 0; index < all_modeling_views.size(); index++){
+					System.out.println("View "+index+": ");
+				}
+			}
+		} catch (NoResultsException e) {
+			e.printStackTrace();
+		}
+
+
+
+
+		String json = gson.toJson(all_modeling_views);
+		System.out.println("\n####################<start>####################");
+		System.out.println("/search genereated json: " +json);
+		System.out.println("####################<end>####################");
+		return Response.status(Status.OK).entity(json).build();
+	}
+
+	private ArrayList<ModelingView> queryAllModelingViews(String langId) throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<ModelingView> result = new ArrayList<ModelingView>();
+
+		queryStr.append("SELECT ?element ?label ?isMainModelingView ?viewIsPartOfModelingLanguage ?type WHERE {");
+		//queryStr.append("?element rdf:type ?type . FILTER(?type IN (lo:ModelingView)) .");
+		queryStr.append("?element rdfs:label ?label .");
+		queryStr.append("?element lo:viewIsPartOfModelingLanguage "+ langId +" ."); 
+		queryStr.append("?element lo:isMainModelingView ?isMainModelingView .");		
+		
+		queryStr.append("}");
+		//queryStr.append("ORDER BY ?domain ?field");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				ModelingView tempModelingView = new ModelingView();
+
+				QuerySolution soln = results.next();
+				tempModelingView.setId(soln.get("?element").toString());
+				tempModelingView.setLabel(soln.get("?label").toString());
+				if (soln.get("?isMainModelingView") != null){
+					tempModelingView.setMainModelingView(FormatConverter.ParseOntologyBoolean(soln.get("?isMainModelingView").toString()));
+				}
+				if (soln.get("?viewIsPartOfModelingLanguage") != null){
+					tempModelingView.setViewIsPartOfModelingLanguage(soln.get("?viewIsPartOfModelingLanguage").toString());
+				}
+
+
+				result.add(tempModelingView);
+			}
+		}
+		qexec.close();
+		return result;
+	}
 
 	@GET
 	@Path("/getPaletteElements")
@@ -238,6 +379,7 @@ public class ModellingEnvironment {
 		qexec.close();
 		return result;
 	}
+	
 
 	private ArrayList<PaletteElement> addChildElements(ArrayList<PaletteElement> all_palette_elements){
 		ArrayList<PaletteElement> parentList = new ArrayList<PaletteElement>();
