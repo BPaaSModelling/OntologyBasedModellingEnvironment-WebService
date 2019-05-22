@@ -78,7 +78,7 @@ public class ModellingEnvironment {
 
 		queryStr.append("SELECT ?element ?label ?hasModelingView ?viewIsPartOfModelingLanguage ?type WHERE {");
 		queryStr.append("?element rdf:type ?type . FILTER(?type IN (lo:ModelingLanguage)) .");
-		queryStr.append("?element rdfs:label ?label .");
+		queryStr.append("?element rdfs:label ?label . ");
 		queryStr.append("OPTIONAL {?element lo:hasModelingView ?hasModelingView }.");	//not needed, remove	
 		queryStr.append("OPTIONAL {?element lo:viewIsPartOfModelingLanguage ?viewIsPartOfModelingLanguage }.");//not needed, remove
 
@@ -164,7 +164,10 @@ public class ModellingEnvironment {
 				ModelingView tempModelingView = new ModelingView();
 
 				QuerySolution soln = results.next();
-				tempModelingView.setId(soln.get("?element").toString());
+				String[] id = (soln.get("?element").toString()).split("#"); //eg. http://fhnw.ch/modelingEnvironment/LanguageOntology#DMN_1.1
+				String prefix = GlobalVariables.getNamespaceMap().get(id[0]); //eg. lo
+				String simpleId = prefix + ":" + id[1]; //eg. lo:DMN_1.1
+				tempModelingView.setId(simpleId);
 				tempModelingView.setLabel(soln.get("?label").toString());
 				if (soln.get("?isMainModelingView") != null){
 					tempModelingView.setMainModelingView(FormatConverter.ParseOntologyBoolean(soln.get("?isMainModelingView").toString()));
@@ -222,6 +225,7 @@ public class ModellingEnvironment {
 		//queryStr.append("?element po:languageElementIsRelatedToDomainElement ?representedDomainClasses ."); //not sure how to read multiple values
 		queryStr.append("?element po:paletteConstructIsHiddenFromPalette ?hidden .");
 		queryStr.append("?element po:paletteConstructIsGroupedInPaletteCategory ?category .");
+		//queryStr.append("?element po:paletteCategoryBelongsToModelingView " + viewId + " .");
 		//queryStr.append("?element po:paletteElementUsesImage ?usesImage ."); //currently not used as every element uses an image
 
 		queryStr.append("OPTIONAL{ ?element po:paletteElementBackgroundColor ?backgroundColor }.");
@@ -315,15 +319,15 @@ public class ModellingEnvironment {
 	}
 
 	@GET
-	@Path("/getPaletteCategories")
-	public Response getPaletteCategories() {
+	@Path("/getPaletteCategories/{viewId}")
+	public Response getPaletteCategories(@PathParam("viewId") String viewId) {
 		System.out.println("\n####################<start>####################");
 		System.out.println("/requested palette categories" );
 		System.out.println("####################<end>####################");
 		ArrayList<PaletteCategory> all_palette_categories = new ArrayList<PaletteCategory>();
 
 		try {
-			all_palette_categories = queryAllPaletteCategories();
+			all_palette_categories = queryAllPaletteCategories(viewId);
 
 			if (debug_properties){
 				for (int index = 0; index < all_palette_categories.size(); index++){
@@ -342,13 +346,14 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity(json).build();
 	}
 
-	private ArrayList<PaletteCategory> queryAllPaletteCategories() throws NoResultsException {
+	private ArrayList<PaletteCategory> queryAllPaletteCategories(String viewId) throws NoResultsException {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteCategory> result = new ArrayList<PaletteCategory>();
 
 		queryStr.append("SELECT ?category ?label ?orderNumber ?hidden WHERE {");
 		queryStr.append("?category rdf:type* po:PaletteCategory .");
-		queryStr.append("?category rdfs:label ?label .");
+		queryStr.append("?category rdfs:label ?label . ");
+		queryStr.append("?category po:paletteCategoryIsShownInModelingView " + viewId + " . ");
 		queryStr.append("OPTIONAL {?category po:paletteCategoryOrderNumber ?orderNumber . }");
 		queryStr.append("OPTIONAL {?category po:hiddenFromPalette ?hidden . }");
 
