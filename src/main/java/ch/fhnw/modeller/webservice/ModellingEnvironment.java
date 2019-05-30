@@ -1,5 +1,7 @@
 package ch.fhnw.modeller.webservice;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,8 +13,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
@@ -368,7 +372,10 @@ public class ModellingEnvironment {
 				PaletteCategory tempPaletteCategory = new PaletteCategory();
 
 				QuerySolution soln = results.next();
-				tempPaletteCategory.setId(soln.get("?category").toString());
+				String categoryURI = soln.get("?category").toString();
+				tempPaletteCategory.setId(categoryURI);
+				String idSuffix = categoryURI.split("#")[1];
+				tempPaletteCategory.setIdSuffix(idSuffix);
 				tempPaletteCategory.setLabel(soln.get("?label").toString());
 
 				if (soln.get("?orderNumber") != null){
@@ -1327,4 +1334,20 @@ public class ModellingEnvironment {
 		System.out.println("Returning namespace map: " + gson.toJson(GlobalVariables.getNamespaceMap()));
 		return Response.status(Status.OK).entity(gson.toJson(GlobalVariables.getNamespaceMap())).build();
 	}
+	
+	
+	    @GET
+	    @Path("/images")
+	    @Produces("image/png")
+	    public Response getCompanyLogo() throws IOException {
+	        String filePath = "images/Test_Agent.png";
+	        File file = new File(filePath);
+	 
+	        ResponseBuilder response = Response.ok((Object) file);
+	        
+	        response.header("Content-Disposition",
+	                "attachment; filename=Test_Agent.png");
+	        
+	        return response.build();
+	    }
 }

@@ -2,6 +2,7 @@ package ch.fhnw.modeller.model.palette;
 
 public class PaletteCategory {
 	String id;
+	String idSuffix;
 	String label;
 	int orderNumber;
 	boolean hiddenFromPalette;
@@ -29,9 +30,16 @@ public class PaletteCategory {
 	public void setHiddenFromPalette(boolean hiddenFromPalette) {
 		this.hiddenFromPalette = hiddenFromPalette;
 	}
-	public PaletteCategory(String id, String label, int orderNumber, boolean hiddenFromPalette) {
+	public String getIdSuffix() {
+		return idSuffix;
+	}
+	public void setIdSuffix(String idSuffix) {
+		this.idSuffix = idSuffix;
+	}
+	public PaletteCategory(String id, String idSuffix, String label, int orderNumber, boolean hiddenFromPalette) {
 		super();
 		this.id = id;
+		this.idSuffix = idSuffix;
 		this.label = label;
 		this.orderNumber = orderNumber;
 		this.hiddenFromPalette = hiddenFromPalette;
