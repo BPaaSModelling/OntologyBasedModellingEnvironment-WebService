@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
@@ -30,7 +31,8 @@ public final class OntologyManager {
 	private boolean localOntology = false;
 	//private Model rdfModel;
 	
-	private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment";
+	//private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment"; // endpoint for standalone server
+	private static String TRIPLESTOREENDPOINT 	= "https://fusekiherokutest.herokuapp.com/modellingEnvironment"; // endpoint for server on heroku
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
 	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
 	private static String READENDPOINT			= TRIPLESTOREENDPOINT + "/get";
@@ -46,6 +48,13 @@ public final class OntologyManager {
 //		rdfModel = ModelFactory.createDefaultModel();
 //		setNamespaces(rdfModel);
 //		loadOntologyiesToModel();
+		/*DatasetGraph ds = DatasetGraphFactory.createTxnMem() ;
+		DatasetGraph modellingEnv = DatasetGraphFactory.createTxnMem();
+		FusekiServer server = FusekiServer.create()
+			    .add("/ds", ds, true)
+			    .add("modellingEnv", modellingEnv, true)
+			    .build() ;
+			server.start() ;*/
 	}
 
 	private void applyReasoningRulesToMainModel(String ruleFile) {
