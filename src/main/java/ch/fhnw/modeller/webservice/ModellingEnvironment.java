@@ -222,13 +222,14 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 
-		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness ?comment ?type WHERE {");
+		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?categoryLabel ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness ?comment ?type WHERE {");
 		queryStr.append("?element rdf:type ?type . FILTER(?type IN (po:PaletteElement, po:PaletteConnector)) .");
 		queryStr.append("?element rdfs:label ?label .");
 		queryStr.append("?element po:paletteConstructIsRelatedToModelingLanguageConstruct ?representedClass .");
 		//queryStr.append("?element po:languageElementIsRelatedToDomainElement ?representedDomainClasses ."); //not sure how to read multiple values
 		queryStr.append("?element po:paletteConstructIsHiddenFromPalette ?hidden .");
 		queryStr.append("?element po:paletteConstructIsGroupedInPaletteCategory ?category .");
+		queryStr.append("?category rdfs:label ?categoryLabel .");
 		//queryStr.append("?element po:paletteCategoryBelongsToModelingView " + viewId + " .");
 		//queryStr.append("?element po:paletteElementUsesImage ?usesImage ."); //currently not used as every element uses an image
 
@@ -241,6 +242,7 @@ public class ModellingEnvironment {
 		queryStr.append("OPTIONAL{ ?element po:paletteElementShape ?shape }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasPaletteThumbnail ?thumbnailURL }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasWidth ?width }.");
+		//queryStr.append("OPTIONAL{ ?element po:paletteConstructBelongsToModelingView ?view }.");
 		//queryStr.append("OPTIONAL{ ?element po:paletteElementBorderColor ?borderColor }."); //future use
 		//queryStr.append("OPTIONAL{ ?element po:paletteElementBorderThickness ?borderThickness }."); //future use
 		//queryStr.append("OPTIONAL{ ?element po:paletteElementBorderType ?borderType }."); //future use
@@ -292,6 +294,9 @@ public class ModellingEnvironment {
 				}
 				if (soln.get("?width") != null){
 					tempPaletteElement.setWidth(FormatConverter.ParseOntologyInteger(soln.get("?width").toString()));
+				}
+				if (soln.get("?categoryLabel") != null){
+					tempPaletteElement.setCategoryLabel(soln.get("?categoryLabel").toString());
 				}
 				/*if (soln.get("?borderColor") != null){
 					tempPaletteElement.setBorderColor(soln.get("?borderColor").toString());
@@ -375,6 +380,7 @@ public class ModellingEnvironment {
 				String categoryURI = soln.get("?category").toString();
 				tempPaletteCategory.setId(categoryURI);
 				String idSuffix = categoryURI.split("#")[1];
+				System.out.println("idSuffix: "+idSuffix);
 				tempPaletteCategory.setIdSuffix(idSuffix);
 				tempPaletteCategory.setLabel(soln.get("?label").toString());
 

@@ -19,6 +19,7 @@ public class PaletteModel {
 	private String representedLanguageClass;
 	private ArrayList<Answer> languageSubclasses;
 	private ArrayList<String> representedDomainClass;
+	private String categoryLabel;
 	private String languagePrefix;
 	private String comment;
 	private ArrayList<DatatypeProperty> inheritedProperties;
@@ -49,6 +50,12 @@ public class PaletteModel {
 	}
 	public void setPaletteCategory(String paletteCategory) {
 		this.paletteCategory = paletteCategory;
+	}
+	public String getCategoryLabel() {
+		return categoryLabel;
+	}
+	public void setCategoryLabel(String categoryLabel) {
+		this.categoryLabel = categoryLabel;
 	}
 	public String getParentElement() {
 		return parentElement;
@@ -85,6 +92,7 @@ public class PaletteModel {
 	public void setRepresentedDomainClass(ArrayList<String> representedDomainClass) {
 		this.representedDomainClass = representedDomainClass;
 	}
+	
 	/*public String getDatatypePropertyLabel() {
 		return datatypePropertyLabel;
 	}
