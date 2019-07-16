@@ -36,7 +36,7 @@ public enum NAMESPACE {
 	PO( "po",									"http://fhnw.ch/modelingEnvironment/PaletteOntology#"),
 	DC( "dc",									"http://purl.org/dc/elements/1.1/"),
 	APQC( "apqc",								"http://ikm-group.ch/archimeo/apqc#"),
-	SAPSCENES( "sapscenes",						"http://fhnw.ch/SAPScenes#");
+	SAPSCENES( "sapscenes",						"http://fhnw.ch/SAPScenesOntology#");
 	
 	private String prefix;
 	private String url;
