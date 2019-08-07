@@ -401,14 +401,14 @@ public class ModellingEnvironment {
 
 	private ArrayList<PaletteElement> addChildElements(ArrayList<PaletteElement> all_palette_elements){
 		ArrayList<PaletteElement> parentList = new ArrayList<PaletteElement>();
-		System.out.println("pre: " + all_palette_elements.size());
+		//System.out.println("pre: " + all_palette_elements.size());
 		for (int i = 0; i < all_palette_elements.size(); i++){
 			if (all_palette_elements.get(i).getParentElement() == null){
 				parentList.add(all_palette_elements.get(i));
 			}
 		}
-		System.out.println("post: " + all_palette_elements.size());
-		System.out.println("Number of parents: " + parentList.size());
+		//System.out.println("post: " + all_palette_elements.size());
+		//System.out.println("Number of parents: " + parentList.size());
 		if (parentList.size() > 0){
 			for (int i = 0; i < parentList.size();i++){
 				if (parentList.get(i).getChildElements().size() == 0){
@@ -434,8 +434,9 @@ public class ModellingEnvironment {
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 		for (int i = 0; i < list.size(); i++){
 			if (list.get(i).getParentElement() != null &&
-					list.get(i).getParentElement().equals(parent.getId())){
+					list.get(i).getParentElement().equals(parent.getId()) && parent.getPaletteCategory().equals(list.get(i).getPaletteCategory())){
 				//System.out.println("2. Found a child of " + parent.getId() + " -> " + list.get(i).getId());
+				//System.out.println("3. Category of parent: " + parent.getPaletteCategory() + ", of child: " + list.get(i).getPaletteCategory());
 				result.add(list.get(i));
 			}
 		}
@@ -593,7 +594,7 @@ public class ModellingEnvironment {
 				querStr.append("<" + languageSubclass.getId() + "> rdfs:subClassOf <"+ element.getRepresentedLanguageClass() + "> . ");		
 				/** The assumption is that the palette element should be already available before creating a language subclass. 
 				 * The below clause creates a parent-child relationship between the existing element and the element to be integrated **/
-				querStr.append("<http://fhnw.ch/modelingEnvironment/PaletteOntology#" + uuid + "> po:hasParentPaletteConstruct <http://fhnw.ch/modelingEnvironment/PaletteOntology#"+ element.getParentElement() + "> . ");								
+				querStr.append("<http://fhnw.ch/modelingEnvironment/PaletteOntology#" + uuid + "> po:paletteConstructHasParentPaletteConstruct <http://fhnw.ch/modelingEnvironment/PaletteOntology#"+ element.getParentElement() + "> . <http://fhnw.ch/modelingEnvironment/PaletteOntology#" + uuid + "> po:paletteConstructIsGroupedInPaletteCategory <" + element.getPaletteCategory() + "> . ");								
 			}
 		}
 		querStr.append("}");
