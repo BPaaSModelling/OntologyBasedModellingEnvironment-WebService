@@ -641,7 +641,7 @@ public class ModellingEnvironment {
 	}
 
 	@POST
-	@Path("/createCanvasInstance")//Not being used in webapp
+	@Path("/createCanvasInstance")//Not yet being used in webapp
 	public Response insertCanvasInstance(String json) { 
 
 		System.out.println("/element received: " +json);

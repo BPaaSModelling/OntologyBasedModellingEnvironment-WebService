@@ -3,6 +3,7 @@ package ch.fhnw.modeller.webservice.ontology;
 public enum ONTOLOGY {
 	
 	APQC			("apqc",		"TTL",		"apqc.ttl"),
+	DKMM			("dkmm",		"TTL",		"dkmm.ttl"),
 	BPAAS			("bpaas",		"TTL",		"bpaas.ttl"),
 	FBPDO			("fbpdo",		"TTL",		"fbpdo.ttl"),
 	ARCHIMATE		("archi",		"TTL",		"ARCHIMEO/ARCHIMATE/ArchiMate.ttl"),
@@ -13,6 +14,8 @@ public enum ONTOLOGY {
 	EO				("eo",			"TTL",	 	"ARCHIMEO/EO/EO.ttl"),
 	NCO				("nco",			"TTL",	 	"ARCHIMEO/NCO/NCO.ttl"),
 	TOP				("top",			"TTL",		"ARCHIMEO/TOP/TOP.ttl"),
+	ICF				("icf",			"TTL",		"icf.ttl"),
+	
 	
 	
 	bdata			("bdata",			"TTL",	"bdata.ttl"),
