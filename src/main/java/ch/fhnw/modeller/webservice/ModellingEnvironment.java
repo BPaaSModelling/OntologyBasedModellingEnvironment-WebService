@@ -492,7 +492,7 @@ public class ModellingEnvironment {
 		System.out.println("    Element Hidden property: "+ pElement.getHiddenFromPalette());
 		querStr.append("po:paletteConstructIsHiddenFromPalette " + pElement.getHiddenFromPalette() +" ;");
 		System.out.println("    Element Parent: "+ pElement.getParentElement());
-		querStr.append("po:paletteConstructHasParentPaletteConstruct <" + "http://fhnw.ch/modelingEnvironment/PaletteOntology#"+pElement.getParentElement() +"> ;");
+		querStr.append("po:paletteConstructHasParentPaletteConstruct <" + pElement.getParentElement() +"> ;");
 		System.out.println("    Element Category: "+ pElement.getPaletteCategory());
 		querStr.append("po:paletteConstructIsGroupedInPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
 		//System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
