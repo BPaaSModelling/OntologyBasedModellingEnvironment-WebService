@@ -933,7 +933,7 @@ public class ModellingEnvironment {
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + objectProperty.getId());
-			querStr1.append("lo:" + objectProperty.getId() + " rdf:type lo:hasBridgingConcept . ");
+			querStr1.append("lo:" + objectProperty.getId() + " rdfs:subPropertyOf lo:elementHasBridgingConcept . ");
 			System.out.println("    Language Class: " + objectProperty.getDomainName());
 			querStr1.append("lo:" + objectProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
 			System.out.println("    Property Label: " + objectProperty.getLabel());
@@ -977,7 +977,7 @@ public class ModellingEnvironment {
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + objectProperty.getId());
-			querStr1.append("lo:" + objectProperty.getId() + " rdf:type lo:elementIsMappedWithDOConcept . ");
+			querStr1.append("lo:" + objectProperty.getId() + " rdfs:subPropertyOf lo:elementIsMappedWithDOConcept . ");
 			System.out.println("    Language Class: " + objectProperty.getDomainName());
 			querStr1.append("lo:" + objectProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
 			System.out.println("    Property Label: " + objectProperty.getLabel());
@@ -1228,7 +1228,7 @@ public class ModellingEnvironment {
 		ArrayList<ObjectProperty> result = new ArrayList<ObjectProperty>();
 
 		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label WHERE {");
-		queryStr.append("?id a ?type . FILTER(?type IN (lo:hasBridgingConcept)) . "); //lo:elementIsMappedWithDOConcept, lo:hasBridgingConcept
+		queryStr.append("?id rdfs:subPropertyOf ?subProperty . FILTER(?subProperty IN (lo:elementHasBridgingConcept)) . "); //lo:elementIsMappedWithDOConcept, lo:hasBridgingConcept
 		queryStr.append("?id rdfs:domain ?domain . ");
 		queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
 		queryStr.append("?id rdfs:label ?label . ");
@@ -1295,7 +1295,7 @@ public class ModellingEnvironment {
 		ArrayList<ObjectProperty> result = new ArrayList<ObjectProperty>();
 
 		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label WHERE {");
-		queryStr.append("?id a ?type . FILTER(?type IN (lo:elementIsMappedWithDOConcept)) . "); //lo:elementIsMappedWithDOConcept, lo:hasBridgingConcept
+		queryStr.append("?id rdfs:subPropertyOf ?subProperty . FILTER(?subProperty IN (lo:elementIsMappedWithDOConcept)) . "); //lo:elementIsMappedWithDOConcept, lo:hasBridgingConcept
 		queryStr.append("?id rdfs:domain ?domain . ");
 		queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
 		queryStr.append("?id rdfs:label ?label . ");
