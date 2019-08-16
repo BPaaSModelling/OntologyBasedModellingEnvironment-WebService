@@ -933,6 +933,7 @@ public class ModellingEnvironment {
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + objectProperty.getId());
+			querStr1.append("lo:" + objectProperty.getId() + " rdf:type owl:ObjectProperty .");
 			querStr1.append("lo:" + objectProperty.getId() + " rdfs:subPropertyOf lo:elementHasBridgingConcept . ");
 			System.out.println("    Language Class: " + objectProperty.getDomainName());
 			querStr1.append("lo:" + objectProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
@@ -977,6 +978,7 @@ public class ModellingEnvironment {
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + objectProperty.getId());
+			querStr1.append("lo:" + objectProperty.getId() + " rdf:type owl:ObjectProperty .");
 			querStr1.append("lo:" + objectProperty.getId() + " rdfs:subPropertyOf lo:elementIsMappedWithDOConcept . ");
 			System.out.println("    Language Class: " + objectProperty.getDomainName());
 			querStr1.append("lo:" + objectProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
