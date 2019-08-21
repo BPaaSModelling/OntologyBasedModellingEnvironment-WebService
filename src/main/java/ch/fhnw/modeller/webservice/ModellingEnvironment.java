@@ -889,7 +889,7 @@ public class ModellingEnvironment {
 			ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 			querStr1.append("INSERT DATA {");
 			System.out.println("    Property ID: " + datatypeProperty.getId());
-			querStr1.append("lo:" + datatypeProperty.getId() + " rdf:type owl:DataTypeProperty . ");
+			querStr1.append("lo:" + datatypeProperty.getId() + " rdf:type owl:DatatypeProperty . ");
 			System.out.println("    Language Class: " + datatypeProperty.getDomainName());
 			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:domain "+ "<" + domainName + "> . ");
 			System.out.println("    Property Label: " + datatypeProperty.getLabel());
@@ -1162,7 +1162,7 @@ public class ModellingEnvironment {
 		ArrayList<DatatypeProperty> result = new ArrayList<DatatypeProperty>();
 
 		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label WHERE {");
-		queryStr.append("?id a ?type . FILTER(?type IN (owl:DataTypeProperty)) . ");
+		queryStr.append("?id a ?type . FILTER(?type IN (owl:DatatypeProperty)) . ");
 		queryStr.append("?id rdfs:domain ?domain . ");
 		queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
 		queryStr.append("?id rdfs:label ?label . ");
