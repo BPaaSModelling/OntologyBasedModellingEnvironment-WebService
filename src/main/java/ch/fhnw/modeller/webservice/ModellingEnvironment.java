@@ -743,7 +743,7 @@ public class ModellingEnvironment {
 		querStr1.append("INSERT DATA { ");
 		//querStr1.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
 		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:label \"" + modifiedDatatypeProperty.getLabel() + "\" . ");
-		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:range \"" + "xsd:" + modifiedDatatypeProperty.getRange() + "\" . ");
+		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:range " + "xsd:" + modifiedDatatypeProperty.getRange() + " . ");
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
