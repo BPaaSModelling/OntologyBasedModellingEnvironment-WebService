@@ -453,14 +453,14 @@ public class ModellingEnvironment {
 
 		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
 		querStr.append("DELETE DATA {");
-		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr.append("po:" + pElement.getUuid() + " po:paletteConstructIsHiddenFromPalette false;");
+		System.out.println("    Element ID: " + pElement.getId());
+		querStr.append("<" + pElement.getId() + "> po:paletteConstructIsHiddenFromPalette false .");
 		querStr.append("}");
 
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 		querStr1.append("INSERT DATA {");
-		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr1.append("po:" + pElement.getUuid() + " po:paletteConstructIsHiddenFromPalette true;");
+		System.out.println("    Element ID: " + pElement.getId());
+		querStr1.append("<" + pElement.getId() + "> po:paletteConstructIsHiddenFromPalette true .");
 		querStr1.append("}");
 
 		ArrayList<ParameterizedSparqlString> queryList = new ArrayList<ParameterizedSparqlString>();
