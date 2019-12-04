@@ -31,8 +31,8 @@ public final class OntologyManager {
 	private boolean localOntology = false;
 	//private Model rdfModel;
 	
-	private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment"; // endpoint for standalone server
-	//private static String TRIPLESTOREENDPOINT 	= "https://fusekiherokutest.herokuapp.com/modellingEnvironment"; // endpoint for server on heroku
+	//private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment"; // endpoint for standalone server
+	private static String TRIPLESTOREENDPOINT 	= "https://fusekiherokutest.herokuapp.com/modellingEnvironment"; // endpoint for server on heroku
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
 	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
 	private static String READENDPOINT			= TRIPLESTOREENDPOINT + "/get";
