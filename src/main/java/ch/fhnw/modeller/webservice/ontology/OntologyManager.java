@@ -33,7 +33,7 @@ public final class OntologyManager {
 	
 	//private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment"; // endpoint for standalone server
 	//private static String TRIPLESTOREENDPOINT 	= "https://fusekiherokutest.herokuapp.com/modellingEnvironment"; // endpoint for demo server on heroku
-	private static String TRIPLESTOREENDPOINT 	= "https://aoame-fuseki.herokuapp.com/modellingEnvironment"; // endpoint for deployment
+	private static String TRIPLESTOREENDPOINT 	= "https://aoame-fuseki.herokuapp.com"; // endpoint for deployment
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
 	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
 	private static String READENDPOINT			= TRIPLESTOREENDPOINT + "/get";
