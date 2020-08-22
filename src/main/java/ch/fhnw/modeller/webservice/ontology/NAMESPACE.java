@@ -1,5 +1,7 @@
 package ch.fhnw.modeller.webservice.ontology;
 
+import ch.fhnw.modeller.model.model.Model;
+
 public enum NAMESPACE {
 	RDFS(		"rdfs",							"http://www.w3.org/2000/01/rdf-schema#"),
 	RDF(		"rdf", 							"http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
@@ -38,7 +40,9 @@ public enum NAMESPACE {
 	//APQC( "apqc",								"http://ikm-group.ch/archimeo/apqc#"),
 	DKMM( "dkmm",								"http://fhnw.ch/modelingEnvironment/dkmm#"),
 	ICF( "icf",								"http://who.int/icf#"),
-	SAPSCENES( "sapscenes",						"http://fhnw.ch/SAPScenesOntology#");
+	SAPSCENES( "sapscenes",					"http://fhnw.ch/SAPScenesOntology#"),
+	MODEL("eval2", 							"http://fhnw.ch/modelingEnvironment/EvaluationTwo#")
+	;
 	
 	private String prefix;
 	private String url;
