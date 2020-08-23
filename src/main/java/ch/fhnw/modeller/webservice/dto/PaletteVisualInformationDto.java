@@ -10,4 +10,5 @@ public class PaletteVisualInformationDto {
     private String imageUrl;
     private String fromArrow;
     private String toArrow;
+    private String arrowStroke;
 }

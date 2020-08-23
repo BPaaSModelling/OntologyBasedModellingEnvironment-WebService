@@ -215,7 +215,7 @@ public class ModellingEnvironment {
 	private PaletteVisualInformationDto getPaletteVisualInformation(String diagramId) {
 
 		String command = String.format(
-				"SELECT ?imgUrl ?cat ?fromArrow ?toArrow\n" +
+				"SELECT ?imgUrl ?cat ?fromArrow ?toArrow ?arrowStroke\n" +
 				"WHERE\n" +
 				"{\n" +
 				"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po .\n" +
@@ -223,6 +223,7 @@ public class ModellingEnvironment {
 				"\t?po po:paletteConstructIsGroupedInPaletteCategory ?cat\n" +
 				"\tOPTIONAL { ?po po:paletteConnectorConfiguresFromArrowHead ?fromArrow }\n" +
 				"\tOPTIONAL { ?po po:paletteConnectorConfiguresToArrowHead ?toArrow }\n" +
+				"\tOPTIONAL { ?po po:paletteConnectorConfiguresArrowStroke ?arrowStroke }\n" +
 				"}",
 				MODEL.getPrefix(),
 				diagramId);
@@ -237,11 +238,13 @@ public class ModellingEnvironment {
 
 		String fromArrow = extractIdFrom(querySolution, "?fromArrow");
 		String toArrow = extractIdFrom(querySolution, "?toArrow");
+		String arrowStroke = extractIdFrom(querySolution, "?arrowStroke");
 
 		PaletteVisualInformationDto dto = new PaletteVisualInformationDto();
 		dto.setFromArrow(fromArrow);
 		dto.setToArrow(toArrow);
 		dto.setImageUrl(imageUrl);
+		dto.setArrowStroke(arrowStroke);
 
 		return dto;
 	}
@@ -933,10 +936,21 @@ public class ModellingEnvironment {
 	@Path("/arrow-structures")
 	public Response getArrowDefinitions() {
 
-		String command = "SELECT ?arrowHeadLabel\n" +
+		// strokes are taken from https://gojs.net/latest/samples/relationships.html
+
+		List<String> arrowHeads = getArrowHeads();
+		List<String> arrowStrokes = getArrowStrokes();
+
+		String payload = gson.toJson(new ArrowStructuresDto(arrowHeads, arrowStrokes));
+
+		return Response.ok().entity(payload).build();
+	}
+
+	private List<String> getArrowHeads() {
+		String command = "SELECT ?label\n" +
 				"WHERE {\n" +
 				"\t?arrowHead rdf:type po:ArrowHead .\n" +
-				"\t?arrowHead rdfs:label ?arrowHeadLabel\n" +
+				"\t?arrowHead rdfs:label ?label\n" +
 				"}\n";
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
@@ -945,15 +959,31 @@ public class ModellingEnvironment {
 		List<String> arrowHeads = new ArrayList<>();
 
 		while (resultSet.hasNext()) {
-			String arrowHeadLabel = extractValueFrom(resultSet.next(), "?arrowHeadLabel");
-			arrowHeads.add(arrowHeadLabel);
+			String label = extractValueFrom(resultSet.next(), "?label");
+			arrowHeads.add(label);
 		}
-
-		String payload = gson.toJson(arrowHeads);
-
-		return Response.ok().entity(payload).build();
+		return arrowHeads;
 	}
-	
+
+	private List<String> getArrowStrokes() {
+		String command = "SELECT ?label\n" +
+				"WHERE {\n" +
+				"\t?arrowHead rdf:type po:ArrowStroke .\n" +
+				"\t?arrowHead rdfs:label ?label\n" +
+				"}\n";
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		List<String> strokes = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			String label = extractValueFrom(resultSet.next(), "?label");
+			strokes.add(label);
+		}
+		return strokes;
+	}
+
 	@GET
 	@Path("/getModelingLanguages")
 	public Response getModelingLanguages() {
@@ -1616,6 +1646,7 @@ public class ModellingEnvironment {
 		querStr.append("<"+element.getId()+"> rdfs:label \"" +element.getLabel()+ "\" . ");
 		querStr.append("<"+element.getId()+"> po:paletteConstructHasModelImage \"" +element.getImageURL()+ "\" . ");
 		querStr.append("<"+element.getId()+"> po:paletteConstructHasPaletteThumbnail \"" +element.getThumbnailURL()+ "\" . ");
+
 		if (element.getToArrow() != null) {
 			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresToArrowHead \"" + element.getToArrow() + "\" . ");
 		}
@@ -1623,6 +1654,11 @@ public class ModellingEnvironment {
 		if (element.getFromArrow() != null) {
 			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresFromArrowHead \"" + element.getFromArrow() + "\" . ");
 		}
+
+		if (element.getArrowStroke() != null) {
+			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresArrowStroke \"" + element.getArrowStroke() + "\" . ");
+		}
+
 		querStr.append(" }");
 		querStr1.append("INSERT DATA { ");
 		querStr1.append("<"+element.getId()+"> rdfs:label \""+modifiedElement.getLabel()+ "\" . ");
@@ -1634,6 +1670,10 @@ public class ModellingEnvironment {
 
 		if (modifiedElement.getFromArrow() != null) {
 			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresFromArrowHead \"" + modifiedElement.getFromArrow() + "\" . ");
+		}
+
+		if (modifiedElement.getArrowStroke() != null) {
+			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresArrowStroke \"" + modifiedElement.getArrowStroke() + "\" . ");
 		}
 		querStr1.append(" }");
 

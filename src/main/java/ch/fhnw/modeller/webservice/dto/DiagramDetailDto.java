@@ -27,6 +27,7 @@ public class DiagramDetailDto {
     private String imageUrl;
     private String fromArrow;
     private String toArrow;
+    private String arrowStroke;
 
     public DiagramDetailDto() {}
 
@@ -71,6 +72,7 @@ public class DiagramDetailDto {
         dto.setImageUrl(visualInformationDto.getImageUrl());
         dto.setFromArrow(visualInformationDto.getFromArrow());
         dto.setToArrow(visualInformationDto.getToArrow());
+        dto.setArrowStroke(visualInformationDto.getArrowStroke());
 
         return dto;
     }
