@@ -861,8 +861,8 @@ public class ModellingEnvironment {
 				"	%1$s rdf:type ?type .\n" +
 				"	%1$s rdf:type %7$s:ModelConstructInstance .\n" +
 				"	%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
-				"	%1$s lo:modelingRelationHasSourceModelingElement %7$s:%8$s .\n" +
-				"	%1$s lo:modelingRelationHasTargetModelingElement %7$s:%9$s .\n" +
+				"	%1$s lo:modelingRelationHasSourceModelingElement ?fromInstance .\n" +
+				"	%1$s lo:modelingRelationHasTargetModelingElement ?toInstance .\n" +
 				"	%2$s rdf:type %7$s:Diagram .\n" +
 				"	%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
 				"	%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
@@ -876,6 +876,10 @@ public class ModellingEnvironment {
 				"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +
 				"	po:%3$s po:paletteConstructHasHeight ?height .\n" +
 				"	po:%3$s po:paletteConstructHasWidth ?width .\n" +
+				"   %7$s:%8$s rdf:type %7$s:Diagram . \n" +
+				"   %7$s:%9$s rdf:type %7$s:Diagram . \n" +
+				"   %7$s:%8$s %7$s:diagramVisualisesModelingLanguageConstructInstance ?fromInstance . \n" +
+				"   %7$s:%9$s %7$s:diagramVisualisesModelingLanguageConstructInstance ?toInstance . \n" +
 				"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
 				"}",
 				elementId,
