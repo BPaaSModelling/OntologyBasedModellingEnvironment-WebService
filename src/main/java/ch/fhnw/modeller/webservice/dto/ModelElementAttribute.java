@@ -9,6 +9,4 @@ public class ModelElementAttribute {
     private String relation;
     private String valuePrefix;
     private String value;
-    private String rangePrefix;
-    private String range;
 }

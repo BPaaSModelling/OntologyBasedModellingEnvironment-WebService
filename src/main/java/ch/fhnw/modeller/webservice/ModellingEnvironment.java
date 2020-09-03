@@ -202,7 +202,7 @@ public class ModellingEnvironment {
 
 			String modelElementId = diagramAttributes.get("diagramVisualisesModelingLanguageConstructInstance").split("#")[1];
 			Optional<String> elementTypeOpt = getModelElementType(modelElementId);
-			Map<String, String> modelElementAttributes = getOverridableModelElementAttributes(modelElementId);
+			ModelElementAttributes modelElementAttributes = getOverridableModelElementAttributes(modelElementId);
 
 			elementTypeOpt.ifPresent(elementType -> diagrams.add(DiagramDetailDto.from(diagramId, diagramAttributes, modelElementAttributes, elementType, visualInformationDto)));
 		});
@@ -256,7 +256,9 @@ public class ModellingEnvironment {
 
 		DiagramDetailDto dto = getDiagramDetail(modelId, diagramId);
 
-		return Response.status(Status.OK).entity(dto).build();
+		String payload = gson.toJson(dto);
+
+		return Response.status(Status.OK).entity(payload).build();
 	}
 
 	private DiagramDetailDto getDiagramDetail(String modelId, String diagramId) {
@@ -265,7 +267,7 @@ public class ModellingEnvironment {
 		Map<String, String> diagramAttributes = getDiagramAttributes(diagramId);
 		String modelElement = diagramAttributes.get("diagramVisualisesModelingLanguageConstructInstance");
 		String modelElementId = modelElement.split("#")[1];
-		Map<String, String> modelElementAttributes = getOverridableModelElementAttributes(modelElementId);
+		ModelElementAttributes modelElementAttributes = getOverridableModelElementAttributes(modelElementId);
 
 		Optional<String> elementTypeOpt = getModelElementType(modelElementId);
 		PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(diagramId);
@@ -352,9 +354,7 @@ public class ModellingEnvironment {
 		return attributes;
 	}
 
-	private Map<String, String> getOverridableModelElementAttributes(String modelElementId) {
-
-		Map<String, String> attributes = new HashMap<>();
+	private ModelElementAttributes getOverridableModelElementAttributes(String modelElementId) {
 
 		String command = String.format(
 				"SELECT ?objProp ?range ?instanceValue ?classValue\n" +
@@ -405,15 +405,31 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
+		Set<RelationDto> options = new HashSet<>();
+		List<ModelElementAttribute> values = new ArrayList<>();
+
 		while (resultSet.hasNext()) {
 			QuerySolution solution = resultSet.next();
 			String relation = extractValueFrom(solution, "?objProp");
 			String instanceValue = extractValueFrom(solution, "?instanceValue");
 			String classValue = extractValueFrom(solution, "?classValue");
+			String actualValue = instanceValue != null ? instanceValue : classValue;
 
-			attributes.putIfAbsent(relation, instanceValue != null ? instanceValue : classValue);
+			RelationDto relationDto = new RelationDto(relation.split("#")[0], relation.split("#")[1]);
+			options.add(relationDto);
+
+			if (actualValue != null) {
+				ModelElementAttribute value = new ModelElementAttribute();
+				value.setRelation(relationDto.getRelation());
+				value.setRelationPrefix(relationDto.getRelationPrefix());
+				value.setValuePrefix(actualValue.split("#")[0]);
+				value.setValue(actualValue.split("#")[1]);
+
+				values.add(value);
+			}
 		}
-		return attributes;
+
+		return new ModelElementAttributes(options, values);
 	}
 
 	@PUT
@@ -545,19 +561,61 @@ public class ModellingEnvironment {
 
 		if (diagram.getModelingLanguageConstructInstance().equals(diagramToBeStored.getModelingLanguageConstructInstance()) &&
 			diagramToBeStored.getModelElementAttributes() != null &&
-			diagramToBeStored.getModelElementAttributes().size() > 1) {
+			diagramToBeStored.getModelElementAttributes().getValues() != null &&
+			!diagramToBeStored.getModelElementAttributes().getValues().isEmpty()) {
 
-			ParameterizedSparqlString deleteQueryElement = getDeleteModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagramToBeStored.getModelElementAttributes());
+			ParameterizedSparqlString deleteQueryElement = getDeleteModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagramToBeStored.getModelElementAttributes().getValues());
 			queries.add(deleteQueryElement);
 
-			getInsertModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagramToBeStored.getModelElementAttributes())
+			getInsertModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagramToBeStored.getModelElementAttributes().getValues())
 					.ifPresent(queries::add);
 		}
 
+		if ("ModelingContainer".equals(diagram.getModelElementType())) {
+			ParameterizedSparqlString deleteQueryElement = getDeleteContainedModelElementsQuery(diagram.getModelingLanguageConstructInstance());
+			queries.add(deleteQueryElement);
+
+			if (diagramToBeStored.getContainedDiagrams() != null && !diagramToBeStored.getContainedDiagrams().isEmpty()) {
+				ParameterizedSparqlString insertQueryElement = getInsertContainedModelElementsQuery(diagramToBeStored.getModelingLanguageConstructInstance(), diagramToBeStored.getContainedDiagrams());
+				queries.add(insertQueryElement);
+			}
+		}
 
 		ontology.insertMultipleQueries(queries);
 
 		return Response.status(Status.CREATED).entity(getDiagram(modelId, diagramId).getEntity()).build();
+	}
+
+	private ParameterizedSparqlString getInsertContainedModelElementsQuery(String modelingLanguageConstructInstance, List<String> containedDiagrams) {
+
+		StringBuilder command = new StringBuilder("INSERT DATA {\n");
+		containedDiagrams.forEach(diagram -> {
+			command.append(String.format(
+					"\t%1$s:%2$s %1$s:modelingContainerContainsModelingLanguageConstruct %1$s:%3$s .\n",
+					MODEL.getPrefix(),
+					modelingLanguageConstructInstance,
+					diagram));
+		});
+		command.append("}");
+
+		return new ParameterizedSparqlString(command.toString());
+	}
+
+	private ParameterizedSparqlString getDeleteContainedModelElementsQuery(String modelingLanguageConstructInstance) {
+
+		String command = String.format(
+				"DELETE\n" +
+				"{\n" +
+				"\t%1$s:%2$s %1$s:modelingContainerContainsModelingLanguageConstruct ?o\n" +
+				"}\n" +
+				"WHERE {\n" +
+				"\t%1$s:%2$s %1$s:modelingContainerContainsModelingLanguageConstruct ?o\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelingLanguageConstructInstance
+		);
+
+		return new ParameterizedSparqlString(command);
 	}
 
 	private Optional<ParameterizedSparqlString> getInsertModelElementDataQuery(String modelingLanguageConstruct, List<ModelElementAttribute> modelElementAttributes) {

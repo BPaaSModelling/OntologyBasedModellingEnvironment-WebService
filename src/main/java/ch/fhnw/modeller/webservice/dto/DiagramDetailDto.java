@@ -6,12 +6,9 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Data
 public class DiagramDetailDto {
-
-    private List<ModelElementAttribute> modelElementAttributes;
 
     private String id;
     private String paletteConstruct;
@@ -28,10 +25,14 @@ public class DiagramDetailDto {
     private String fromArrow;
     private String toArrow;
     private String arrowStroke;
+    private ModelElementAttributes modelElementAttributes;
+    private String fromDiagram;
+    private String toDiagram;
+    private List<String> containedDiagrams;
 
     public DiagramDetailDto() {}
 
-    public static DiagramDetailDto from(String diagramId, Map<String, String> diagramAttributes, Map<String, String> modelElementAttributes, String modelElementType, PaletteVisualInformationDto visualInformationDto) {
+    public static DiagramDetailDto from(String diagramId, Map<String, String> diagramAttributes, ModelElementAttributes modelElementAttributes, String modelElementType, PaletteVisualInformationDto visualInformationDto) {
 
         DiagramDetailDto dto = new DiagramDetailDto();
 
@@ -53,21 +54,21 @@ public class DiagramDetailDto {
 
         dto.setModelElementType(modelElementType);
 
-        List<ModelElementAttribute> attributes = new ArrayList<>();
-
-        modelElementAttributes.forEach((key, value) -> {
-            ModelElementAttribute attribute = new ModelElementAttribute();
-            attribute.setRelationPrefix(key.split("#")[0]);
-            attribute.setRelation(key.split("#")[1]);
-            if (value != null) {
-                attribute.setValuePrefix(value.split("#")[0]);
-                attribute.setValue(value.split("#")[1]);
+        modelElementAttributes.getValues().forEach(modelElementAttribute -> {
+            if ("modelingRelationHasSourceModelingElement".equals(modelElementAttribute.getRelation())) {
+                dto.setFromDiagram(modelElementAttribute.getValue());
             }
 
-            attributes.add(attribute);
+            if ("modelingRelationHasTargetModelingElement".equals(modelElementAttribute.getRelation())) {
+                dto.setToDiagram(modelElementAttribute.getValue());
+            }
+
+            if ("modelingContainerContainsModelingLanguageConstruct".equals(modelElementAttribute.getRelation())) {
+                dto.addContainedDiagram(modelElementAttribute.getValue());
+            }
         });
 
-        dto.setModelElementAttributes(attributes);
+        dto.setModelElementAttributes(modelElementAttributes);
 
         dto.setImageUrl(visualInformationDto.getImageUrl());
         dto.setFromArrow(visualInformationDto.getFromArrow());
@@ -75,6 +76,11 @@ public class DiagramDetailDto {
         dto.setArrowStroke(visualInformationDto.getArrowStroke());
 
         return dto;
+    }
+
+    public void addContainedDiagram(String diagramKey) {
+        if (this.containedDiagrams == null) this.containedDiagrams = new ArrayList<>();
+        this.containedDiagrams.add(diagramKey);
     }
 
     public boolean hasOptionalValues() {
