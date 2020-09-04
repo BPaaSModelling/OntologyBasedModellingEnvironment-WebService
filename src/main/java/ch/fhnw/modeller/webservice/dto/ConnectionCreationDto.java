@@ -11,4 +11,5 @@ public class ConnectionCreationDto {
     private String uuid;
     private String to;
     private String from;
+    private InstantiationTargetType instantiationType;
 }

@@ -201,10 +201,16 @@ public class ModellingEnvironment {
 			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(diagramId);
 
 			String modelElementId = diagramAttributes.get("diagramVisualisesModelingLanguageConstructInstance").split("#")[1];
-			Optional<String> elementTypeOpt = getModelElementType(modelElementId);
-			ModelElementAttributes modelElementAttributes = getOverridableModelElementAttributes(modelElementId);
+			ModelElementAttributes modelElementAttributes = getModelElementAttributesAndOptions(modelElementId);
 
-			elementTypeOpt.ifPresent(elementType -> diagrams.add(DiagramDetailDto.from(diagramId, diagramAttributes, modelElementAttributes, elementType, visualInformationDto)));
+			modelElementAttributes.getModelElementType()
+					.ifPresent(elementType -> diagrams.add(
+									DiagramDetailDto.from(
+											diagramId,
+											diagramAttributes,
+											modelElementAttributes,
+											elementType,
+											visualInformationDto)));
 		});
 
 		String payload = gson.toJson(diagrams);
@@ -267,24 +273,32 @@ public class ModellingEnvironment {
 		Map<String, String> diagramAttributes = getDiagramAttributes(diagramId);
 		String modelElement = diagramAttributes.get("diagramVisualisesModelingLanguageConstructInstance");
 		String modelElementId = modelElement.split("#")[1];
-		ModelElementAttributes modelElementAttributes = getOverridableModelElementAttributes(modelElementId);
+		ModelElementAttributes modelElementAttributes = getModelElementAttributesAndOptions(modelElementId);
 
-		Optional<String> elementTypeOpt = getModelElementType(modelElementId);
 		PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(diagramId);
 
-		return elementTypeOpt.map(elementType -> DiagramDetailDto.from(diagramId, diagramAttributes, modelElementAttributes, elementType, visualInformationDto))
+		return modelElementAttributes.getModelElementType()
+				.map(elementType -> DiagramDetailDto.from(diagramId, diagramAttributes, modelElementAttributes, elementType, visualInformationDto))
 				.orElse(null);
 	}
 
-	private Optional<String> getModelElementType(String modelElementId) {
+	private Optional<ModelElementType> getModelElementType(String modelElementId) {
 
 		String command = String.format(
-				"SELECT ?type\n" +
-				"WHERE {\n" +
-				"\t%1$s:%2$s rdf:type %1$s:ModelConstructInstance .\n" +
+				"SELECT ?type ?class \n" +
+				"WHERE { \n" +
+				"\t{\n" +
+				"\t%1$s:%2$s rdf:type %1$s:ModelConstructInstance . \n" +
+				"\t%1$s:%2$s rdfs:subClassOf* ?type . \n" +
+				"\t?type rdfs:subClassOf lo:ModelingLanguageConstruct \n" +
+				"\t}\n" +
+				"\tUNION\n" +
+				"\t{\n" +
+				"\t%1$s:%2$s rdf:type %1$s:ModelConstructInstance . \n" +
 				"\t%1$s:%2$s rdf:type ?class .\n" +
-				"\t?class rdfs:subClassOf* ?type .\n" +
-				"\t?type rdfs:subClassOf lo:ModelingLanguageConstruct\n" +
+				"\t?class rdfs:subClassOf* ?type . \n" +
+				"\t?type rdfs:subClassOf lo:ModelingLanguageConstruct \n" +
+				"\t}\n" +
 				"}",
 				MODEL.getPrefix(),
 				modelElementId
@@ -294,7 +308,17 @@ public class ModellingEnvironment {
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		if (resultSet.hasNext()) {
-			return Optional.ofNullable(extractIdFrom(resultSet.next(), "?type"));
+			QuerySolution next = resultSet.next();
+			String type = extractIdFrom(next, "?type");
+			String directType = extractIdFrom(next, "?class");
+
+			if (type != null) {
+				ModelElementType modelElementType = new ModelElementType();
+				modelElementType.setType(type);
+				modelElementType.setInstantiationType(directType != null ? InstantiationTargetType.Instance : InstantiationTargetType.Class);
+
+				return Optional.of(modelElementType);
+			}
 		}
 
 		return Optional.empty();
@@ -354,12 +378,20 @@ public class ModellingEnvironment {
 		return attributes;
 	}
 
-	private ModelElementAttributes getOverridableModelElementAttributes(String modelElementId) {
+	private ModelElementAttributes getModelElementAttributesAndOptions(String modelElementId) {
+
+		Optional<ModelElementType> elementTypeOpt = getModelElementType(modelElementId);
+
+		String instanceCreationBit = "\t\t%1$s:%2$s rdf:type ?mloConcept .\n";
+		String classCreationBit = 	"\t\t%1$s:%2$s rdf:type owl:Class .\n" +
+									"\t\t%1$s:%2$s rdfs:subClassOf ?mloConcept .\n";
+
+		String creationBit = elementTypeOpt.isPresent() && elementTypeOpt.get().getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
 
 		String command = String.format(
 				"SELECT ?objProp ?range ?instanceValue ?classValue\n" +
 				"WHERE {\n" +
-				"\t\t%1$s:%2$s rdf:type ?mloConcept .\n" +
+				creationBit +
 				"\t\t?mloConcept rdfs:subClassOf* ?relTarget .\n" +
 				"\n" +
 				"\t\t?objProp rdf:type owl:ObjectProperty .\n" +
@@ -429,7 +461,10 @@ public class ModellingEnvironment {
 			}
 		}
 
-		return new ModelElementAttributes(options, values);
+		return new ModelElementAttributes(
+				options,
+				values,
+				elementTypeOpt.map(ModelElementType::getType).orElse(null));
 	}
 
 	@PUT
@@ -446,20 +481,12 @@ public class ModellingEnvironment {
 			throw new IllegalArgumentException("Palette Construct must be related to a Modeling Language Construct");
 		}
 
-		String modelIdentifier = String.format("%s:%s", MODEL.getPrefix(), modelId);
+		String elementId = String.format("%s_%s", mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
 
-		String diagramId = String.format("%s:%s",
-				MODEL.getPrefix(),
-				diagramCreationDto.getUuid());
-
-		String elementId = String.format("%s:%s_%s", MODEL.getPrefix(), mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
-
-		String command = getDiagramCreationCommand(diagramCreationDto, modelIdentifier, diagramId, elementId);
-
-		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ParameterizedSparqlString query = getDiagramCreationQuery(diagramCreationDto, modelId, elementId);
 		ontology.insertQuery(query);
 
-		Object diagram = getDiagram(modelId, diagramId.split(":")[1]).getEntity();
+		Object diagram = getDiagram(modelId, diagramCreationDto.getUuid()).getEntity();
 		return Response.status(Status.CREATED).entity(diagram).build();
 	}
 
@@ -477,21 +504,18 @@ public class ModellingEnvironment {
 			throw new IllegalArgumentException("Palette Construct must be related to a Modeling Language Construct");
 		}
 
-		String modelIdentifier = String.format("%s:%s", MODEL.getPrefix(), modelId);
-
-		String diagramId = String.format("%s:%s_Diagram_%s",
-				MODEL.getPrefix(),
+		String diagramId = String.format("%s_Diagram_%s",
 				connectionCreationDto.getPaletteConstruct(),
 				connectionCreationDto.getUuid());
 
-		String elementId = String.format("%s:%s_%s", MODEL.getPrefix(), mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
+		String elementId = String.format("%s_%s", mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
 
-		String command = getConnectionCreationCommand(connectionCreationDto, modelIdentifier, diagramId, elementId);
+		String command = getConnectionCreationCommand(connectionCreationDto, modelId, diagramId, elementId);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
 		ontology.insertQuery(query);
 
-		Object diagram = getDiagram(modelId, diagramId.split(":")[1]).getEntity();
+		Object diagram = getDiagram(modelId, diagramId).getEntity();
 		return Response.status(Status.CREATED).entity(diagram).build();
 	}
 
@@ -822,21 +846,28 @@ public class ModellingEnvironment {
 		return new ParameterizedSparqlString(command);
 	}
 
-	private String getDiagramCreationCommand(DiagramCreationDto diagramCreationDto, String modelId, String diagramId, String elementId) {
-		return String.format(
+	private ParameterizedSparqlString getDiagramCreationQuery(DiagramCreationDto diagramCreationDto, String modelId, String elementId) {
+
+		String instanceCreationBit = "	%7$s:%1$s rdf:type ?type .\n";
+		String classCreationBit = 	"	%7$s:%1$s rdf:type owl:Class .\n" +
+									"	%7$s:%1$s rdfs:subClassOf ?type .\n";
+
+		String creationBit = diagramCreationDto.getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
+
+		String command = String.format(
 				"INSERT {\n" +
-				"	%1$s rdf:type ?type .\n" +
-				"	%1$s rdf:type %7$s:ModelConstructInstance .\n" +
-				"	%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
-				"	%2$s rdf:type %7$s:Diagram .\n" +
-				"	%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
-				"	%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
-				"	%2$s %7$s:diagramHasLength ?height .\n" +
-				"	%2$s %7$s:diagramHasWidth ?width .\n" +
-				"	%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
-				"	%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %1$s .\n" +
-				"	%2$s rdfs:label \"%8$s\" .\n" +
-				"	%4$s %7$s:modelHasDiagram %2$s .\n" +
+				creationBit +
+				"	%7$s:%1$s rdf:type %7$s:ModelConstructInstance .\n" +
+				"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
+				"	%7$s:%2$s rdf:type %7$s:Diagram .\n" +
+				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
+				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
+				"	%7$s:%2$s %7$s:diagramHasLength ?height .\n" +
+				"	%7$s:%2$s %7$s:diagramHasWidth ?width .\n" +
+				"	%7$s:%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
+				"	%7$s:%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
+				"	%7$s:%2$s rdfs:label \"%8$s\" .\n" +
+				"	%7$s:%4$s %7$s:modelHasDiagram %7$s:%2$s .\n" +
 				"}" +
 				"WHERE {" +
 				"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +
@@ -845,7 +876,7 @@ public class ModellingEnvironment {
 				"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
 				"}",
 				elementId,
-				diagramId,
+				diagramCreationDto.getUuid(),
 				diagramCreationDto.getPaletteConstruct(),
 				modelId,
 				diagramCreationDto.getX(),
@@ -853,24 +884,33 @@ public class ModellingEnvironment {
 				MODEL.getPrefix(),
 				diagramCreationDto.getLabel()
 		);
+
+		return new ParameterizedSparqlString(command);
 	}
 
 	private String getConnectionCreationCommand(ConnectionCreationDto connectionCreationDto, String modelId, String id, String elementId) {
+
+		String instanceCreationBit = "	%7$s:%1$s rdf:type ?type .\n";
+		String classCreationBit = 	"	%7$s:%1$s rdf:type owl:Class .\n" +
+									"	%7$s:%1$s rdfs:subClassOf ?type .\n";
+
+		String creationBit = connectionCreationDto.getInstantiationType() == InstantiationTargetType.Class ? instanceCreationBit : classCreationBit;
+
 		return String.format(
 				"INSERT {\n" +
-				"	%1$s rdf:type ?type .\n" +
-				"	%1$s rdf:type %7$s:ModelConstructInstance .\n" +
-				"	%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
-				"	%1$s lo:modelingRelationHasSourceModelingElement ?fromInstance .\n" +
-				"	%1$s lo:modelingRelationHasTargetModelingElement ?toInstance .\n" +
-				"	%2$s rdf:type %7$s:Diagram .\n" +
-				"	%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
-				"	%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
-				"	%2$s %7$s:diagramHasLength ?height .\n" +
-				"	%2$s %7$s:diagramHasWidth ?width .\n" +
-				"	%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
-				"	%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %1$s .\n" +
-				"	%4$s %7$s:modelHasDiagram %2$s .\n" +
+				creationBit +
+				"	%7$s:%1$s rdf:type %7$s:ModelConstructInstance .\n" +
+				"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
+				"	%7$s:%1$s lo:modelingRelationHasSourceModelingElement ?fromInstance .\n" +
+				"	%7$s:%1$s lo:modelingRelationHasTargetModelingElement ?toInstance .\n" +
+				"	%7$s:%2$s rdf:type %7$s:Diagram .\n" +
+				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
+				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
+				"	%7$s:%2$s %7$s:diagramHasLength ?height .\n" +
+				"	%7$s:%2$s %7$s:diagramHasWidth ?width .\n" +
+				"	%7$s:%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
+				"	%7$s:%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
+				"	%7$s:%4$s %7$s:modelHasDiagram %7$s:%2$s .\n" +
 				"}" +
 				"WHERE {" +
 				"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +

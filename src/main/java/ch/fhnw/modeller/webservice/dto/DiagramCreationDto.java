@@ -10,4 +10,5 @@ public class DiagramCreationDto {
     private int y;
     private String uuid;
     private String label;
+    private InstantiationTargetType instantiationType;
 }
