@@ -12,6 +12,7 @@ public class ModelElementAttributes {
     private final Set<RelationDto> options;
     private final List<ModelElementAttribute> values;
     private final String modelElementType;
+    private final InstantiationTargetType instantiationType;
 
     public Optional<String> getModelElementType() {
         return Optional.ofNullable(modelElementType);

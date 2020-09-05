@@ -464,7 +464,8 @@ public class ModellingEnvironment {
 		return new ModelElementAttributes(
 				options,
 				values,
-				elementTypeOpt.map(ModelElementType::getType).orElse(null));
+				elementTypeOpt.map(ModelElementType::getType).orElse(null),
+                elementTypeOpt.map(ModelElementType::getInstantiationType).orElse(null));
 	}
 
 	@PUT
