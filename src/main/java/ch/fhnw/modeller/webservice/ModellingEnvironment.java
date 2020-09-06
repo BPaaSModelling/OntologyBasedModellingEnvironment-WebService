@@ -1361,15 +1361,15 @@ public class ModellingEnvironment {
 				}
 
 				if (soln.get("?arrowStroke") != null){
-					tempPaletteElement.setArrowStroke(soln.get("?arrowStroke").toString());
+					tempPaletteElement.setArrowStroke(extractIdFrom(soln, "?arrowStroke"));
 				}
 
 				if (soln.get("?toArrow") != null){
-					tempPaletteElement.setToArrow(soln.get("?toArrow").toString());
+					tempPaletteElement.setToArrow(extractIdFrom(soln, "?toArrow"));
 				}
 
 				if (soln.get("?fromArrow") != null){
-					tempPaletteElement.setFromArrow(soln.get("?fromArrow").toString());
+					tempPaletteElement.setFromArrow(extractIdFrom(soln, "?fromArrow"));
 				}
 
 				String type = extractIdFrom(soln, "?type");
@@ -1751,15 +1751,15 @@ public class ModellingEnvironment {
 		querStr.append("<"+element.getId()+"> po:paletteConstructHasPaletteThumbnail \"" +element.getThumbnailURL()+ "\" . ");
 
 		if (element.getToArrow() != null) {
-			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresToArrowHead \"" + element.getToArrow() + "\" . ");
+			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresToArrowHead po:" + element.getToArrow() + " . ");
 		}
 
 		if (element.getFromArrow() != null) {
-			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresFromArrowHead \"" + element.getFromArrow() + "\" . ");
+			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresFromArrowHead po:" + element.getFromArrow() + " . ");
 		}
 
 		if (element.getArrowStroke() != null) {
-			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresArrowStroke \"" + element.getArrowStroke() + "\" . ");
+			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresArrowStroke po:" + element.getArrowStroke() + " . ");
 		}
 
 		querStr.append(" }");
@@ -1768,15 +1768,15 @@ public class ModellingEnvironment {
 		querStr1.append("<"+element.getId()+"> po:paletteConstructHasModelImage \""+modifiedElement.getImageURL()+ "\" . ");
 		querStr1.append("<"+element.getId()+"> po:paletteConstructHasPaletteThumbnail \"" +modifiedElement.getThumbnailURL()+ "\" . ");
 		if (modifiedElement.getToArrow() != null) {
-			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresToArrowHead \"" + modifiedElement.getToArrow() + "\" . ");
+			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresToArrowHead po:" + modifiedElement.getToArrow() + " . ");
 		}
 
 		if (modifiedElement.getFromArrow() != null) {
-			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresFromArrowHead \"" + modifiedElement.getFromArrow() + "\" . ");
+			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresFromArrowHead po:" + modifiedElement.getFromArrow() + " . ");
 		}
 
 		if (modifiedElement.getArrowStroke() != null) {
-			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresArrowStroke \"" + modifiedElement.getArrowStroke() + "\" . ");
+			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresArrowStroke po:" + modifiedElement.getArrowStroke() + " . ");
 		}
 		querStr1.append(" }");
 
