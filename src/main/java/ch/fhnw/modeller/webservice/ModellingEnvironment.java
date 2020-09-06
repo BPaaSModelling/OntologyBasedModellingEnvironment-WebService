@@ -225,8 +225,8 @@ public class ModellingEnvironment {
 				"WHERE\n" +
 				"{\n" +
 				"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po .\n" +
-				"\t?po po:paletteConstructHasModelImage ?imgUrl .\n" +
 				"\t?po po:paletteConstructIsGroupedInPaletteCategory ?cat\n" +
+				"\tOPTIONAL { ?po po:paletteConstructHasModelImage ?imgUrl }\n" +
 				"\tOPTIONAL { ?po po:paletteConnectorConfiguresFromArrowHead ?fromArrow }\n" +
 				"\tOPTIONAL { ?po po:paletteConnectorConfiguresToArrowHead ?toArrow }\n" +
 				"\tOPTIONAL { ?po po:paletteConnectorConfiguresArrowStroke ?arrowStroke }\n" +
@@ -240,7 +240,7 @@ public class ModellingEnvironment {
 		QuerySolution querySolution = resultSet.next();
 		String category = extractIdFrom(querySolution, "?cat");
 		String imageName = extractValueFrom(querySolution, "?imgUrl");
-		String imageUrl = category + "/" + imageName;
+		String imageUrl = imageName != null ? category + "/" + imageName : null;
 
 		String fromArrow = extractIdFrom(querySolution, "?fromArrow");
 		String toArrow = extractIdFrom(querySolution, "?toArrow");
