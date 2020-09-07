@@ -611,14 +611,14 @@ public class ModellingEnvironment {
 		return Response.status(Status.CREATED).entity(getDiagram(modelId, diagramId).getEntity()).build();
 	}
 
-	private ParameterizedSparqlString getInsertContainedModelElementsQuery(String modelingLanguageConstructInstance, List<String> containedDiagrams) {
+	private ParameterizedSparqlString getInsertContainedModelElementsQuery(String containerInstance, List<String> containedDiagrams) {
 
 		StringBuilder command = new StringBuilder("INSERT DATA {\n");
 		containedDiagrams.forEach(diagram -> {
 			command.append(String.format(
 					"\t%1$s:%2$s %1$s:modelingContainerContainsModelingLanguageConstruct %1$s:%3$s .\n",
 					MODEL.getPrefix(),
-					modelingLanguageConstructInstance,
+					containerInstance,
 					diagram));
 		});
 		command.append("}");
