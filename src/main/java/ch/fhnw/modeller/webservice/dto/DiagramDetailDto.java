@@ -29,6 +29,7 @@ public class DiagramDetailDto {
     private String fromDiagram;
     private String toDiagram;
     private List<String> containedDiagrams;
+    private List<String> otherVisualisationsOfSameLanguageConstruct;
 
     public DiagramDetailDto() {}
 
@@ -67,6 +68,12 @@ public class DiagramDetailDto {
                 dto.addContainedDiagram(modelElementAttribute.getValue());
             }
         });
+
+        if (modelElementAttributes.getReferencingDiagrams() != null && modelElementAttributes.getReferencingDiagrams().size() > 1) {
+            List<String> referencingDiagrams = modelElementAttributes.getReferencingDiagrams();
+            referencingDiagrams.remove(dto.getId());
+            dto.setOtherVisualisationsOfSameLanguageConstruct(referencingDiagrams);
+        }
 
         dto.setModelElementAttributes(modelElementAttributes);
 

@@ -13,6 +13,7 @@ public class ModelElementAttributes {
     private final List<ModelElementAttribute> values;
     private final String modelElementType;
     private final InstantiationTargetType instantiationType;
+    private final List<String> referencingDiagrams;
 
     public Optional<String> getModelElementType() {
         return Optional.ofNullable(modelElementType);

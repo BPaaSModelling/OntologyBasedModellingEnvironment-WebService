@@ -382,11 +382,13 @@ public class ModellingEnvironment {
 
 		Optional<ModelElementType> elementTypeOpt = getModelElementType(modelElementId);
 
+		if (!elementTypeOpt.isPresent()) return null;
+
 		String instanceCreationBit = "\t\t%1$s:%2$s rdf:type ?mloConcept .\n";
 		String classCreationBit = 	"\t\t%1$s:%2$s rdf:type owl:Class .\n" +
 									"\t\t%1$s:%2$s rdfs:subClassOf ?mloConcept .\n";
 
-		String creationBit = elementTypeOpt.isPresent() && elementTypeOpt.get().getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
+		String creationBit = elementTypeOpt.get().getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
 
 		String command = String.format(
 				"SELECT ?objProp ?range ?instanceValue ?classValue\n" +
@@ -461,14 +463,38 @@ public class ModellingEnvironment {
 			}
 		}
 
-		return new ModelElementAttributes(
+        List<String> referencingDiagrams = getReferencingDiagramIds(modelElementId);
+
+        return new ModelElementAttributes(
 				options,
 				values,
-				elementTypeOpt.map(ModelElementType::getType).orElse(null),
-                elementTypeOpt.map(ModelElementType::getInstantiationType).orElse(null));
+				elementTypeOpt.get().getType(),
+                elementTypeOpt.get().getInstantiationType(),
+                referencingDiagrams);
 	}
 
-	@PUT
+    private List<String> getReferencingDiagramIds(String modelElementId) {
+        String incomingReferencesCommand = String.format(
+                "SELECT ?diag\n" +
+"WHERE { \n" +
+"\t?diag %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%2$s .\n" +
+"}",
+MODEL.getPrefix(),
+modelElementId);
+
+        List<String> referencingDiagrams = new ArrayList<>();
+
+        ParameterizedSparqlString incomingReferencesQuery = new ParameterizedSparqlString(incomingReferencesCommand);
+        ResultSet incomingReferencesResultSet = ontology.query(incomingReferencesQuery).execSelect();
+        while (incomingReferencesResultSet.hasNext()) {
+            QuerySolution next = incomingReferencesResultSet.next();
+            String diagram = extractIdFrom(next, "?diag");
+            referencingDiagrams.add(diagram);
+        }
+        return referencingDiagrams;
+    }
+
+    @PUT
 	@Path("/model/{modelId}/diagram")
 	public Response createDiagram(@PathParam("modelId") String modelId,
 								  String json) {
