@@ -502,6 +502,59 @@ modelElementId);
 		Gson gson = new Gson();
 		DiagramCreationDto diagramCreationDto = gson.fromJson(json, DiagramCreationDto.class);
 
+		if (diagramCreationDto.getModelingLanguageConstructInstance() == null) {
+			createDiagramForNewModelElement(modelId, diagramCreationDto);
+		} else {
+			ParameterizedSparqlString query = getDiagramCreationQuery(diagramCreationDto, modelId, diagramCreationDto.getModelingLanguageConstructInstance());
+			ontology.insertQuery(query);
+		}
+
+		Object diagram = getDiagram(modelId, diagramCreationDto.getUuid()).getEntity();
+		return Response.status(Status.CREATED).entity(diagram).build();
+	}
+
+	private ParameterizedSparqlString getDiagramAndModelElementCreationQuery(DiagramCreationDto diagramCreationDto, String modelId, String elementId) {
+		String instanceCreationBit = "	%7$s:%1$s rdf:type ?type .\n";
+		String classCreationBit = 	"	%7$s:%1$s rdf:type owl:Class .\n" +
+									"	%7$s:%1$s rdfs:subClassOf ?type .\n";
+
+		String creationBit = diagramCreationDto.getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
+
+		String command = String.format(
+				"INSERT {\n" +
+						creationBit +
+						"	%7$s:%1$s rdf:type %7$s:ModelConstructInstance .\n" +
+						"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
+						"	%7$s:%2$s rdf:type %7$s:Diagram .\n" +
+						"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
+						"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
+						"	%7$s:%2$s %7$s:diagramHasLength ?height .\n" +
+						"	%7$s:%2$s %7$s:diagramHasWidth ?width .\n" +
+						"	%7$s:%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
+						"	%7$s:%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
+						"	%7$s:%2$s rdfs:label \"%8$s\" .\n" +
+						"	%7$s:%4$s %7$s:modelHasDiagram %7$s:%2$s .\n" +
+						"}" +
+						"WHERE {" +
+						"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +
+						"	po:%3$s po:paletteConstructHasHeight ?height .\n" +
+						"	po:%3$s po:paletteConstructHasWidth ?width .\n" +
+						"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
+						"}",
+				elementId,
+				diagramCreationDto.getUuid(),
+				diagramCreationDto.getPaletteConstruct(),
+				modelId,
+				diagramCreationDto.getX(),
+				diagramCreationDto.getY(),
+				MODEL.getPrefix(),
+				diagramCreationDto.getLabel()
+		);
+
+		return new ParameterizedSparqlString(command);
+	}
+
+	private void createDiagramForNewModelElement(String modelId, DiagramCreationDto diagramCreationDto) {
 		Optional<String> mappedModelingLanguageConstruct = getMappedModelingLanguageConstruct(diagramCreationDto.getPaletteConstruct());
 
 		if (!mappedModelingLanguageConstruct.isPresent()) {
@@ -510,11 +563,8 @@ modelElementId);
 
 		String elementId = String.format("%s_%s", mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
 
-		ParameterizedSparqlString query = getDiagramCreationQuery(diagramCreationDto, modelId, elementId);
+		ParameterizedSparqlString query = getDiagramAndModelElementCreationQuery(diagramCreationDto, modelId, elementId);
 		ontology.insertQuery(query);
-
-		Object diagram = getDiagram(modelId, diagramCreationDto.getUuid()).getEntity();
-		return Response.status(Status.CREATED).entity(diagram).build();
 	}
 
 	@PUT
@@ -875,44 +925,53 @@ modelElementId);
 
 	private ParameterizedSparqlString getDiagramCreationQuery(DiagramCreationDto diagramCreationDto, String modelId, String elementId) {
 
-		String instanceCreationBit = "	%7$s:%1$s rdf:type ?type .\n";
-		String classCreationBit = 	"	%7$s:%1$s rdf:type owl:Class .\n" +
-									"	%7$s:%1$s rdfs:subClassOf ?type .\n";
-
-		String creationBit = diagramCreationDto.getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
-
 		String command = String.format(
-				"INSERT {\n" +
-				creationBit +
-				"	%7$s:%1$s rdf:type %7$s:ModelConstructInstance .\n" +
-				"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
-				"	%7$s:%2$s rdf:type %7$s:Diagram .\n" +
-				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
-				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
-				"	%7$s:%2$s %7$s:diagramHasLength ?height .\n" +
-				"	%7$s:%2$s %7$s:diagramHasWidth ?width .\n" +
-				"	%7$s:%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
-				"	%7$s:%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
-				"	%7$s:%2$s rdfs:label \"%8$s\" .\n" +
-				"	%7$s:%4$s %7$s:modelHasDiagram %7$s:%2$s .\n" +
-				"}" +
-				"WHERE {" +
-				"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +
-				"	po:%3$s po:paletteConstructHasHeight ?height .\n" +
-				"	po:%3$s po:paletteConstructHasWidth ?width .\n" +
-				"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
-				"}",
-				elementId,
+				"INSERT DATA {\n" +
+				"	%1$s:%2$s rdf:type %1$s:Diagram .\n" +
+				"	%1$s:%2$s %1$s:diagramPositionsOnCoordinateX %6$s .\n" +
+				"	%1$s:%2$s %1$s:diagramPositionsOnCoordinateY %7$s .\n" +
+				"	%1$s:%2$s %1$s:diagramHasWidth %8$s .\n" +
+				"	%1$s:%2$s %1$s:diagramHasLength %9$s .\n" +
+				"	%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct %5$s .\n" +
+				"	%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%4$s .\n" +
+				"	%1$s:%3$s %1$s:modelHasDiagram %1$s:%2$s .\n",
+				MODEL.getPrefix(),
 				diagramCreationDto.getUuid(),
-				diagramCreationDto.getPaletteConstruct(),
 				modelId,
+				elementId,
+				diagramCreationDto.getPaletteConstruct(),
 				diagramCreationDto.getX(),
 				diagramCreationDto.getY(),
-				MODEL.getPrefix(),
-				diagramCreationDto.getLabel()
+				diagramCreationDto.getW(),
+				diagramCreationDto.getH()
 		);
 
-		return new ParameterizedSparqlString(command);
+		StringBuilder commandBuilder = new StringBuilder(command);
+
+		if (diagramCreationDto.getNote() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:diagramHasNote %1$s:%3$s .\n",
+					MODEL.getPrefix(),
+					diagramCreationDto.getUuid(),
+					diagramCreationDto.getNote()));
+		}
+
+		if (diagramCreationDto.getDiagramRepresentsModel() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:diagramRepresentsModel %1$s:%3$s .\n",
+					MODEL.getPrefix(),
+					diagramCreationDto.getUuid(),
+					diagramCreationDto.getDiagramRepresentsModel()));
+		}
+
+		if (diagramCreationDto.getLabel() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s rdfs:label \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					diagramCreationDto.getUuid(),
+					diagramCreationDto.getLabel()));
+		}
+
+		commandBuilder.append("}");
+
+		return new ParameterizedSparqlString(commandBuilder.toString());
 	}
 
 	private String getConnectionCreationCommand(ConnectionCreationDto connectionCreationDto, String modelId, String id, String elementId) {
