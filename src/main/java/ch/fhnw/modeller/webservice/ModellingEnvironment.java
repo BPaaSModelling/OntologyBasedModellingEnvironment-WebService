@@ -449,15 +449,15 @@ public class ModellingEnvironment {
 			String classValue = extractValueFrom(solution, "?classValue");
 			String actualValue = instanceValue != null ? instanceValue : classValue;
 
-			RelationDto relationDto = new RelationDto(relation.split("#")[0], relation.split("#")[1]);
+			RelationDto relationDto = new RelationDto(GlobalVariables.getNamespaceMap().get(relation.split("#")[0]), relation.split("#")[1]);
 			options.add(relationDto);
 
 			if (actualValue != null) {
 				ModelElementAttribute value = new ModelElementAttribute();
 				value.setRelation(relationDto.getRelation());
 				value.setRelationPrefix(relationDto.getRelationPrefix());
-				value.setValuePrefix(actualValue.split("#")[0]);
 				value.setValue(actualValue.split("#")[1]);
+				value.setValuePrefix(GlobalVariables.getNamespaceMap().get(actualValue.split("#")[0]));
 
 				values.add(value);
 			}
@@ -476,11 +476,11 @@ public class ModellingEnvironment {
     private List<String> getReferencingDiagramIds(String modelElementId) {
         String incomingReferencesCommand = String.format(
                 "SELECT ?diag\n" +
-"WHERE { \n" +
-"\t?diag %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%2$s .\n" +
-"}",
-MODEL.getPrefix(),
-modelElementId);
+				"WHERE { \n" +
+				"\t?diag %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%2$s .\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelElementId);
 
         List<String> referencingDiagrams = new ArrayList<>();
 
@@ -660,16 +660,21 @@ modelElementId);
 			queries.add(optInsertQuery);
 		}
 
+		if (diagram.getModelElementAttributes() != null &&
+			diagram.getModelElementAttributes().getValues() != null &&
+			!diagram.getModelElementAttributes().getValues().isEmpty()) {
+
+			ParameterizedSparqlString deleteQueryElement = getDeleteModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagram.getModelElementAttributes().getValues());
+			queries.add(deleteQueryElement);
+		}
+
 		if (diagram.getModelingLanguageConstructInstance().equals(diagramToBeStored.getModelingLanguageConstructInstance()) &&
 			diagramToBeStored.getModelElementAttributes() != null &&
 			diagramToBeStored.getModelElementAttributes().getValues() != null &&
 			!diagramToBeStored.getModelElementAttributes().getValues().isEmpty()) {
 
-			ParameterizedSparqlString deleteQueryElement = getDeleteModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagramToBeStored.getModelElementAttributes().getValues());
-			queries.add(deleteQueryElement);
-
-			getInsertModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagramToBeStored.getModelElementAttributes().getValues())
-					.ifPresent(queries::add);
+			Optional<ParameterizedSparqlString> insertModelElementDataQuery = getInsertModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagramToBeStored.getModelElementAttributes().getValues());
+			insertModelElementDataQuery.ifPresent(queries::add);
 		}
 
 		if ("ModelingContainer".equals(diagram.getModelElementType())) {
@@ -736,9 +741,9 @@ modelElementId);
 					" %1$s:%2$s %3$s:%4$s %5$s:%6$s . \n",
 					MODEL.getPrefix(),
 					modelingLanguageConstruct,
-					GlobalVariables.getNamespaceMap().get(modelElementAttribute.getRelationPrefix()),
+					modelElementAttribute.getRelationPrefix(),
 					modelElementAttribute.getRelation(),
-					GlobalVariables.getNamespaceMap().get(modelElementAttribute.getValuePrefix()),
+					modelElementAttribute.getValuePrefix(),
 					modelElementAttribute.getValue()
 			);
 
@@ -761,7 +766,7 @@ modelElementId);
 					" %1$s:%2$s %3$s:%4$s ?value%5$s . \n",
 					MODEL.getPrefix(),
 					modelingLanguageConstruct,
-					GlobalVariables.getNamespaceMap().get(modelElementAttribute.getRelationPrefix()),
+					modelElementAttribute.getRelationPrefix(),
 					modelElementAttribute.getRelation(),
 					i
 			);
@@ -1170,6 +1175,46 @@ modelElementId);
 			strokes.add(label);
 		}
 		return strokes;
+	}
+
+	@GET
+	@Path("relations/{name}/options")
+	public Response getOptionsForRelation(@PathParam("name") String name) {
+
+		String command = String.format(
+				"SELECT ?class ?instance\n" +
+				"WHERE { \n" +
+				"\t%1$s rdfs:range ?range .\n" +
+				"\t?class rdfs:subClassOf* ?range .\n" +
+				"\tOPTIONAL {\t?instance rdf:type ?class }\n" +
+				"}",
+				name);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		Set<String> classes = new HashSet<>();
+		Set<String> instances = new HashSet<>();
+
+		while (resultSet.hasNext()) {
+			QuerySolution next = resultSet.next();
+			String clazz = extractValueFrom(next, "?class");
+			String instance = extractValueFrom(next, "?instance");
+
+			if (clazz != null) {
+				String prefix = GlobalVariables.getNamespaceMap().get(clazz.split("#")[0]);
+				classes.add(prefix + ":" + clazz.split("#")[1]);
+			}
+
+			if (instance != null) {
+				String prefix = GlobalVariables.getNamespaceMap().get(instance.split("#")[0]);
+				instances.add(prefix + ":" + instance.split("#")[1]);
+			}
+		}
+
+		String payload = gson.toJson(new Options(instances, classes));
+
+		return Response.ok(payload).build();
 	}
 
 	@GET

@@ -1,7 +1,5 @@
 package ch.fhnw.modeller.webservice.ontology;
 
-import ch.fhnw.modeller.model.model.Model;
-
 public enum NAMESPACE {
 	RDFS(		"rdfs",							"http://www.w3.org/2000/01/rdf-schema#"),
 	RDF(		"rdf", 							"http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
