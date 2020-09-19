@@ -96,6 +96,10 @@ public class ModellingEnvironment {
 	@Path("/model/{modelId}")
 	public Response deleteModel(@PathParam("modelId") String modelId) {
 
+		for (DiagramDetailDto diagramDetailDto : this.getDiagramDetailDtos(modelId)) {
+			this.deleteDiagramOfModel(modelId, diagramDetailDto.getId());
+		}
+
 		ParameterizedSparqlString deleteQuery = getDeleteModelQuery(modelId);
 		ontology.insertQuery(deleteQuery);
 
@@ -173,6 +177,14 @@ public class ModellingEnvironment {
 	@Path("/model/{id}/diagram")
 	public Response getDiagramList(@PathParam("id") String id) {
 
+		List<DiagramDetailDto> diagrams = getDiagramDetailDtos(id);
+
+		String payload = gson.toJson(diagrams);
+
+		return Response.status(Status.OK).entity(payload).build();
+	}
+
+	private List<DiagramDetailDto> getDiagramDetailDtos(@PathParam("id") String id) {
 		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);
 
 		String command = String.format(
@@ -212,10 +224,7 @@ public class ModellingEnvironment {
 											elementType,
 											visualInformationDto)));
 		});
-
-		String payload = gson.toJson(diagrams);
-
-		return Response.status(Status.OK).entity(payload).build();
+		return diagrams;
 	}
 
 	private PaletteVisualInformationDto getPaletteVisualInformation(String diagramId) {
@@ -601,6 +610,12 @@ public class ModellingEnvironment {
 	public Response deleteDiagram(@PathParam("modelId") String modelId,
 								  @PathParam("diagramId") String diagramId) {
 
+		deleteDiagramOfModel(modelId, diagramId);
+
+		return Response.status(Status.OK).build();
+	}
+
+	private void deleteDiagramOfModel(@PathParam("modelId") String modelId, @PathParam("diagramId") String diagramId) {
 		DiagramDetailDto diagramDetail = getDiagramDetail(modelId, diagramId);
 		String modelingLanguageConstructInstance = diagramDetail.getModelingLanguageConstructInstance();
 
@@ -611,8 +626,6 @@ public class ModellingEnvironment {
 				&& !isModelingLanguageConstructLinkedInAnotherModel(modelingLanguageConstructInstance)) {
 			deleteModelElementInstance(modelingLanguageConstructInstance);
 		}
-
-		return Response.status(Status.OK).build();
 	}
 
 	private boolean isModelingLanguageConstructLinkedInAnotherModel(String instanceId) {
