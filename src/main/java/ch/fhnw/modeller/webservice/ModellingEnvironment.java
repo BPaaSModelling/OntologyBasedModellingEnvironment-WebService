@@ -106,6 +106,43 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).build();
 	}
 
+	@PUT
+	@Path("/model/{modelId}")
+	public Response updateModel(@PathParam("modelId") String modelId, String json) {
+
+		ModelUpdateDto modelUpdateDto = gson.fromJson(json, ModelUpdateDto.class);
+
+		String deleteModelLabel = String.format(
+				"DELETE {\n" +
+				"\t%1$s:%2$s rdfs:label ?label\n" +
+				"}\n" +
+				"WHERE\n" +
+				"{\n" +
+				"\t%1$s:%2$s rdfs:label ?label\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelId);
+
+		String insertModelLabel = String.format(
+				"INSERT DATA {\n" +
+				"\t%1$s:%2$s rdfs:label \"%3$s\"\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelId,
+				modelUpdateDto.getLabel());
+
+		ParameterizedSparqlString deleteQuery = new ParameterizedSparqlString(deleteModelLabel);
+		ParameterizedSparqlString insertQuery = new ParameterizedSparqlString(insertModelLabel);
+
+		List<ParameterizedSparqlString> list = new ArrayList<>(2);
+		list.add(deleteQuery);
+		list.add(insertQuery);
+
+		ontology.insertMultipleQueries(list);
+
+		return Response.status(Status.OK).build();
+	}
+
 	private ParameterizedSparqlString getDeleteModelQuery(String modelId) {
 
 		String command = String.format(
