@@ -44,7 +44,7 @@ public class DiagramDetailDto {
         dto.setY(Integer.parseInt(diagramAttributes.get("diagramPositionsOnCoordinateY").split("\\^\\^")[0]));
         dto.setModelingLanguageConstructInstance(diagramAttributes.get("diagramVisualisesModelingLanguageConstructInstance").split("#")[1]);
         dto.setWidth(Integer.parseInt(diagramAttributes.get("diagramHasWidth").split("\\^\\^")[0]));
-        dto.setHeight(Integer.parseInt(diagramAttributes.get("diagramHasLength").split("\\^\\^")[0]));
+        dto.setHeight(Integer.parseInt(diagramAttributes.get("diagramHasHeight").split("\\^\\^")[0]));
         dto.setLabel(diagramAttributes.get("label"));
 
         if (diagramAttributes.get("diagramRepresentsModel") != null) {

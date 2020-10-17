@@ -574,7 +574,7 @@ public class ModellingEnvironment {
 						"	%7$s:%2$s rdf:type %7$s:Diagram .\n" +
 						"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
 						"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
-						"	%7$s:%2$s %7$s:diagramHasLength ?height .\n" +
+						"	%7$s:%2$s %7$s:diagramHasHeight ?height .\n" +
 						"	%7$s:%2$s %7$s:diagramHasWidth ?width .\n" +
 						"	%7$s:%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
 						"	%7$s:%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
@@ -869,7 +869,7 @@ public class ModellingEnvironment {
 				"INSERT DATA {\n" +
 				"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateX %3$s .\n" +
 				"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateY %4$s .\n" +
-				"\t%1$s:%2$s %1$s:diagramHasLength %5$s .\n" +
+				"\t%1$s:%2$s %1$s:diagramHasHeight %5$s .\n" +
 				"\t%1$s:%2$s %1$s:diagramHasWidth %6$s .\n" +
 				"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct %7$s .\n" +
 				"\t%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%8$s .\n" +
@@ -921,7 +921,7 @@ public class ModellingEnvironment {
 				"DELETE {\n" +
 						"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x .\n" +
 						"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y .\n" +
-						"\t%1$s:%2$s %1$s:diagramHasLength ?h .\n" +
+						"\t%1$s:%2$s %1$s:diagramHasHeight ?h .\n" +
 						"\t%1$s:%2$s %1$s:diagramHasWidth ?w .\n" +
 						"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po .\n" +
 						"\t%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance ?mlo .\n" +
@@ -932,7 +932,7 @@ public class ModellingEnvironment {
 						"} WHERE {\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasLength ?h }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasHeight ?h }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasWidth ?w }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance ?mlo }\n" +
@@ -953,7 +953,7 @@ public class ModellingEnvironment {
 				"DELETE {\n" +
 				"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x .\n" +
 				"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y .\n" +
-				"\t%1$s:%2$s %1$s:diagramHasLength ?h .\n" +
+				"\t%1$s:%2$s %1$s:diagramHasHeight ?h .\n" +
 				"\t%1$s:%2$s %1$s:diagramHasWidth ?w .\n" +
 				"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po .\n" +
 				"\t%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance ?mlo .\n" +
@@ -963,7 +963,7 @@ public class ModellingEnvironment {
 				"} WHERE {\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x }\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasLength ?h }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasHeight ?h }\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasWidth ?w }\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po }\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance ?mlo }\n" +
@@ -986,7 +986,7 @@ public class ModellingEnvironment {
 				"	%1$s:%2$s %1$s:diagramPositionsOnCoordinateX %6$s .\n" +
 				"	%1$s:%2$s %1$s:diagramPositionsOnCoordinateY %7$s .\n" +
 				"	%1$s:%2$s %1$s:diagramHasWidth %8$s .\n" +
-				"	%1$s:%2$s %1$s:diagramHasLength %9$s .\n" +
+				"	%1$s:%2$s %1$s:diagramHasHeight %9$s .\n" +
 				"	%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct %5$s .\n" +
 				"	%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%4$s .\n" +
 				"	%1$s:%3$s %1$s:modelHasDiagram %1$s:%2$s .\n",
@@ -1047,7 +1047,7 @@ public class ModellingEnvironment {
 				"	%7$s:%2$s rdf:type %7$s:Diagram .\n" +
 				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
 				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
-				"	%7$s:%2$s %7$s:diagramHasLength ?height .\n" +
+				"	%7$s:%2$s %7$s:diagramHasHeight ?height .\n" +
 				"	%7$s:%2$s %7$s:diagramHasWidth ?width .\n" +
 				"	%7$s:%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
 				"	%7$s:%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
