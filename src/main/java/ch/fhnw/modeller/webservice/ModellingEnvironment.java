@@ -1004,7 +1004,7 @@ public class ModellingEnvironment {
 		StringBuilder commandBuilder = new StringBuilder(command);
 
 		if (diagramCreationDto.getNote() != null) {
-			commandBuilder.append(String.format("	%1$s:%2$s %1$s:diagramHasNote %1$s:%3$s .\n",
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:diagramHasNote \"%3$s\" .\n",
 					MODEL.getPrefix(),
 					diagramCreationDto.getUuid(),
 					diagramCreationDto.getNote()));
