@@ -919,6 +919,7 @@ public class ModellingEnvironment {
 	private ParameterizedSparqlString getDeleteDiagramQuery(String diagramId) {
 		String command = String.format(
 				"DELETE {\n" +
+                        "\t%1$s:%2$s rdf:type %1$s:Diagram .\n" +
 						"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x .\n" +
 						"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y .\n" +
 						"\t%1$s:%2$s %1$s:diagramHasHeight ?h .\n" +
