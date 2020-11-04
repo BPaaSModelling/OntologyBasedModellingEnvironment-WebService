@@ -96,8 +96,8 @@ public class ModellingEnvironment {
 	@Path("/model/{modelId}")
 	public Response deleteModel(@PathParam("modelId") String modelId) {
 
-		for (DiagramDetailDto diagramDetailDto : this.getDiagramDetailDtos(modelId)) {
-			this.deleteDiagramOfModel(modelId, diagramDetailDto.getId());
+		for (ModelElementDetailDto modelElementDetailDto : this.getModelElementDetailDtos(modelId)) {
+			this.deleteElementOfModel(modelId, modelElementDetailDto.getId());
 		}
 
 		ParameterizedSparqlString deleteQuery = getDeleteModelQuery(modelId);
@@ -134,11 +134,8 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString deleteQuery = new ParameterizedSparqlString(deleteModelLabel);
 		ParameterizedSparqlString insertQuery = new ParameterizedSparqlString(insertModelLabel);
 
-		List<ParameterizedSparqlString> list = new ArrayList<>(2);
-		list.add(deleteQuery);
-		list.add(insertQuery);
-
-		ontology.insertMultipleQueries(list);
+		ontology.insertQuery(deleteQuery);
+		ontology.insertQuery(insertQuery);
 
 		return Response.status(Status.OK).build();
 	}
@@ -149,13 +146,13 @@ public class ModellingEnvironment {
 				 "DELETE {\n" +
 				"\t%1$s:%2$s ?modelRel ?modelObj .\n" +
 				"\t?diag ?diagRel ?diagObj .\n" +
-				"\t?referencingDiag %1$s:diagramRepresentsModel %1$s:%2$s\n" +
+				"\t?referencingDiag %1$s:shapeRepresentsModel %1$s:%2$s\n" +
 				"}\n" +
 				"WHERE {\n" +
 				"\t%1$s:%2$s ?modelRel ?modelObj .\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:modelHasDiagram ?diag .\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:modelHasShape ?diag .\n" +
 				"\t?diag ?diagRel ?diagObj } .\n" +
-				"\tOPTIONAL { ?referencingDiag %1$s:diagramRepresentsModel %1$s:%2$s}\n" +
+				"\tOPTIONAL { ?referencingDiag %1$s:shapeRepresentsModel %1$s:%2$s}\n" +
 				"}",
 				MODEL.getPrefix(),
 				modelId
@@ -211,23 +208,23 @@ public class ModellingEnvironment {
 	}
 
 	@GET
-	@Path("/model/{id}/diagram")
-	public Response getDiagramList(@PathParam("id") String id) {
+	@Path("/model/{id}/element")
+	public Response getModelElementList(@PathParam("id") String id) {
 
-		List<DiagramDetailDto> diagrams = getDiagramDetailDtos(id);
+		List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
 
-		String payload = gson.toJson(diagrams);
+		String payload = gson.toJson(elements);
 
 		return Response.status(Status.OK).entity(payload).build();
 	}
 
-	private List<DiagramDetailDto> getDiagramDetailDtos(@PathParam("id") String id) {
+	private List<ModelElementDetailDto> getModelElementDetailDtos(String id) {
 		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);
 
 		String command = String.format(
 				"SELECT ?diag\n" +
 				"WHERE {\n" +
-				"\t%1$s %2$s:modelHasDiagram ?diag .\n" +
+				"\t%1$s %2$s:modelHasShape ?diag .\n" +
 				"}",
 				modelId,
 				MODEL.getPrefix()
@@ -236,41 +233,41 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
-		List<String> diagramIds = new ArrayList<>();
+		List<String> shapeIds = new ArrayList<>();
 
 		while (resultSet.hasNext()) {
 			QuerySolution solution = resultSet.next();
-			diagramIds.add(extractIdFrom(solution, "?diag"));
+			shapeIds.add(extractIdFrom(solution, "?diag"));
 		}
 
-		List<DiagramDetailDto> diagrams = new ArrayList<>(diagramIds.size());
+		List<ModelElementDetailDto> modelElements = new ArrayList<>(shapeIds.size());
 
-		diagramIds.forEach(diagramId -> {
-			Map<String, String> diagramAttributes = getDiagramAttributes(diagramId);
-			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(diagramId);
+		shapeIds.forEach(shapeId -> {
+			Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
+			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);
 
-			String modelElementId = diagramAttributes.get("diagramVisualisesModelingLanguageConstructInstance").split("#")[1];
-			ModelElementAttributes modelElementAttributes = getModelElementAttributesAndOptions(modelElementId);
+			String modelElementId = shapeAttributes.get("shapeVisualisesModelingLanguageConstructInstance").split("#")[1];
+			AbstractElementAttributes abstractElementAttributes = getModelElementAttributesAndOptions(modelElementId);
 
-			modelElementAttributes.getModelElementType()
-					.ifPresent(elementType -> diagrams.add(
-									DiagramDetailDto.from(
-											diagramId,
-											diagramAttributes,
-											modelElementAttributes,
+			abstractElementAttributes.getModelElementType()
+					.ifPresent(elementType -> modelElements.add(
+									ModelElementDetailDto.from(
+											shapeId,
+											shapeAttributes,
+											abstractElementAttributes,
 											elementType,
 											visualInformationDto)));
 		});
-		return diagrams;
+		return modelElements;
 	}
 
-	private PaletteVisualInformationDto getPaletteVisualInformation(String diagramId) {
+	private PaletteVisualInformationDto getPaletteVisualInformation(String shapeId) {
 
 		String command = String.format(
 				"SELECT ?imgUrl ?cat ?fromArrow ?toArrow ?arrowStroke\n" +
 				"WHERE\n" +
 				"{\n" +
-				"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po .\n" +
+				"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
 				"\t?po po:paletteConstructIsGroupedInPaletteCategory ?cat\n" +
 				"\tOPTIONAL { ?po po:paletteConstructHasModelImage ?imgUrl }\n" +
 				"\tOPTIONAL { ?po po:paletteConnectorConfiguresFromArrowHead ?fromArrow }\n" +
@@ -278,7 +275,7 @@ public class ModellingEnvironment {
 				"\tOPTIONAL { ?po po:paletteConnectorConfiguresArrowStroke ?arrowStroke }\n" +
 				"}",
 				MODEL.getPrefix(),
-				diagramId);
+				shapeId);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
 		ResultSet resultSet = ontology.query(query).execSelect();
@@ -302,29 +299,29 @@ public class ModellingEnvironment {
 	}
 
 	@GET
-	@Path("/model/{modelId}/diagram/{id}")
-	public Response getDiagram(	@PathParam("modelId") String modelId,
-							  	@PathParam("id") String diagramId) {
+	@Path("/model/{modelId}/element/{id}")
+	public Response getModelElement(@PathParam("modelId") String modelId,
+									@PathParam("id") String elementId) {
 
-		DiagramDetailDto dto = getDiagramDetail(modelId, diagramId);
+		ModelElementDetailDto dto = getModelElementDetail(modelId, elementId);
 
 		String payload = gson.toJson(dto);
 
 		return Response.status(Status.OK).entity(payload).build();
 	}
 
-	private DiagramDetailDto getDiagramDetail(String modelId, String diagramId) {
+	private ModelElementDetailDto getModelElementDetail(String modelId, String shapeId) {
 		String modelIdentifier = String.format("%s:%s", MODEL.getPrefix(), modelId);
 
-		Map<String, String> diagramAttributes = getDiagramAttributes(diagramId);
-		String modelElement = diagramAttributes.get("diagramVisualisesModelingLanguageConstructInstance");
+		Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
+		String modelElement = shapeAttributes.get("shapeVisualisesModelingLanguageConstructInstance");
 		String modelElementId = modelElement.split("#")[1];
-		ModelElementAttributes modelElementAttributes = getModelElementAttributesAndOptions(modelElementId);
+		AbstractElementAttributes abstractElementAttributes = getModelElementAttributesAndOptions(modelElementId);
 
-		PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(diagramId);
+		PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);
 
-		return modelElementAttributes.getModelElementType()
-				.map(elementType -> DiagramDetailDto.from(diagramId, diagramAttributes, modelElementAttributes, elementType, visualInformationDto))
+		return abstractElementAttributes.getModelElementType()
+				.map(elementType -> ModelElementDetailDto.from(shapeId, shapeAttributes, abstractElementAttributes, elementType, visualInformationDto))
 				.orElse(null);
 	}
 
@@ -370,7 +367,7 @@ public class ModellingEnvironment {
 		return Optional.empty();
 	}
 
-	private Map<String, String> getDiagramAttributes(String diagramId) {
+	private Map<String, String> getShapeAttributes(String id) {
 
 		Map<String, String> attributes = new HashMap<>();
 
@@ -378,10 +375,10 @@ public class ModellingEnvironment {
 				"SELECT *\n" +
 				"WHERE {\n" +
 				"\t%1$s:%2$s ?rel ?relValue .\n" +
-				"\t%1$s:%2$s rdf:type %1$s:Diagram\n" +
+				"\t%1$s:%2$s rdf:type %1$s:Shape\n" +
 				"}",
 				MODEL.getPrefix(),
-				diagramId
+				id
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
@@ -424,7 +421,7 @@ public class ModellingEnvironment {
 		return attributes;
 	}
 
-	private ModelElementAttributes getModelElementAttributesAndOptions(String modelElementId) {
+	private AbstractElementAttributes getModelElementAttributesAndOptions(String modelElementId) {
 
 		Optional<ModelElementType> elementTypeOpt = getModelElementType(modelElementId);
 
@@ -509,77 +506,77 @@ public class ModellingEnvironment {
 			}
 		}
 
-        List<String> referencingDiagrams = getReferencingDiagramIds(modelElementId);
+        List<String> referencingShapes = getReferencingShapeIds(modelElementId);
 
-        return new ModelElementAttributes(
+        return new AbstractElementAttributes(
 				options,
 				values,
 				elementTypeOpt.get().getType(),
                 elementTypeOpt.get().getInstantiationType(),
-                referencingDiagrams);
+                referencingShapes);
 	}
 
-    private List<String> getReferencingDiagramIds(String modelElementId) {
+    private List<String> getReferencingShapeIds(String modelElementId) {
         String incomingReferencesCommand = String.format(
                 "SELECT ?diag\n" +
 				"WHERE { \n" +
-				"\t?diag %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%2$s .\n" +
+				"\t?diag %1$s:shapeVisualisesModelingLanguageConstructInstance %1$s:%2$s .\n" +
 				"}",
 				MODEL.getPrefix(),
 				modelElementId);
 
-        List<String> referencingDiagrams = new ArrayList<>();
+        List<String> referencingShapes = new ArrayList<>();
 
         ParameterizedSparqlString incomingReferencesQuery = new ParameterizedSparqlString(incomingReferencesCommand);
         ResultSet incomingReferencesResultSet = ontology.query(incomingReferencesQuery).execSelect();
         while (incomingReferencesResultSet.hasNext()) {
             QuerySolution next = incomingReferencesResultSet.next();
-            String diagram = extractIdFrom(next, "?diag");
-            referencingDiagrams.add(diagram);
+            String shape = extractIdFrom(next, "?diag");
+            referencingShapes.add(shape);
         }
-        return referencingDiagrams;
+        return referencingShapes;
     }
 
     @PUT
-	@Path("/model/{modelId}/diagram")
-	public Response createDiagram(@PathParam("modelId") String modelId,
-								  String json) {
+	@Path("/model/{modelId}/element")
+	public Response createModelElement(@PathParam("modelId") String modelId,
+									   String json) {
 
 		Gson gson = new Gson();
-		DiagramCreationDto diagramCreationDto = gson.fromJson(json, DiagramCreationDto.class);
+		ModelElementCreationDto modelElementCreationDto = gson.fromJson(json, ModelElementCreationDto.class);
 
-		if (diagramCreationDto.getModelingLanguageConstructInstance() == null) {
-			createDiagramForNewModelElement(modelId, diagramCreationDto);
+		if (modelElementCreationDto.getModelingLanguageConstructInstance() == null) {
+			createShapeForNewModelElement(modelId, modelElementCreationDto);
 		} else {
-			ParameterizedSparqlString query = getDiagramCreationQuery(diagramCreationDto, modelId, diagramCreationDto.getModelingLanguageConstructInstance());
+			ParameterizedSparqlString query = getShapeCreationQuery(modelElementCreationDto, modelId, modelElementCreationDto.getModelingLanguageConstructInstance());
 			ontology.insertQuery(query);
 		}
 
-		Object diagram = getDiagram(modelId, diagramCreationDto.getUuid()).getEntity();
-		return Response.status(Status.CREATED).entity(diagram).build();
+		Object modelElement = getModelElement(modelId, modelElementCreationDto.getUuid()).getEntity();
+		return Response.status(Status.CREATED).entity(modelElement).build();
 	}
 
-	private ParameterizedSparqlString getDiagramAndModelElementCreationQuery(DiagramCreationDto diagramCreationDto, String modelId, String elementId) {
+	private ParameterizedSparqlString getShapeAndAbstractElementCreationQuery(ModelElementCreationDto modelElementCreationDto, String modelId, String elementId) {
 		String instanceCreationBit = "	%7$s:%1$s rdf:type ?type .\n";
 		String classCreationBit = 	"	%7$s:%1$s rdf:type owl:Class .\n" +
 									"	%7$s:%1$s rdfs:subClassOf ?type .\n";
 
-		String creationBit = diagramCreationDto.getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
+		String creationBit = modelElementCreationDto.getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
 
 		String command = String.format(
 				"INSERT {\n" +
 						creationBit +
 						"	%7$s:%1$s rdf:type %7$s:ModelConstructInstance .\n" +
 						"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
-						"	%7$s:%2$s rdf:type %7$s:Diagram .\n" +
-						"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
-						"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
-						"	%7$s:%2$s %7$s:diagramHasHeight ?height .\n" +
-						"	%7$s:%2$s %7$s:diagramHasWidth ?width .\n" +
-						"	%7$s:%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
-						"	%7$s:%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
+						"	%7$s:%2$s rdf:type %7$s:Shape .\n" +
+						"	%7$s:%2$s %7$s:shapePositionsOnCoordinateX %5$s .\n" +
+						"	%7$s:%2$s %7$s:shapePositionsOnCoordinateY %6$s .\n" +
+						"	%7$s:%2$s %7$s:shapeHasHeight ?height .\n" +
+						"	%7$s:%2$s %7$s:shapeHasWidth ?width .\n" +
+						"	%7$s:%2$s %7$s:shapeInstantiatesPaletteConstruct po:%3$s .\n" +
+						"	%7$s:%2$s %7$s:shapeVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
 						"	%7$s:%2$s rdfs:label \"%8$s\" .\n" +
-						"	%7$s:%4$s %7$s:modelHasDiagram %7$s:%2$s .\n" +
+						"	%7$s:%4$s %7$s:modelHasShape %7$s:%2$s .\n" +
 						"}" +
 						"WHERE {" +
 						"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +
@@ -588,20 +585,20 @@ public class ModellingEnvironment {
 						"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
 						"}",
 				elementId,
-				diagramCreationDto.getUuid(),
-				diagramCreationDto.getPaletteConstruct(),
+				modelElementCreationDto.getUuid(),
+				modelElementCreationDto.getPaletteConstruct(),
 				modelId,
-				diagramCreationDto.getX(),
-				diagramCreationDto.getY(),
+				modelElementCreationDto.getX(),
+				modelElementCreationDto.getY(),
 				MODEL.getPrefix(),
-				diagramCreationDto.getLabel()
+				modelElementCreationDto.getLabel()
 		);
 
 		return new ParameterizedSparqlString(command);
 	}
 
-	private void createDiagramForNewModelElement(String modelId, DiagramCreationDto diagramCreationDto) {
-		Optional<String> mappedModelingLanguageConstruct = getMappedModelingLanguageConstruct(diagramCreationDto.getPaletteConstruct());
+	private void createShapeForNewModelElement(String modelId, ModelElementCreationDto modelElementCreationDto) {
+		Optional<String> mappedModelingLanguageConstruct = getMappedModelingLanguageConstruct(modelElementCreationDto.getPaletteConstruct());
 
 		if (!mappedModelingLanguageConstruct.isPresent()) {
 			throw new IllegalArgumentException("Palette Construct must be related to a Modeling Language Construct");
@@ -609,7 +606,7 @@ public class ModellingEnvironment {
 
 		String elementId = String.format("%s_%s", mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
 
-		ParameterizedSparqlString query = getDiagramAndModelElementCreationQuery(diagramCreationDto, modelId, elementId);
+		ParameterizedSparqlString query = getShapeAndAbstractElementCreationQuery(modelElementCreationDto, modelId, elementId);
 		ontology.insertQuery(query);
 	}
 
@@ -627,36 +624,36 @@ public class ModellingEnvironment {
 			throw new IllegalArgumentException("Palette Construct must be related to a Modeling Language Construct");
 		}
 
-		String diagramId = String.format("%s_Diagram_%s",
+		String shapeId = String.format("%s_Shape_%s",
 				connectionCreationDto.getPaletteConstruct(),
 				connectionCreationDto.getUuid());
 
 		String elementId = String.format("%s_%s", mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
 
-		String command = getConnectionCreationCommand(connectionCreationDto, modelId, diagramId, elementId);
+		String command = getConnectionCreationCommand(connectionCreationDto, modelId, shapeId, elementId);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
 		ontology.insertQuery(query);
 
-		Object diagram = getDiagram(modelId, diagramId).getEntity();
-		return Response.status(Status.CREATED).entity(diagram).build();
+		Object modelElement = getModelElement(modelId, shapeId).getEntity();
+		return Response.status(Status.CREATED).entity(modelElement).build();
 	}
 
 	@DELETE
-	@Path("/model/{modelId}/diagram/{diagramId}")
-	public Response deleteDiagram(@PathParam("modelId") String modelId,
-								  @PathParam("diagramId") String diagramId) {
+	@Path("/model/{modelId}/element/{shapeId}")
+	public Response deleteModelElement(@PathParam("modelId") String modelId,
+									   @PathParam("shapeId") String shapeId) {
 
-		deleteDiagramOfModel(modelId, diagramId);
+		deleteElementOfModel(modelId, shapeId);
 
 		return Response.status(Status.OK).build();
 	}
 
-	private void deleteDiagramOfModel(@PathParam("modelId") String modelId, @PathParam("diagramId") String diagramId) {
-		DiagramDetailDto diagramDetail = getDiagramDetail(modelId, diagramId);
-		String modelingLanguageConstructInstance = diagramDetail.getModelingLanguageConstructInstance();
+	private void deleteElementOfModel(String modelId, String shapeId) {
+		ModelElementDetailDto modelElementDetailDto = getModelElementDetail(modelId, shapeId);
+		String modelingLanguageConstructInstance = modelElementDetailDto.getModelingLanguageConstructInstance();
 
-		ParameterizedSparqlString deleteQuery = getDeleteDiagramQuery(diagramId);
+		ParameterizedSparqlString deleteQuery = getDeleteShapeQuery(shapeId);
 		ontology.insertQuery(deleteQuery);
 
 		if (StringUtils.isNotBlank(modelingLanguageConstructInstance)
@@ -670,7 +667,7 @@ public class ModellingEnvironment {
 		String command = String.format(
 				"SELECT *\n" +
 				"WHERE {\n" +
-				"    ?diagram %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%2$s\n" +
+				"    ?shape %1$s:shapeVisualisesModelingLanguageConstructInstance %1$s:%2$s\n" +
 				"}",
 				MODEL.getPrefix(),
 				instanceId
@@ -683,74 +680,74 @@ public class ModellingEnvironment {
 	}
 
 	@PUT
-	@Path("/model/{modelId}/diagram/{diagramId}")
-	public Response updateDiagram(@PathParam("modelId") String modelId,
-								  @PathParam("diagramId") String diagramId,
-								  String json) {
+	@Path("/model/{modelId}/element/{shapeId}")
+	public Response updateModelElement(@PathParam("modelId") String modelId,
+									   @PathParam("shapeId") String shapeId,
+									   String json) {
 
-		DiagramDetailDto diagram = getDiagramDetail(modelId, diagramId);
+		ModelElementDetailDto modelElementDetailDto = getModelElementDetail(modelId, shapeId);
 
-		if (diagram == null) {
+		if (modelElementDetailDto == null) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
 		Gson gson = new Gson();
-		DiagramDetailDto diagramToBeStored = gson.fromJson(json, DiagramDetailDto.class);
+		ModelElementDetailDto modelElementToBeStored = gson.fromJson(json, ModelElementDetailDto.class);
 
 		List<ParameterizedSparqlString> queries = new ArrayList<>();
 
-		ParameterizedSparqlString deleteQuery = getDeleteDiagramDataQuery(diagramId);
+		ParameterizedSparqlString deleteQuery = getDeleteShapeDataQuery(shapeId);
 		queries.add(deleteQuery);
 
-		ParameterizedSparqlString insertQuery = getInsertDiagramDataQuery(diagramId, diagramToBeStored);
+		ParameterizedSparqlString insertQuery = getInsertShapeDataQuery(shapeId, modelElementToBeStored);
 		queries.add(insertQuery);
 
-		if (diagramToBeStored.hasOptionalValues()) {
-			ParameterizedSparqlString optInsertQuery = getInsertOptionalDiagramDataQuery(diagramId, diagramToBeStored);
+		if (modelElementToBeStored.hasOptionalValues()) {
+			ParameterizedSparqlString optInsertQuery = getInsertOptionalShapeDataQuery(shapeId, modelElementToBeStored);
 			queries.add(optInsertQuery);
 		}
 
-		if (diagram.getModelElementAttributes() != null &&
-			diagram.getModelElementAttributes().getValues() != null &&
-			!diagram.getModelElementAttributes().getValues().isEmpty()) {
+		if (modelElementDetailDto.getAbstractElementAttributes() != null &&
+			modelElementDetailDto.getAbstractElementAttributes().getValues() != null &&
+			!modelElementDetailDto.getAbstractElementAttributes().getValues().isEmpty()) {
 
-			ParameterizedSparqlString deleteQueryElement = getDeleteModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagram.getModelElementAttributes().getValues());
+			ParameterizedSparqlString deleteQueryElement = getDeleteModelElementDataQuery(modelElementDetailDto.getModelingLanguageConstructInstance(), modelElementDetailDto.getAbstractElementAttributes().getValues());
 			queries.add(deleteQueryElement);
 		}
 
-		if (diagram.getModelingLanguageConstructInstance().equals(diagramToBeStored.getModelingLanguageConstructInstance()) &&
-			diagramToBeStored.getModelElementAttributes() != null &&
-			diagramToBeStored.getModelElementAttributes().getValues() != null &&
-			!diagramToBeStored.getModelElementAttributes().getValues().isEmpty()) {
+		if (modelElementDetailDto.getModelingLanguageConstructInstance().equals(modelElementToBeStored.getModelingLanguageConstructInstance()) &&
+			modelElementToBeStored.getAbstractElementAttributes() != null &&
+			modelElementToBeStored.getAbstractElementAttributes().getValues() != null &&
+			!modelElementToBeStored.getAbstractElementAttributes().getValues().isEmpty()) {
 
-			Optional<ParameterizedSparqlString> insertModelElementDataQuery = getInsertModelElementDataQuery(diagram.getModelingLanguageConstructInstance(), diagramToBeStored.getModelElementAttributes().getValues());
+			Optional<ParameterizedSparqlString> insertModelElementDataQuery = getInsertModelElementDataQuery(modelElementDetailDto.getModelingLanguageConstructInstance(), modelElementToBeStored.getAbstractElementAttributes().getValues());
 			insertModelElementDataQuery.ifPresent(queries::add);
 		}
 
-		if ("ModelingContainer".equals(diagram.getModelElementType())) {
-			ParameterizedSparqlString deleteQueryElement = getDeleteContainedModelElementsQuery(diagram.getModelingLanguageConstructInstance());
+		if ("ModelingContainer".equals(modelElementDetailDto.getModelElementType())) {
+			ParameterizedSparqlString deleteQueryElement = getDeleteContainedModelElementsQuery(modelElementDetailDto.getModelingLanguageConstructInstance());
 			queries.add(deleteQueryElement);
 
-			if (diagramToBeStored.getContainedDiagrams() != null && !diagramToBeStored.getContainedDiagrams().isEmpty()) {
-				ParameterizedSparqlString insertQueryElement = getInsertContainedModelElementsQuery(diagramToBeStored.getModelingLanguageConstructInstance(), diagramToBeStored.getContainedDiagrams());
+			if (modelElementToBeStored.getContainedShapes() != null && !modelElementToBeStored.getContainedShapes().isEmpty()) {
+				ParameterizedSparqlString insertQueryElement = getInsertContainedModelElementsQuery(modelElementToBeStored.getModelingLanguageConstructInstance(), modelElementToBeStored.getContainedShapes());
 				queries.add(insertQueryElement);
 			}
 		}
 
 		ontology.insertMultipleQueries(queries);
 
-		return Response.status(Status.CREATED).entity(getDiagram(modelId, diagramId).getEntity()).build();
+		return Response.status(Status.CREATED).entity(getModelElement(modelId, shapeId).getEntity()).build();
 	}
 
-	private ParameterizedSparqlString getInsertContainedModelElementsQuery(String containerInstance, List<String> containedDiagrams) {
+	private ParameterizedSparqlString getInsertContainedModelElementsQuery(String containerInstance, List<String> containedShapes) {
 
 		StringBuilder command = new StringBuilder("INSERT DATA {\n");
-		containedDiagrams.forEach(diagram -> {
+		containedShapes.forEach(shape -> {
 			command.append(String.format(
 					"\t%1$s:%2$s %1$s:modelingContainerContainsModelingLanguageConstruct %1$s:%3$s .\n",
 					MODEL.getPrefix(),
 					containerInstance,
-					diagram));
+					shape));
 		});
 		command.append("}");
 
@@ -830,33 +827,33 @@ public class ModellingEnvironment {
 		return new ParameterizedSparqlString(deleteQueryBuilder.toString() + whereQueryBuilder.toString());
 	}
 
-	private ParameterizedSparqlString getInsertOptionalDiagramDataQuery(String diagramId, DiagramDetailDto diagram) {
+	private ParameterizedSparqlString getInsertOptionalShapeDataQuery(String shapeId, ModelElementDetailDto dto) {
 
 		StringBuilder queryBuilder = new StringBuilder();
 		queryBuilder.append("INSERT DATA {\n");
 
-		if (diagram.getNote() != null) {
+		if (dto.getNote() != null) {
 			queryBuilder.append(String.format(
-					"\t%1$s:%2$s %1$s:diagramHasNote \"%3$s\" .\n",
+					"\t%1$s:%2$s %1$s:shapeHasNote \"%3$s\" .\n",
 					MODEL.getPrefix(),
-					diagramId,
-					diagram.getNote()));
+					shapeId,
+					dto.getNote()));
 		}
 
-		if (diagram.getLabel() != null) {
+		if (dto.getLabel() != null) {
 			queryBuilder.append(String.format(
 					"\t%1$s:%2$s rdfs:label \"%3$s\" .\n",
 					MODEL.getPrefix(),
-					diagramId,
-					diagram.getLabel()));
+					shapeId,
+					dto.getLabel()));
 		}
 
-		if (diagram.getDiagramRepresentsModel() != null) {
+		if (dto.getShapeRepresentsModel() != null) {
 			queryBuilder.append(String.format(
-					"\t%1$s:%2$s %1$s:diagramRepresentsModel %1$s:%3$s .\n",
+					"\t%1$s:%2$s %1$s:shapeRepresentsModel %1$s:%3$s .\n",
 					MODEL.getPrefix(),
-					diagramId,
-					diagram.getDiagramRepresentsModel()));
+					shapeId,
+					dto.getShapeRepresentsModel()));
 		}
 
 		queryBuilder.append("}");
@@ -864,51 +861,51 @@ public class ModellingEnvironment {
 		return new ParameterizedSparqlString(queryBuilder.toString());
 	}
 
-	private ParameterizedSparqlString getInsertDiagramDataQuery(String diagramId, DiagramDetailDto diagram) {
+	private ParameterizedSparqlString getInsertShapeDataQuery(String shapeId, ModelElementDetailDto dto) {
 		String command = String.format(
 				"INSERT DATA {\n" +
-				"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateX %3$s .\n" +
-				"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateY %4$s .\n" +
-				"\t%1$s:%2$s %1$s:diagramHasHeight %5$s .\n" +
-				"\t%1$s:%2$s %1$s:diagramHasWidth %6$s .\n" +
-				"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct %7$s .\n" +
-				"\t%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%8$s .\n" +
+				"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateX %3$s .\n" +
+				"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateY %4$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasHeight %5$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasWidth %6$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct %7$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance %1$s:%8$s .\n" +
 				"} ",
 				MODEL.getPrefix(),
-				diagramId,
-				diagram.getX(),
-				diagram.getY(),
-				diagram.getHeight(),
-				diagram.getWidth(),
-				diagram.getPaletteConstruct(),
-				diagram.getModelingLanguageConstructInstance()
+				shapeId,
+				dto.getX(),
+				dto.getY(),
+				dto.getHeight(),
+				dto.getWidth(),
+				dto.getPaletteConstruct(),
+				dto.getModelingLanguageConstructInstance()
 		);
 
 		StringBuilder queryBuilder = new StringBuilder();
 		queryBuilder.append("INSERT DATA {\n");
 
-		if (diagram.getNote() != null) {
+		if (dto.getNote() != null) {
 			queryBuilder.append(String.format(
-					"\t%1$s:%2$s %1$s:diagramHasNote \"%3$s\" .\n",
+					"\t%1$s:%2$s %1$s:shapeHasNote \"%3$s\" .\n",
 					MODEL.getPrefix(),
-					diagramId,
-					diagram.getNote()));
+					shapeId,
+					dto.getNote()));
 		}
 
-		if (diagram.getLabel() != null) {
+		if (dto.getLabel() != null) {
 			queryBuilder.append(String.format(
 					"\t%1$s:%2$s rdfs:label \"%3$s\" .\n",
 					MODEL.getPrefix(),
-					diagramId,
-					diagram.getLabel()));
+					shapeId,
+					dto.getLabel()));
 		}
 
-		if (diagram.getDiagramRepresentsModel() != null) {
+		if (dto.getShapeRepresentsModel() != null) {
 			queryBuilder.append(String.format(
-					"\t%1$s:%2$s %1$s:diagramRepresentsModel %1$s:%3$s .\n",
+					"\t%1$s:%2$s %1$s:shapeRepresentsModel %1$s:%3$s .\n",
 					MODEL.getPrefix(),
-					diagramId,
-					diagram.getDiagramRepresentsModel()));
+					shapeId,
+					dto.getShapeRepresentsModel()));
 		}
 
 		queryBuilder.append("}");
@@ -916,113 +913,113 @@ public class ModellingEnvironment {
 		return new ParameterizedSparqlString(command);
 	}
 
-	private ParameterizedSparqlString getDeleteDiagramQuery(String diagramId) {
+	private ParameterizedSparqlString getDeleteShapeQuery(String shapeId) {
 		String command = String.format(
 				"DELETE {\n" +
-                        "\t%1$s:%2$s rdf:type %1$s:Diagram .\n" +
-						"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x .\n" +
-						"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y .\n" +
-						"\t%1$s:%2$s %1$s:diagramHasHeight ?h .\n" +
-						"\t%1$s:%2$s %1$s:diagramHasWidth ?w .\n" +
-						"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po .\n" +
-						"\t%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance ?mlo .\n" +
-						"\t%1$s:%2$s %1$s:diagramHasNote ?note .\n" +
+                        "\t%1$s:%2$s rdf:type %1$s:Shape .\n" +
+						"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateX ?x .\n" +
+						"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateY ?y .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasHeight ?h .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasWidth ?w .\n" +
+						"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
+						"\t%1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance ?mlo .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasNote ?note .\n" +
 						"\t%1$s:%2$s rdfs:label ?label .\n" +
-						"\t%1$s:%2$s %1$s:diagramRepresentsModel ?model .\n" +
-						"\t?parentModel %1$s:modelHasDiagram %1$s:%2$s .\n" +
+						"\t%1$s:%2$s %1$s:shapeRepresentsModel ?model .\n" +
+						"\t?parentModel %1$s:modelHasShape %1$s:%2$s .\n" +
 						"} WHERE {\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasHeight ?h }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasWidth ?w }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance ?mlo }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasNote ?note }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapePositionsOnCoordinateX ?x }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapePositionsOnCoordinateY ?y }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasHeight ?h }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasWidth ?w }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance ?mlo }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasNote ?note }\n" +
 						"\tOPTIONAL { %1$s:%2$s rdfs:label ?label }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:diagramRepresentsModel ?model }\n" +
-						"\t?parentModel %1$s:modelHasDiagram %1$s:%2$s .\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeRepresentsModel ?model }\n" +
+						"\t?parentModel %1$s:modelHasShape %1$s:%2$s .\n" +
 						"} ",
 				MODEL.getPrefix(),
-				diagramId
+				shapeId
 		);
 
 		return new ParameterizedSparqlString(command);
 	}
 
-	private ParameterizedSparqlString getDeleteDiagramDataQuery(String diagramId) {
+	private ParameterizedSparqlString getDeleteShapeDataQuery(String shapeId) {
 		String command = String.format(
 				"DELETE {\n" +
-				"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x .\n" +
-				"\t%1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y .\n" +
-				"\t%1$s:%2$s %1$s:diagramHasHeight ?h .\n" +
-				"\t%1$s:%2$s %1$s:diagramHasWidth ?w .\n" +
-				"\t%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po .\n" +
-				"\t%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance ?mlo .\n" +
-				"\t%1$s:%2$s %1$s:diagramHasNote ?note .\n" +
+				"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateX ?x .\n" +
+				"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateY ?y .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasHeight ?h .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasWidth ?w .\n" +
+				"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
+				"\t%1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance ?mlo .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasNote ?note .\n" +
 				"\t%1$s:%2$s rdfs:label ?label .\n" +
-				"\t%1$s:%2$s %1$s:diagramRepresentsModel ?model .\n" +
+				"\t%1$s:%2$s %1$s:shapeRepresentsModel ?model .\n" +
 				"} WHERE {\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramPositionsOnCoordinateX ?x }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramPositionsOnCoordinateY ?y }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasHeight ?h }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasWidth ?w }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct ?po }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance ?mlo }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramHasNote ?note }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapePositionsOnCoordinateX ?x }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapePositionsOnCoordinateY ?y }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasHeight ?h }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasWidth ?w }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance ?mlo }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasNote ?note }\n" +
 				"\tOPTIONAL { %1$s:%2$s rdfs:label ?label }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:diagramRepresentsModel ?model }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeRepresentsModel ?model }\n" +
 				"} ",
 				MODEL.getPrefix(),
-				diagramId
+				shapeId
 		);
 
 		return new ParameterizedSparqlString(command);
 	}
 
-	private ParameterizedSparqlString getDiagramCreationQuery(DiagramCreationDto diagramCreationDto, String modelId, String elementId) {
+	private ParameterizedSparqlString getShapeCreationQuery(ModelElementCreationDto modelElementCreationDto, String modelId, String elementId) {
 
 		String command = String.format(
 				"INSERT DATA {\n" +
-				"	%1$s:%2$s rdf:type %1$s:Diagram .\n" +
-				"	%1$s:%2$s %1$s:diagramPositionsOnCoordinateX %6$s .\n" +
-				"	%1$s:%2$s %1$s:diagramPositionsOnCoordinateY %7$s .\n" +
-				"	%1$s:%2$s %1$s:diagramHasWidth %8$s .\n" +
-				"	%1$s:%2$s %1$s:diagramHasHeight %9$s .\n" +
-				"	%1$s:%2$s %1$s:diagramInstantiatesPaletteConstruct %5$s .\n" +
-				"	%1$s:%2$s %1$s:diagramVisualisesModelingLanguageConstructInstance %1$s:%4$s .\n" +
-				"	%1$s:%3$s %1$s:modelHasDiagram %1$s:%2$s .\n",
+				"	%1$s:%2$s rdf:type %1$s:Shape .\n" +
+				"	%1$s:%2$s %1$s:shapePositionsOnCoordinateX %6$s .\n" +
+				"	%1$s:%2$s %1$s:shapePositionsOnCoordinateY %7$s .\n" +
+				"	%1$s:%2$s %1$s:shapeHasWidth %8$s .\n" +
+				"	%1$s:%2$s %1$s:shapeHasHeight %9$s .\n" +
+				"	%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct %5$s .\n" +
+				"	%1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance %1$s:%4$s .\n" +
+				"	%1$s:%3$s %1$s:modelHasShape %1$s:%2$s .\n",
 				MODEL.getPrefix(),
-				diagramCreationDto.getUuid(),
+				modelElementCreationDto.getUuid(),
 				modelId,
 				elementId,
-				diagramCreationDto.getPaletteConstruct(),
-				diagramCreationDto.getX(),
-				diagramCreationDto.getY(),
-				diagramCreationDto.getW(),
-				diagramCreationDto.getH()
+				modelElementCreationDto.getPaletteConstruct(),
+				modelElementCreationDto.getX(),
+				modelElementCreationDto.getY(),
+				modelElementCreationDto.getW(),
+				modelElementCreationDto.getH()
 		);
 
 		StringBuilder commandBuilder = new StringBuilder(command);
 
-		if (diagramCreationDto.getNote() != null) {
-			commandBuilder.append(String.format("	%1$s:%2$s %1$s:diagramHasNote \"%3$s\" .\n",
+		if (modelElementCreationDto.getNote() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeHasNote \"%3$s\" .\n",
 					MODEL.getPrefix(),
-					diagramCreationDto.getUuid(),
-					diagramCreationDto.getNote()));
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getNote()));
 		}
 
-		if (diagramCreationDto.getDiagramRepresentsModel() != null) {
-			commandBuilder.append(String.format("	%1$s:%2$s %1$s:diagramRepresentsModel %1$s:%3$s .\n",
+		if (modelElementCreationDto.getShapeRepresentsModel() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeRepresentsModel %1$s:%3$s .\n",
 					MODEL.getPrefix(),
-					diagramCreationDto.getUuid(),
-					diagramCreationDto.getDiagramRepresentsModel()));
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getShapeRepresentsModel()));
 		}
 
-		if (diagramCreationDto.getLabel() != null) {
+		if (modelElementCreationDto.getLabel() != null) {
 			commandBuilder.append(String.format("	%1$s:%2$s rdfs:label \"%3$s\" .\n",
 					MODEL.getPrefix(),
-					diagramCreationDto.getUuid(),
-					diagramCreationDto.getLabel()));
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getLabel()));
 		}
 
 		commandBuilder.append("}");
@@ -1045,23 +1042,23 @@ public class ModellingEnvironment {
 				"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
 				"	%7$s:%1$s lo:modelingRelationHasSourceModelingElement ?fromInstance .\n" +
 				"	%7$s:%1$s lo:modelingRelationHasTargetModelingElement ?toInstance .\n" +
-				"	%7$s:%2$s rdf:type %7$s:Diagram .\n" +
-				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateX %5$s .\n" +
-				"	%7$s:%2$s %7$s:diagramPositionsOnCoordinateY %6$s .\n" +
-				"	%7$s:%2$s %7$s:diagramHasHeight ?height .\n" +
-				"	%7$s:%2$s %7$s:diagramHasWidth ?width .\n" +
-				"	%7$s:%2$s %7$s:diagramInstantiatesPaletteConstruct po:%3$s .\n" +
-				"	%7$s:%2$s %7$s:diagramVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
-				"	%7$s:%4$s %7$s:modelHasDiagram %7$s:%2$s .\n" +
+				"	%7$s:%2$s rdf:type %7$s:Shape .\n" +
+				"	%7$s:%2$s %7$s:shapePositionsOnCoordinateX %5$s .\n" +
+				"	%7$s:%2$s %7$s:shapePositionsOnCoordinateY %6$s .\n" +
+				"	%7$s:%2$s %7$s:shapeHasHeight ?height .\n" +
+				"	%7$s:%2$s %7$s:shapeHasWidth ?width .\n" +
+				"	%7$s:%2$s %7$s:shapeInstantiatesPaletteConstruct po:%3$s .\n" +
+				"	%7$s:%2$s %7$s:shapeVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
+				"	%7$s:%4$s %7$s:modelHasShape %7$s:%2$s .\n" +
 				"}" +
 				"WHERE {" +
 				"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +
 				"	po:%3$s po:paletteConstructHasHeight ?height .\n" +
 				"	po:%3$s po:paletteConstructHasWidth ?width .\n" +
-				"   %7$s:%8$s rdf:type %7$s:Diagram . \n" +
-				"   %7$s:%9$s rdf:type %7$s:Diagram . \n" +
-				"   %7$s:%8$s %7$s:diagramVisualisesModelingLanguageConstructInstance ?fromInstance . \n" +
-				"   %7$s:%9$s %7$s:diagramVisualisesModelingLanguageConstructInstance ?toInstance . \n" +
+				"   %7$s:%8$s rdf:type %7$s:Shape . \n" +
+				"   %7$s:%9$s rdf:type %7$s:Shape . \n" +
+				"   %7$s:%8$s %7$s:shapeVisualisesModelingLanguageConstructInstance ?fromInstance . \n" +
+				"   %7$s:%9$s %7$s:shapeVisualisesModelingLanguageConstructInstance ?toInstance . \n" +
 				"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
 				"}",
 				elementId,
@@ -1113,7 +1110,7 @@ public class ModellingEnvironment {
 				"\n" +
 				"\t\tFILTER NOT EXISTS\n" +
 				"\t\t{\n" +
-				"\t\t\t?diagram %1$s:diagramVisualisesModelingLanguageConstructInstance ?instance\n" +
+				"\t\t\t?shape %1$s:shapeVisualisesModelingLanguageConstructInstance ?instance\n" +
 				"\t\t}\n" +
 				"\t}\n" +
 				"\tUNION\n" +
@@ -1123,7 +1120,7 @@ public class ModellingEnvironment {
 				"\n" +
 				"\t\tFILTER NOT EXISTS\n" +
 				"\t\t{\n" +
-				"\t\t\t?diagram %1$s:diagramVisualisesModelingLanguageConstructInstance ?instance\n" +
+				"\t\t\t?shape %1$s:shapeVisualisesModelingLanguageConstructInstance ?instance\n" +
 				"\t\t}\n" +
 				"\t}\n" +
 				"}\n",
