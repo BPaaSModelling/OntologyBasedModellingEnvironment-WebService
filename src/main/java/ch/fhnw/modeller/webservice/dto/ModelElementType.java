@@ -6,4 +6,5 @@ import lombok.Data;
 public class ModelElementType {
     private String type;
     private InstantiationTargetType instantiationType;
+    private String modellingLanguageConstruct;
 }

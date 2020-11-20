@@ -12,6 +12,7 @@ public class ModelElementDetailDto {
 
     private String id;
     private String paletteConstruct;
+    private String modellingLanguageConstruct;
     private int x;
     private int y;
     private String modelingLanguageConstructInstance;
@@ -40,9 +41,10 @@ public class ModelElementDetailDto {
         dto.setId(shapeId);
         String[] paletteConstruct = shapeAttributes.get("shapeInstantiatesPaletteConstruct").split("#");
         dto.setPaletteConstruct(GlobalVariables.getNamespaceMap().get(paletteConstruct[0]) + ":" + paletteConstruct[1]);
+        dto.setModellingLanguageConstruct(abstractElementAttributes.getModellingLanguageConstruct());
         dto.setX(Integer.parseInt(shapeAttributes.get("shapePositionsOnCoordinateX").split("\\^\\^")[0]));
         dto.setY(Integer.parseInt(shapeAttributes.get("shapePositionsOnCoordinateY").split("\\^\\^")[0]));
-        dto.setModelingLanguageConstructInstance(shapeAttributes.get("shapeVisualisesModelingLanguageConstructInstance").split("#")[1]);
+        dto.setModelingLanguageConstructInstance(shapeAttributes.get("shapeVisualisesConceptualElement").split("#")[1]);
         dto.setWidth(Integer.parseInt(shapeAttributes.get("shapeHasWidth").split("\\^\\^")[0]));
         dto.setHeight(Integer.parseInt(shapeAttributes.get("shapeHasHeight").split("\\^\\^")[0]));
         dto.setLabel(shapeAttributes.get("label"));

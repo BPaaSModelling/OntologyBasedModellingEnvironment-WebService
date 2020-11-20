@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import ch.fhnw.modeller.model.model.Model;
+import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
 import ch.fhnw.modeller.webservice.dto.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.MethodNotSupportedException;
@@ -246,7 +247,7 @@ public class ModellingEnvironment {
 			Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
 			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);
 
-			String modelElementId = shapeAttributes.get("shapeVisualisesModelingLanguageConstructInstance").split("#")[1];
+			String modelElementId = shapeAttributes.get("shapeVisualisesConceptualElement").split("#")[1];
 			AbstractElementAttributes abstractElementAttributes = getModelElementAttributesAndOptions(modelElementId);
 
 			abstractElementAttributes.getModelElementType()
@@ -314,7 +315,7 @@ public class ModellingEnvironment {
 		String modelIdentifier = String.format("%s:%s", MODEL.getPrefix(), modelId);
 
 		Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
-		String modelElement = shapeAttributes.get("shapeVisualisesModelingLanguageConstructInstance");
+		String modelElement = shapeAttributes.get("shapeVisualisesConceptualElement");
 		String modelElementId = modelElement.split("#")[1];
 		AbstractElementAttributes abstractElementAttributes = getModelElementAttributesAndOptions(modelElementId);
 
@@ -328,16 +329,19 @@ public class ModellingEnvironment {
 	private Optional<ModelElementType> getModelElementType(String modelElementId) {
 
 		String command = String.format(
-				"SELECT ?type ?class \n" +
+				"SELECT ?type ?class ?allTypes \n" +
 				"WHERE { \n" +
 				"\t{\n" +
-				"\t%1$s:%2$s rdf:type %1$s:ModelConstructInstance . \n" +
+				"\t%1$s:%2$s rdf:type %1$s:ConceptualElement . \n" +
+				"\t%1$s:%2$s rdf:type ?allTypes . \n" +
+				"\t%1$s:%2$s rdfs:subClassOf ?class . \n" +
 				"\t%1$s:%2$s rdfs:subClassOf* ?type . \n" +
 				"\t?type rdfs:subClassOf lo:ModelingLanguageConstruct \n" +
 				"\t}\n" +
 				"\tUNION\n" +
 				"\t{\n" +
-				"\t%1$s:%2$s rdf:type %1$s:ModelConstructInstance . \n" +
+				"\t%1$s:%2$s rdf:type %1$s:ConceptualElement . \n" +
+				"\t%1$s:%2$s rdf:type ?allTypes . \n" +
 				"\t%1$s:%2$s rdf:type ?class .\n" +
 				"\t?class rdfs:subClassOf* ?type . \n" +
 				"\t?type rdfs:subClassOf lo:ModelingLanguageConstruct \n" +
@@ -350,18 +354,37 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
+		List<String> types = new ArrayList<>();
+
+		ModelElementType modelElementType = new ModelElementType();
+
 		if (resultSet.hasNext()) {
 			QuerySolution next = resultSet.next();
 			String type = extractIdFrom(next, "?type");
-			String directType = extractIdFrom(next, "?class");
+			String directSuperClass = extractIdFrom(next, "?class");
+			String firstType = extractNamespaceAndIdFrom(next, "?allTypes");
+
+			types.add(firstType);
 
 			if (type != null) {
-				ModelElementType modelElementType = new ModelElementType();
 				modelElementType.setType(type);
-				modelElementType.setInstantiationType(directType != null ? InstantiationTargetType.Instance : InstantiationTargetType.Class);
-
-				return Optional.of(modelElementType);
+				modelElementType.setModellingLanguageConstruct(directSuperClass);
 			}
+		}
+
+		QuerySolution nextForOtherType = resultSet.next();
+		String otherType = extractNamespaceAndIdFrom(nextForOtherType, "?allTypes");
+		types.add(otherType);
+
+		if (modelElementType.getType() != null) {
+			if (types.contains("owl:Class")) {
+				modelElementType.setInstantiationType(InstantiationTargetType.Class);
+			} else {
+				modelElementType.setInstantiationType(InstantiationTargetType.Instance);
+
+			}
+
+			return Optional.of(modelElementType);
 		}
 
 		return Optional.empty();
@@ -401,7 +424,7 @@ public class ModellingEnvironment {
 		String command = String.format(
 				"SELECT *\n" +
 				"WHERE {\n" +
-				"\t%1$s:%2$s rdf:type %1$s:ModelConstructInstance .\n" +
+				"\t%1$s:%2$s rdf:type %1$s:ConceptualElement .\n" +
 				"\t%1$s:%2$s ?rel ?relValue .\n" +
 				"}",
 				MODEL.getPrefix(),
@@ -434,7 +457,7 @@ public class ModellingEnvironment {
 		String creationBit = elementTypeOpt.get().getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
 
 		String command = String.format(
-				"SELECT ?objProp ?range ?instanceValue ?classValue\n" +
+				"SELECT ?mloConcept ?objProp ?range ?instanceValue ?classValue\n" +
 				"WHERE {\n" +
 				creationBit +
 				"\t\t?mloConcept rdfs:subClassOf* ?relTarget .\n" +
@@ -509,6 +532,7 @@ public class ModellingEnvironment {
         List<String> referencingShapes = getReferencingShapeIds(modelElementId);
 
         return new AbstractElementAttributes(
+				elementTypeOpt.get().getModellingLanguageConstruct(),
 				options,
 				values,
 				elementTypeOpt.get().getType(),
@@ -520,7 +544,7 @@ public class ModellingEnvironment {
         String incomingReferencesCommand = String.format(
                 "SELECT ?diag\n" +
 				"WHERE { \n" +
-				"\t?diag %1$s:shapeVisualisesModelingLanguageConstructInstance %1$s:%2$s .\n" +
+				"\t?diag %1$s:shapeVisualisesConceptualElement %1$s:%2$s .\n" +
 				"}",
 				MODEL.getPrefix(),
 				modelElementId);
@@ -566,7 +590,7 @@ public class ModellingEnvironment {
 		String command = String.format(
 				"INSERT {\n" +
 						creationBit +
-						"	%7$s:%1$s rdf:type %7$s:ModelConstructInstance .\n" +
+						"	%7$s:%1$s rdf:type %7$s:ConceptualElement .\n" +
 						"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
 						"	%7$s:%2$s rdf:type %7$s:Shape .\n" +
 						"	%7$s:%2$s %7$s:shapePositionsOnCoordinateX %5$s .\n" +
@@ -574,7 +598,7 @@ public class ModellingEnvironment {
 						"	%7$s:%2$s %7$s:shapeHasHeight ?height .\n" +
 						"	%7$s:%2$s %7$s:shapeHasWidth ?width .\n" +
 						"	%7$s:%2$s %7$s:shapeInstantiatesPaletteConstruct po:%3$s .\n" +
-						"	%7$s:%2$s %7$s:shapeVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
+						"	%7$s:%2$s %7$s:shapeVisualisesConceptualElement %7$s:%1$s .\n" +
 						"	%7$s:%2$s rdfs:label \"%8$s\" .\n" +
 						"	%7$s:%4$s %7$s:modelHasShape %7$s:%2$s .\n" +
 						"}" +
@@ -667,7 +691,7 @@ public class ModellingEnvironment {
 		String command = String.format(
 				"SELECT *\n" +
 				"WHERE {\n" +
-				"    ?shape %1$s:shapeVisualisesModelingLanguageConstructInstance %1$s:%2$s\n" +
+				"    ?shape %1$s:shapeVisualisesConceptualElement %1$s:%2$s\n" +
 				"}",
 				MODEL.getPrefix(),
 				instanceId
@@ -869,7 +893,7 @@ public class ModellingEnvironment {
 				"\t%1$s:%2$s %1$s:shapeHasHeight %5$s .\n" +
 				"\t%1$s:%2$s %1$s:shapeHasWidth %6$s .\n" +
 				"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct %7$s .\n" +
-				"\t%1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance %1$s:%8$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeVisualisesConceptualElement %1$s:%8$s .\n" +
 				"} ",
 				MODEL.getPrefix(),
 				shapeId,
@@ -922,7 +946,7 @@ public class ModellingEnvironment {
 						"\t%1$s:%2$s %1$s:shapeHasHeight ?h .\n" +
 						"\t%1$s:%2$s %1$s:shapeHasWidth ?w .\n" +
 						"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
-						"\t%1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance ?mlo .\n" +
+						"\t%1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo .\n" +
 						"\t%1$s:%2$s %1$s:shapeHasNote ?note .\n" +
 						"\t%1$s:%2$s rdfs:label ?label .\n" +
 						"\t%1$s:%2$s %1$s:shapeRepresentsModel ?model .\n" +
@@ -933,7 +957,7 @@ public class ModellingEnvironment {
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasHeight ?h }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasWidth ?w }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po }\n" +
-						"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance ?mlo }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasNote ?note }\n" +
 						"\tOPTIONAL { %1$s:%2$s rdfs:label ?label }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeRepresentsModel ?model }\n" +
@@ -954,7 +978,7 @@ public class ModellingEnvironment {
 				"\t%1$s:%2$s %1$s:shapeHasHeight ?h .\n" +
 				"\t%1$s:%2$s %1$s:shapeHasWidth ?w .\n" +
 				"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
-				"\t%1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance ?mlo .\n" +
+				"\t%1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo .\n" +
 				"\t%1$s:%2$s %1$s:shapeHasNote ?note .\n" +
 				"\t%1$s:%2$s rdfs:label ?label .\n" +
 				"\t%1$s:%2$s %1$s:shapeRepresentsModel ?model .\n" +
@@ -964,7 +988,7 @@ public class ModellingEnvironment {
 				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasHeight ?h }\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasWidth ?w }\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po }\n" +
-				"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance ?mlo }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo }\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasNote ?note }\n" +
 				"\tOPTIONAL { %1$s:%2$s rdfs:label ?label }\n" +
 				"\tOPTIONAL { %1$s:%2$s %1$s:shapeRepresentsModel ?model }\n" +
@@ -986,7 +1010,7 @@ public class ModellingEnvironment {
 				"	%1$s:%2$s %1$s:shapeHasWidth %8$s .\n" +
 				"	%1$s:%2$s %1$s:shapeHasHeight %9$s .\n" +
 				"	%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct %5$s .\n" +
-				"	%1$s:%2$s %1$s:shapeVisualisesModelingLanguageConstructInstance %1$s:%4$s .\n" +
+				"	%1$s:%2$s %1$s:shapeVisualisesConceptualElement %1$s:%4$s .\n" +
 				"	%1$s:%3$s %1$s:modelHasShape %1$s:%2$s .\n",
 				MODEL.getPrefix(),
 				modelElementCreationDto.getUuid(),
@@ -1033,12 +1057,12 @@ public class ModellingEnvironment {
 		String classCreationBit = 	"	%7$s:%1$s rdf:type owl:Class .\n" +
 									"	%7$s:%1$s rdfs:subClassOf ?type .\n";
 
-		String creationBit = connectionCreationDto.getInstantiationType() == InstantiationTargetType.Class ? instanceCreationBit : classCreationBit;
+		String creationBit = connectionCreationDto.getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
 
 		return String.format(
 				"INSERT {\n" +
 				creationBit +
-				"	%7$s:%1$s rdf:type %7$s:ModelConstructInstance .\n" +
+				"	%7$s:%1$s rdf:type %7$s:ConceptualElement .\n" +
 				"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
 				"	%7$s:%1$s lo:modelingRelationHasSourceModelingElement ?fromInstance .\n" +
 				"	%7$s:%1$s lo:modelingRelationHasTargetModelingElement ?toInstance .\n" +
@@ -1048,7 +1072,7 @@ public class ModellingEnvironment {
 				"	%7$s:%2$s %7$s:shapeHasHeight ?height .\n" +
 				"	%7$s:%2$s %7$s:shapeHasWidth ?width .\n" +
 				"	%7$s:%2$s %7$s:shapeInstantiatesPaletteConstruct po:%3$s .\n" +
-				"	%7$s:%2$s %7$s:shapeVisualisesModelingLanguageConstructInstance %7$s:%1$s .\n" +
+				"	%7$s:%2$s %7$s:shapeVisualisesConceptualElement %7$s:%1$s .\n" +
 				"	%7$s:%4$s %7$s:modelHasShape %7$s:%2$s .\n" +
 				"}" +
 				"WHERE {" +
@@ -1057,8 +1081,8 @@ public class ModellingEnvironment {
 				"	po:%3$s po:paletteConstructHasWidth ?width .\n" +
 				"   %7$s:%8$s rdf:type %7$s:Shape . \n" +
 				"   %7$s:%9$s rdf:type %7$s:Shape . \n" +
-				"   %7$s:%8$s %7$s:shapeVisualisesModelingLanguageConstructInstance ?fromInstance . \n" +
-				"   %7$s:%9$s %7$s:shapeVisualisesModelingLanguageConstructInstance ?toInstance . \n" +
+				"   %7$s:%8$s %7$s:shapeVisualisesConceptualElement ?fromInstance . \n" +
+				"   %7$s:%9$s %7$s:shapeVisualisesConceptualElement ?toInstance . \n" +
 				"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
 				"}",
 				elementId,
@@ -1092,6 +1116,59 @@ public class ModellingEnvironment {
 		return Optional.ofNullable(extractIdFrom(resultSet.next(), "?mlo"));
 	}
 
+	@POST
+	@Path("modelling-language-construct/instances/search")
+	public Response getModellingLanguageConstructInstances(String json) {
+
+		ModellingLanguageConstructInstancesRequest dto = gson.fromJson(json, ModellingLanguageConstructInstancesRequest.class);
+
+		String command = String.format(
+				"SELECT ?model ?shape ?instance \n" +
+				"WHERE { \n" +
+				"  {\n" +
+				"    <%1$s> po:paletteConstructIsRelatedToModelingLanguageConstruct ?mloConstruct . \n" +
+				"\n" +
+				"    ?instance rdf:type mod:ConceptualElement . \n" +
+				"    ?instance rdf:type ?mloConstruct . \n" +
+				"    \n" +
+				"    ?shape %2$s:shapeVisualisesConceptualElement ?instance . \n" +
+				"    ?model %2$s:modelHasShape ?shape \n" +
+				"  }\n" +
+				"  UNION\n" +
+				"  {\n" +
+				"    <%1$s> po:paletteConstructIsRelatedToModelingLanguageConstruct ?mloConstruct . \n" +
+				"    \n" +
+				"    ?instance rdf:type mod:ConceptualElement . \n" +
+				"    ?instance rdfs:subClassOf ?mloConstruct . \n" +
+				"    \n" +
+				"    ?shape %2$s:shapeVisualisesConceptualElement ?instance . \n" +
+				"    ?model %2$s:modelHasShape ?shape \n" +
+				"  }\n" +
+				"  \n" +
+				"}",
+				dto.getId(),
+				MODEL.getPrefix()
+				);
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		List<ModellingLanguageConstructInstance> instances = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			QuerySolution next = resultSet.next();
+			String modelId = extractIdFrom(next, "?model");
+			String shapeId = extractIdFrom(next, "?shape");
+			String instanceId = extractIdFrom(next, "?instance");
+
+			instances.add(new ModellingLanguageConstructInstance(modelId, shapeId, instanceId));
+		}
+
+		String payload = gson.toJson(instances);
+
+		return Response.status(Status.OK).entity(payload).build();
+	}
+
 	@GET
 	@Path("/model-element")
 	public Response getModelElementInstance(@QueryParam("filter") String filter) throws MethodNotSupportedException {
@@ -1105,22 +1182,22 @@ public class ModellingEnvironment {
 				"WHERE\n" +
 				"{\n" +
 				"\t{\n" +
-				"\t\t?instance rdf:type %1$s:ModelConstructInstance .\n" +
+				"\t\t?instance rdf:type %1$s:ConceptualElement .\n" +
 				"\t\t?instance ?relation ?object\n" +
 				"\n" +
 				"\t\tFILTER NOT EXISTS\n" +
 				"\t\t{\n" +
-				"\t\t\t?shape %1$s:shapeVisualisesModelingLanguageConstructInstance ?instance\n" +
+				"\t\t\t?shape %1$s:shapeVisualisesConceptualElement ?instance\n" +
 				"\t\t}\n" +
 				"\t}\n" +
 				"\tUNION\n" +
 				"\t{\n" +
-				"\t\t?instance rdf:type %1$s:ModelConstructInstance .\n" +
+				"\t\t?instance rdf:type %1$s:ConceptualElement .\n" +
 				"\t\t?subject ?relation ?instance\n" +
 				"\n" +
 				"\t\tFILTER NOT EXISTS\n" +
 				"\t\t{\n" +
-				"\t\t\t?shape %1$s:shapeVisualisesModelingLanguageConstructInstance ?instance\n" +
+				"\t\t\t?shape %1$s:shapeVisualisesConceptualElement ?instance\n" +
 				"\t\t}\n" +
 				"\t}\n" +
 				"}\n",
@@ -1842,6 +1919,29 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity("{}").build();
 	}
 
+	private boolean hasInstantiatedInstances(PaletteElement element) {
+        String command = String.format("SELECT *\n" +
+                        "WHERE {\n" +
+                        "  {\n" +
+                        "    ?subject mod:shapeInstantiatesPaletteConstruct <%1$s>\n" +
+                        "  }\n" +
+                        "  UNION\n" +
+                        "  {\n" +
+                        "\t?subject rdf:type <%2$s>\n" +
+                        "  }\n" +
+                        "  UNION\n" +
+                        "  {\n" +
+                        "    ?subject rdfs:subClassOf <%2$s>\n" +
+                        "  }\n" +
+                        "}",
+                element.getId(),
+                element.getRepresentedLanguageClass());
+
+        ParameterizedSparqlString instantiatedQuery = new ParameterizedSparqlString(command);
+
+        return ontology.query(instantiatedQuery).execSelect().hasNext();
+    }
+
 	@POST
 	@Path("/deletePaletteElement")
 	public Response deletePaletteElement(String json) {
@@ -1851,7 +1951,11 @@ public class ModellingEnvironment {
 		Gson gson = new Gson();
 		PaletteElement element = gson.fromJson(json, PaletteElement.class);
 
-		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+        if (hasInstantiatedInstances(element)) {
+            return Response.status(Status.BAD_REQUEST).entity("{}").build();
+        }
+
+        ParameterizedSparqlString querStr = new ParameterizedSparqlString();
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 
 		/**

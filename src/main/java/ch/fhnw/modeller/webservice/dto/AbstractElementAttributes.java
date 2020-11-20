@@ -9,6 +9,7 @@ import java.util.Set;
 @Data
 public class AbstractElementAttributes {
 
+    private final String modellingLanguageConstruct;
     private final Set<RelationDto> options;
     private final List<ModelElementAttribute> values;
     private final String modelElementType;
