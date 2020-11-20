@@ -768,7 +768,7 @@ public class ModellingEnvironment {
 		StringBuilder command = new StringBuilder("INSERT DATA {\n");
 		containedShapes.forEach(shape -> {
 			command.append(String.format(
-					"\t%1$s:%2$s %1$s:modelingContainerContainsModelingLanguageConstruct %1$s:%3$s .\n",
+					"\t%1$s:%2$s lo:modelingContainerContainsModelingLanguageConstruct %1$s:%3$s .\n",
 					MODEL.getPrefix(),
 					containerInstance,
 					shape));
@@ -783,10 +783,10 @@ public class ModellingEnvironment {
 		String command = String.format(
 				"DELETE\n" +
 				"{\n" +
-				"\t%1$s:%2$s %1$s:modelingContainerContainsModelingLanguageConstruct ?o\n" +
+				"\t%1$s:%2$s lo:modelingContainerContainsModelingLanguageConstruct ?o\n" +
 				"}\n" +
 				"WHERE {\n" +
-				"\t%1$s:%2$s %1$s:modelingContainerContainsModelingLanguageConstruct ?o\n" +
+				"\t%1$s:%2$s lo:modelingContainerContainsModelingLanguageConstruct ?o\n" +
 				"}",
 				MODEL.getPrefix(),
 				modelingLanguageConstructInstance
