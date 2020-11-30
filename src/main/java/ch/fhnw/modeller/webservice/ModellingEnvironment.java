@@ -299,18 +299,6 @@ public class ModellingEnvironment {
 		return dto;
 	}
 
-	@GET
-	@Path("/model/{modelId}/element/{id}")
-	public Response getModelElement(@PathParam("modelId") String modelId,
-									@PathParam("id") String elementId) {
-
-		ModelElementDetailDto dto = getModelElementDetail(modelId, elementId);
-
-		String payload = gson.toJson(dto);
-
-		return Response.status(Status.OK).entity(payload).build();
-	}
-
 	private ModelElementDetailDto getModelElementDetail(String modelId, String shapeId) {
 		String modelIdentifier = String.format("%s:%s", MODEL.getPrefix(), modelId);
 
@@ -576,8 +564,8 @@ public class ModellingEnvironment {
 			ontology.insertQuery(query);
 		}
 
-		Object modelElement = getModelElement(modelId, modelElementCreationDto.getUuid()).getEntity();
-		return Response.status(Status.CREATED).entity(modelElement).build();
+		ModelElementDetailDto modelElement = getModelElementDetail(modelId, modelElementCreationDto.getUuid());
+		return Response.status(Status.CREATED).entity(gson.toJson(modelElement)).build();
 	}
 
 	private ParameterizedSparqlString getShapeAndAbstractElementCreationQuery(ModelElementCreationDto modelElementCreationDto, String modelId, String elementId) {
@@ -659,8 +647,8 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
 		ontology.insertQuery(query);
 
-		Object modelElement = getModelElement(modelId, shapeId).getEntity();
-		return Response.status(Status.CREATED).entity(modelElement).build();
+		ModelElementDetailDto modelElement = getModelElementDetail(modelId, shapeId);
+		return Response.status(Status.CREATED).entity(gson.toJson(modelElement)).build();
 	}
 
 	@DELETE
@@ -675,14 +663,14 @@ public class ModellingEnvironment {
 
 	private void deleteElementOfModel(String modelId, String shapeId) {
 		ModelElementDetailDto modelElementDetailDto = getModelElementDetail(modelId, shapeId);
-		String modelingLanguageConstructInstance = modelElementDetailDto.getModelingLanguageConstructInstance();
+		String conceptualElementId = modelElementDetailDto.getModelingLanguageConstructInstance();
 
 		ParameterizedSparqlString deleteQuery = getDeleteShapeQuery(shapeId);
 		ontology.insertQuery(deleteQuery);
 
-		if (StringUtils.isNotBlank(modelingLanguageConstructInstance)
-				&& !isModelingLanguageConstructLinkedInAnotherModel(modelingLanguageConstructInstance)) {
-			deleteModelElementInstance(modelingLanguageConstructInstance);
+		if (StringUtils.isNotBlank(conceptualElementId)
+				&& !isModelingLanguageConstructLinkedInAnotherModel(conceptualElementId)) {
+			deleteModelElementInstance(conceptualElementId);
 		}
 	}
 
@@ -760,7 +748,8 @@ public class ModellingEnvironment {
 
 		ontology.insertMultipleQueries(queries);
 
-		return Response.status(Status.CREATED).entity(getModelElement(modelId, shapeId).getEntity()).build();
+		ModelElementDetailDto modelElementDetail = getModelElementDetail(modelId, shapeId);
+		return Response.status(Status.CREATED).entity(gson.toJson(modelElementDetail)).build();
 	}
 
 	private ParameterizedSparqlString getInsertContainedModelElementsQuery(String containerInstance, List<String> containedShapes) {
@@ -1117,8 +1106,8 @@ public class ModellingEnvironment {
 	}
 
 	@POST
-	@Path("modelling-language-construct/instances/search")
-	public Response getModellingLanguageConstructInstances(String json) {
+	@Path("model-elements/search")
+	public Response getModelElements(String json) {
 
 		ModellingLanguageConstructInstancesRequest dto = gson.fromJson(json, ModellingLanguageConstructInstancesRequest.class);
 
@@ -1169,6 +1158,13 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity(payload).build();
 	}
 
+	/**
+	 * Utility endpoint which can be utilised to find conceptual elements which are not visualised in a model
+	 *
+	 * @param filter
+	 * @return
+	 * @throws MethodNotSupportedException
+	 */
 	@GET
 	@Path("/model-element")
 	public Response getModelElementInstance(@QueryParam("filter") String filter) throws MethodNotSupportedException {
