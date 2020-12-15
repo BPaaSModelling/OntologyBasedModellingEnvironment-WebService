@@ -1114,6 +1114,12 @@ public class ModellingEnvironment {
 		String command = String.format(
 				"SELECT ?model ?shape ?instance \n" +
 				"WHERE { \n" +
+				"{ \n" +
+				"    ?shape %2$s:shapeInstantiatesPaletteConstruct <%1$s> .\n" +
+				"    ?shape %2$s:shapeVisualisesConceptualElement ?instance .  \n" +
+				"    ?model %2$s:modelHasShape ?shape  \n" +
+				"  } " +
+				"  UNION\n" +
 				"  {\n" +
 				"    <%1$s> po:paletteConstructIsRelatedToModelingLanguageConstruct ?mloConstruct . \n" +
 				"\n" +
@@ -1919,7 +1925,7 @@ public class ModellingEnvironment {
         String command = String.format("SELECT *\n" +
                         "WHERE {\n" +
                         "  {\n" +
-                        "    ?subject mod:shapeInstantiatesPaletteConstruct <%1$s>\n" +
+                        "    ?subject %3$s:shapeInstantiatesPaletteConstruct <%1$s>\n" +
                         "  }\n" +
                         "  UNION\n" +
                         "  {\n" +
@@ -1931,7 +1937,8 @@ public class ModellingEnvironment {
                         "  }\n" +
                         "}",
                 element.getId(),
-                element.getRepresentedLanguageClass());
+                element.getRepresentedLanguageClass(),
+				MODEL.getPrefix());
 
         ParameterizedSparqlString instantiatedQuery = new ParameterizedSparqlString(command);
 
