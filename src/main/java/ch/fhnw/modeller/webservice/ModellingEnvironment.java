@@ -360,6 +360,16 @@ public class ModellingEnvironment {
 			}
 		}
 
+		if ("ModelingElement".equals(modelElementType.getType())) {
+			while(resultSet.hasNext()) {
+				QuerySolution next = resultSet.next();
+				String type = extractIdFrom(next, "?type");
+				if ("ModelingContainer".equals(type)) {
+					modelElementType.setType(type);
+				}
+			}
+		}
+
 		QuerySolution nextForOtherType = resultSet.next();
 		String otherType = extractNamespaceAndIdFrom(nextForOtherType, "?allTypes");
 		types.add(otherType);
