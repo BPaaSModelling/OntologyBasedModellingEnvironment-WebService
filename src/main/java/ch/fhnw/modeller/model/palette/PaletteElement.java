@@ -17,7 +17,10 @@ public class PaletteElement extends PaletteModel {
 	private String borderColor;
 	private String borderThickness;
 	private String borderType;
-					
+	private String toArrow;
+	private String fromArrow;
+	private String arrowStroke;
+	private String type;
 
 	public String getShape() {
 		return shape;
@@ -122,8 +125,38 @@ public class PaletteElement extends PaletteModel {
 	public void setBorderType(String borderType) {
 		this.borderType = borderType;
 	}
-	
-	
+
+	public String getToArrow() {
+		return toArrow;
+	}
+
+	public void setToArrow(String toArrow) {
+		this.toArrow = toArrow;
+	}
+
+	public String getFromArrow() {
+		return fromArrow;
+	}
+
+	public void setFromArrow(String fromArrow) {
+		this.fromArrow = fromArrow;
+	}
+
+	public String getArrowStroke() {
+		return arrowStroke;
+	}
+
+	public void setArrowStroke(String arrowStroke) {
+		this.arrowStroke = arrowStroke;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
 
 	public PaletteElement() {
 		super();

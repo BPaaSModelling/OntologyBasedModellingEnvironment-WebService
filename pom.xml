@@ -29,15 +29,13 @@
 				<executions>
 					<execution>
 						<phase>package</phase>
-						<goals>
-							<goal>copy</goal>
-						</goals>
+						<goals><goal>copy</goal></goals>
 						<configuration>
 							<artifactItems>
 								<artifactItem>
-									<groupId>com.github.jsimone</groupId>
+									<groupId>com.heroku</groupId>
 									<artifactId>webapp-runner</artifactId>
-									<version>8.5.11.2</version>
+									<version>9.0.31.0</version>
 									<destFileName>webapp-runner.jar</destFileName>
 								</artifactItem>
 							</artifactItems>
@@ -59,12 +57,12 @@
 		<type>pom</type>
 		<version>3.0.1</version>
 	</dependency>
-			<dependency>
+		<dependency>
 			<groupId>javax.ws.rs</groupId>
 			<artifactId>javax.ws.rs-api</artifactId>
 			<version>2.0.1</version>
 		</dependency>
-				<dependency>
+		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-moxy</artifactId>
 			<version>2.19</version>
@@ -84,6 +82,22 @@
 			<artifactId>jersey-server</artifactId>
 			<version>2.24</version>
 		</dependency>
+		  <dependency>
+			  <groupId>org.projectlombok</groupId>
+			  <artifactId>lombok</artifactId>
+			  <version>1.18.12</version>
+			  <scope>provided</scope>
+		  </dependency>
+	  <dependency>
+		  <groupId>jakarta.xml.bind</groupId>
+		  <artifactId>jakarta.xml.bind-api</artifactId>
+		  <version>2.3.2</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.glassfish.jaxb</groupId>
+		  <artifactId>jaxb-runtime</artifactId>
+		  <version>2.3.2</version>
+	  </dependency>
   </dependencies>
   <artifactId>OntologyBasedModellingEnvironment-WebService</artifactId>
 </project>

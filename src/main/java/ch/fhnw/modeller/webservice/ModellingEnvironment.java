@@ -2,22 +2,19 @@ package ch.fhnw.modeller.webservice;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 
+import ch.fhnw.modeller.model.model.Model;
+import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
+import ch.fhnw.modeller.webservice.dto.*;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.MethodNotSupportedException;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
@@ -40,12 +37,1313 @@ import ch.fhnw.modeller.webservice.ontology.NAMESPACE;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import ch.fhnw.modeller.persistence.GlobalVariables;
 
+import static ch.fhnw.modeller.webservice.ontology.NAMESPACE.MODEL;
+
 @Path("/ModEnv")
 public class ModellingEnvironment {
 	private Gson gson = new Gson();
 	private OntologyManager ontology = OntologyManager.getInstance();
 	private boolean debug_properties = false;
-	
+
+	private String extractIdFrom(QuerySolution querySolution, String label) {
+
+		if (querySolution.get(label) == null) return null;
+
+		String value = querySolution.get(label).toString();
+		return value.contains("#") ? value.split("#")[1] : value;
+	}
+
+	private String extractNamespaceAndIdFrom(QuerySolution querySolution, String label) {
+
+		if (querySolution.get(label) == null) return null;
+
+		String value = querySolution.get(label).toString();
+		return value.contains("#") ? GlobalVariables.getNamespaceMap().get(value.split("#")[0]) + ":" + value.split("#")[1] : value;
+	}
+
+	private String extractValueFrom(QuerySolution querySolution, String label) {
+		return querySolution.get(label) != null ? querySolution.get(label).toString() : null;
+	}
+
+	@GET
+	@Path("/model")
+	public Response getAllModels() {
+		String command = String.format(
+				"SELECT ?model ?label " +
+				"WHERE { " +
+				"?model rdf:type %s:Model . " +
+				"?model rdfs:label ?label " +
+				"}",
+				MODEL.getPrefix());
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		ArrayList<Model> models = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			QuerySolution next = resultSet.next();
+			String id = extractIdFrom(next, "?model");
+			String label = extractValueFrom(next, "?label");
+			models.add(new Model(id, label));
+		}
+
+		String payload = gson.toJson(models);
+
+		return Response.status(Status.OK).entity(payload).build();
+	}
+
+	@DELETE
+	@Path("/model/{modelId}")
+	public Response deleteModel(@PathParam("modelId") String modelId) {
+
+		for (ModelElementDetailDto modelElementDetailDto : this.getModelElementDetailDtos(modelId)) {
+			this.deleteElementOfModel(modelId, modelElementDetailDto.getId());
+		}
+
+		ParameterizedSparqlString deleteQuery = getDeleteModelQuery(modelId);
+		ontology.insertQuery(deleteQuery);
+
+		return Response.status(Status.OK).build();
+	}
+
+	@PUT
+	@Path("/model/{modelId}")
+	public Response updateModel(@PathParam("modelId") String modelId, String json) {
+
+		ModelUpdateDto modelUpdateDto = gson.fromJson(json, ModelUpdateDto.class);
+
+		String deleteModelLabel = String.format(
+				"DELETE {\n" +
+				"\t%1$s:%2$s rdfs:label ?label\n" +
+				"}\n" +
+				"WHERE\n" +
+				"{\n" +
+				"\t%1$s:%2$s rdfs:label ?label\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelId);
+
+		String insertModelLabel = String.format(
+				"INSERT DATA {\n" +
+				"\t%1$s:%2$s rdfs:label \"%3$s\"\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelId,
+				modelUpdateDto.getLabel());
+
+		ParameterizedSparqlString deleteQuery = new ParameterizedSparqlString(deleteModelLabel);
+		ParameterizedSparqlString insertQuery = new ParameterizedSparqlString(insertModelLabel);
+
+		ontology.insertQuery(deleteQuery);
+		ontology.insertQuery(insertQuery);
+
+		return Response.status(Status.OK).build();
+	}
+
+	private ParameterizedSparqlString getDeleteModelQuery(String modelId) {
+
+		String command = String.format(
+				 "DELETE {\n" +
+				"\t%1$s:%2$s ?modelRel ?modelObj .\n" +
+				"\t?diag ?diagRel ?diagObj .\n" +
+				"\t?referencingDiag %1$s:shapeRepresentsModel %1$s:%2$s\n" +
+				"}\n" +
+				"WHERE {\n" +
+				"\t%1$s:%2$s ?modelRel ?modelObj .\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:modelHasShape ?diag .\n" +
+				"\t?diag ?diagRel ?diagObj } .\n" +
+				"\tOPTIONAL { ?referencingDiag %1$s:shapeRepresentsModel %1$s:%2$s}\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelId
+				);
+
+		return new ParameterizedSparqlString(command);
+	}
+
+	@POST
+	@Path("/model")
+	public Response createModel(String json) {
+
+		Gson gson = new Gson();
+		ModelCreationDto modelCreationDto = gson.fromJson(json, ModelCreationDto.class);
+
+		String modelId = String.format("Model_%s", UUID.randomUUID().toString());
+
+		String command = String.format(
+				"INSERT DATA { " +
+				"%1$s:%2$s rdf:type %1$s:Model ." +
+				"%1$s:%2$s rdfs:label \"%3$s\" " +
+				"}",
+				MODEL.getPrefix(),
+				modelId,
+				modelCreationDto.getLabel());
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ontology.insertQuery(query);
+
+		String selectCommand = String.format(
+				"SELECT ?label " +
+						"WHERE { " +
+						"%1$s:%2$s rdf:type %1$s:Model . " +
+						"%1$s:%2$s rdfs:label ?label " +
+						"}",
+				MODEL.getPrefix(),
+				modelId);
+
+		ParameterizedSparqlString selectQuery = new ParameterizedSparqlString(selectCommand);
+		ResultSet resultSet = ontology.query(selectQuery).execSelect();
+
+		if (!resultSet.hasNext()) {
+			throw new IllegalStateException("created model can not be queried");
+		}
+
+		QuerySolution next = resultSet.next();
+		String label = extractValueFrom(next, "?label");
+		Model createdModel = new Model(modelId, label);
+
+		String payload = gson.toJson(createdModel);
+
+		return Response.status(Status.CREATED).entity(payload).build();
+	}
+
+	@GET
+	@Path("/model/{id}/element")
+	public Response getModelElementList(@PathParam("id") String id) {
+
+		List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
+
+		String payload = gson.toJson(elements);
+
+		return Response.status(Status.OK).entity(payload).build();
+	}
+
+	private List<ModelElementDetailDto> getModelElementDetailDtos(String id) {
+		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);
+
+		String command = String.format(
+				"SELECT ?diag\n" +
+				"WHERE {\n" +
+				"\t%1$s %2$s:modelHasShape ?diag .\n" +
+				"}",
+				modelId,
+				MODEL.getPrefix()
+		);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		List<String> shapeIds = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			QuerySolution solution = resultSet.next();
+			shapeIds.add(extractIdFrom(solution, "?diag"));
+		}
+
+		List<ModelElementDetailDto> modelElements = new ArrayList<>(shapeIds.size());
+
+		shapeIds.forEach(shapeId -> {
+			Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
+			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);
+
+			String modelElementId = shapeAttributes.get("shapeVisualisesConceptualElement").split("#")[1];
+			AbstractElementAttributes abstractElementAttributes = getModelElementAttributesAndOptions(modelElementId);
+
+			abstractElementAttributes.getModelElementType()
+					.ifPresent(elementType -> modelElements.add(
+									ModelElementDetailDto.from(
+											shapeId,
+											shapeAttributes,
+											abstractElementAttributes,
+											elementType,
+											visualInformationDto)));
+		});
+		return modelElements;
+	}
+
+	private PaletteVisualInformationDto getPaletteVisualInformation(String shapeId) {
+
+		String command = String.format(
+				"SELECT ?imgUrl ?cat ?fromArrow ?toArrow ?arrowStroke\n" +
+				"WHERE\n" +
+				"{\n" +
+				"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
+				"\t?po po:paletteConstructIsGroupedInPaletteCategory ?cat\n" +
+				"\tOPTIONAL { ?po po:paletteConstructHasModelImage ?imgUrl }\n" +
+				"\tOPTIONAL { ?po po:paletteConnectorConfiguresFromArrowHead ?fromArrow }\n" +
+				"\tOPTIONAL { ?po po:paletteConnectorConfiguresToArrowHead ?toArrow }\n" +
+				"\tOPTIONAL { ?po po:paletteConnectorConfiguresArrowStroke ?arrowStroke }\n" +
+				"}",
+				MODEL.getPrefix(),
+				shapeId);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		QuerySolution querySolution = resultSet.next();
+		String category = extractIdFrom(querySolution, "?cat");
+		String imageName = extractValueFrom(querySolution, "?imgUrl");
+		String imageUrl = imageName != null ? category + "/" + imageName : null;
+
+		String fromArrow = extractIdFrom(querySolution, "?fromArrow");
+		String toArrow = extractIdFrom(querySolution, "?toArrow");
+		String arrowStroke = extractIdFrom(querySolution, "?arrowStroke");
+
+		PaletteVisualInformationDto dto = new PaletteVisualInformationDto();
+		dto.setFromArrow(fromArrow);
+		dto.setToArrow(toArrow);
+		dto.setImageUrl(imageUrl);
+		dto.setArrowStroke(arrowStroke);
+
+		return dto;
+	}
+
+	private ModelElementDetailDto getModelElementDetail(String modelId, String shapeId) {
+		String modelIdentifier = String.format("%s:%s", MODEL.getPrefix(), modelId);
+
+		Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
+		String modelElement = shapeAttributes.get("shapeVisualisesConceptualElement");
+		String modelElementId = modelElement.split("#")[1];
+		AbstractElementAttributes abstractElementAttributes = getModelElementAttributesAndOptions(modelElementId);
+
+		PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);
+
+		return abstractElementAttributes.getModelElementType()
+				.map(elementType -> ModelElementDetailDto.from(shapeId, shapeAttributes, abstractElementAttributes, elementType, visualInformationDto))
+				.orElse(null);
+	}
+
+	private Optional<ModelElementType> getModelElementType(String modelElementId) {
+
+		String command = String.format(
+				"SELECT ?type ?class ?allTypes \n" +
+				"WHERE { \n" +
+				"\t{\n" +
+				"\t%1$s:%2$s rdf:type %1$s:ConceptualElement . \n" +
+				"\t%1$s:%2$s rdf:type ?allTypes . \n" +
+				"\t%1$s:%2$s rdfs:subClassOf ?class . \n" +
+				"\t%1$s:%2$s rdfs:subClassOf* ?type . \n" +
+				"\t?type rdfs:subClassOf lo:ModelingLanguageConstruct \n" +
+				"\t}\n" +
+				"\tUNION\n" +
+				"\t{\n" +
+				"\t%1$s:%2$s rdf:type %1$s:ConceptualElement . \n" +
+				"\t%1$s:%2$s rdf:type ?allTypes . \n" +
+				"\t%1$s:%2$s rdf:type ?class .\n" +
+				"\t?class rdfs:subClassOf* ?type . \n" +
+				"\t?type rdfs:subClassOf lo:ModelingLanguageConstruct \n" +
+				"\t}\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelElementId
+				);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		List<String> types = new ArrayList<>();
+
+		ModelElementType modelElementType = new ModelElementType();
+
+		if (resultSet.hasNext()) {
+			QuerySolution next = resultSet.next();
+			String type = extractIdFrom(next, "?type");
+			String directSuperClass = extractIdFrom(next, "?class");
+			String firstType = extractNamespaceAndIdFrom(next, "?allTypes");
+
+			types.add(firstType);
+
+			if (type != null) {
+				modelElementType.setType(type);
+				modelElementType.setModellingLanguageConstruct(directSuperClass);
+			}
+		}
+
+		QuerySolution nextForOtherType = resultSet.next();
+		String otherType = extractNamespaceAndIdFrom(nextForOtherType, "?allTypes");
+		types.add(otherType);
+
+		if (modelElementType.getType() != null) {
+			if (types.contains("owl:Class")) {
+				modelElementType.setInstantiationType(InstantiationTargetType.Class);
+			} else {
+				modelElementType.setInstantiationType(InstantiationTargetType.Instance);
+
+			}
+
+			return Optional.of(modelElementType);
+		}
+
+		return Optional.empty();
+	}
+
+	private Map<String, String> getShapeAttributes(String id) {
+
+		Map<String, String> attributes = new HashMap<>();
+
+		String command = String.format(
+				"SELECT *\n" +
+				"WHERE {\n" +
+				"\t%1$s:%2$s ?rel ?relValue .\n" +
+				"\t%1$s:%2$s rdf:type %1$s:Shape\n" +
+				"}",
+				MODEL.getPrefix(),
+				id
+		);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		while (resultSet.hasNext()) {
+			QuerySolution solution = resultSet.next();
+			String relation = extractIdFrom(solution, "?rel");
+			String value = extractValueFrom(solution, "?relValue");
+
+			attributes.putIfAbsent(relation, value);
+		}
+		return attributes;
+	}
+
+	private Map<String, String> getModelElementAttributes(String modelElementId) {
+
+		Map<String, String> attributes = new HashMap<>();
+
+		String command = String.format(
+				"SELECT *\n" +
+				"WHERE {\n" +
+				"\t%1$s:%2$s rdf:type %1$s:ConceptualElement .\n" +
+				"\t%1$s:%2$s ?rel ?relValue .\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelElementId
+		);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		while (resultSet.hasNext()) {
+			QuerySolution solution = resultSet.next();
+			String relation = extractValueFrom(solution, "?rel");
+			String value = extractValueFrom(solution, "?relValue");
+
+			attributes.putIfAbsent(relation, value);
+		}
+		return attributes;
+	}
+
+	private AbstractElementAttributes getModelElementAttributesAndOptions(String modelElementId) {
+
+		Optional<ModelElementType> elementTypeOpt = getModelElementType(modelElementId);
+
+		if (!elementTypeOpt.isPresent()) return null;
+
+		String instanceCreationBit = "\t\t%1$s:%2$s rdf:type ?mloConcept .\n";
+		String classCreationBit = 	"\t\t%1$s:%2$s rdf:type owl:Class .\n" +
+									"\t\t%1$s:%2$s rdfs:subClassOf ?mloConcept .\n";
+
+		String creationBit = elementTypeOpt.get().getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
+
+		String command = String.format(
+				"SELECT ?mloConcept ?objProp ?range ?instanceValue ?classValue\n" +
+				"WHERE {\n" +
+				creationBit +
+				"\t\t?mloConcept rdfs:subClassOf* ?relTarget .\n" +
+				"\n" +
+				"\t\t?objProp rdf:type owl:ObjectProperty .\n" +
+				"\t\t?objProp rdfs:range ?range\n" +
+				"\n" +
+				"\t\tFILTER EXISTS {\n" +
+				"\t\t\t?objProp rdfs:subPropertyOf* ?superObjProp .\n" +
+				"\t\t\t?superObjProp rdfs:domain ?relTarget .\n" +
+				"\n" +
+				"\t\t\tFILTER NOT EXISTS {\n" +
+				"\t\t\t\t?subObjProp rdfs:subPropertyOf+ ?superObjProp .\n" +
+				"\t\t\t\t?subObjProp rdfs:domain ?overwritingDomain .\n" +
+				"\t\t\t\t?objProp rdfs:subPropertyOf* ?subObjProp\n" +
+				"\t\t\t}\n" +
+				"\t\t}\n" +
+				"\n" +
+				"\t\tFILTER EXISTS {\n" +
+				"\t\t\t?objProp rdfs:subPropertyOf* ?superObjProp .\n" +
+				"\t\t\t?superObjProp %1$s:objectPropertyIsShownInModel true .\n" +
+				"\n" +
+				"\t\t\tFILTER NOT EXISTS {\n" +
+				"\t\t\t\t?subObjProp rdfs:subPropertyOf+ ?superObjProp .\n" +
+				"\t\t\t\t?subObjProp %1$s:objectPropertyIsShownInModel false .\n" +
+				"\t\t\t\t?objProp rdfs:subPropertyOf* ?subObjProp\n" +
+				"\t\t\t}\n" +
+				"\t\t}\n" +
+				"\tOPTIONAL\n" +
+				"\t{\n" +
+				"\t\t%1$s:%2$s ?objProp ?instanceValue\n" +
+				"\t}\n" +
+				"\n" +
+				"\tOPTIONAL\n" +
+				"\t{\n" +
+				"\t\t%1$s:%2$s rdf:type ?mloTypeForValue .\n" +
+				"\t\t?mloTypeForValue rdfs:subClassOf* ?relTargetForValue .\n" +
+				"\t\t?relTargetForValue ?objProp ?classValue\n" +
+				"\t}\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelElementId
+		);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		Set<RelationDto> options = new HashSet<>();
+		List<ModelElementAttribute> values = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			QuerySolution solution = resultSet.next();
+			String relation = extractValueFrom(solution, "?objProp");
+			String instanceValue = extractValueFrom(solution, "?instanceValue");
+			String classValue = extractValueFrom(solution, "?classValue");
+			String actualValue = instanceValue != null ? instanceValue : classValue;
+
+			RelationDto relationDto = new RelationDto(GlobalVariables.getNamespaceMap().get(relation.split("#")[0]), relation.split("#")[1]);
+			options.add(relationDto);
+
+			if (actualValue != null) {
+				ModelElementAttribute value = new ModelElementAttribute();
+				value.setRelation(relationDto.getRelation());
+				value.setRelationPrefix(relationDto.getRelationPrefix());
+				value.setValue(actualValue.split("#")[1]);
+				value.setValuePrefix(GlobalVariables.getNamespaceMap().get(actualValue.split("#")[0]));
+
+				values.add(value);
+			}
+		}
+
+        List<String> referencingShapes = getReferencingShapeIds(modelElementId);
+
+        return new AbstractElementAttributes(
+				elementTypeOpt.get().getModellingLanguageConstruct(),
+				options,
+				values,
+				elementTypeOpt.get().getType(),
+                elementTypeOpt.get().getInstantiationType(),
+                referencingShapes);
+	}
+
+    private List<String> getReferencingShapeIds(String modelElementId) {
+        String incomingReferencesCommand = String.format(
+                "SELECT ?diag\n" +
+				"WHERE { \n" +
+				"\t?diag %1$s:shapeVisualisesConceptualElement %1$s:%2$s .\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelElementId);
+
+        List<String> referencingShapes = new ArrayList<>();
+
+        ParameterizedSparqlString incomingReferencesQuery = new ParameterizedSparqlString(incomingReferencesCommand);
+        ResultSet incomingReferencesResultSet = ontology.query(incomingReferencesQuery).execSelect();
+        while (incomingReferencesResultSet.hasNext()) {
+            QuerySolution next = incomingReferencesResultSet.next();
+            String shape = extractIdFrom(next, "?diag");
+            referencingShapes.add(shape);
+        }
+        return referencingShapes;
+    }
+
+    @PUT
+	@Path("/model/{modelId}/element")
+	public Response createModelElement(@PathParam("modelId") String modelId,
+									   String json) {
+
+		Gson gson = new Gson();
+		ModelElementCreationDto modelElementCreationDto = gson.fromJson(json, ModelElementCreationDto.class);
+
+		if (modelElementCreationDto.getModelingLanguageConstructInstance() == null) {
+			createShapeForNewModelElement(modelId, modelElementCreationDto);
+		} else {
+			ParameterizedSparqlString query = getShapeCreationQuery(modelElementCreationDto, modelId, modelElementCreationDto.getModelingLanguageConstructInstance());
+			ontology.insertQuery(query);
+		}
+
+		ModelElementDetailDto modelElement = getModelElementDetail(modelId, modelElementCreationDto.getUuid());
+		return Response.status(Status.CREATED).entity(gson.toJson(modelElement)).build();
+	}
+
+	private ParameterizedSparqlString getShapeAndAbstractElementCreationQuery(ModelElementCreationDto modelElementCreationDto, String modelId, String elementId) {
+		String instanceCreationBit = "	%7$s:%1$s rdf:type ?type .\n";
+		String classCreationBit = 	"	%7$s:%1$s rdf:type owl:Class .\n" +
+									"	%7$s:%1$s rdfs:subClassOf ?type .\n";
+
+		String creationBit = modelElementCreationDto.getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
+
+		String command = String.format(
+				"INSERT {\n" +
+						creationBit +
+						"	%7$s:%1$s rdf:type %7$s:ConceptualElement .\n" +
+						"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
+						"	%7$s:%2$s rdf:type %7$s:Shape .\n" +
+						"	%7$s:%2$s %7$s:shapePositionsOnCoordinateX %5$s .\n" +
+						"	%7$s:%2$s %7$s:shapePositionsOnCoordinateY %6$s .\n" +
+						"	%7$s:%2$s %7$s:shapeHasHeight ?height .\n" +
+						"	%7$s:%2$s %7$s:shapeHasWidth ?width .\n" +
+						"	%7$s:%2$s %7$s:shapeInstantiatesPaletteConstruct po:%3$s .\n" +
+						"	%7$s:%2$s %7$s:shapeVisualisesConceptualElement %7$s:%1$s .\n" +
+						"	%7$s:%2$s rdfs:label \"%8$s\" .\n" +
+						"	%7$s:%4$s %7$s:modelHasShape %7$s:%2$s .\n" +
+						"}" +
+						"WHERE {" +
+						"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +
+						"	po:%3$s po:paletteConstructHasHeight ?height .\n" +
+						"	po:%3$s po:paletteConstructHasWidth ?width .\n" +
+						"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
+						"}",
+				elementId,
+				modelElementCreationDto.getUuid(),
+				modelElementCreationDto.getPaletteConstruct(),
+				modelId,
+				modelElementCreationDto.getX(),
+				modelElementCreationDto.getY(),
+				MODEL.getPrefix(),
+				modelElementCreationDto.getLabel()
+		);
+
+		return new ParameterizedSparqlString(command);
+	}
+
+	private void createShapeForNewModelElement(String modelId, ModelElementCreationDto modelElementCreationDto) {
+		Optional<String> mappedModelingLanguageConstruct = getMappedModelingLanguageConstruct(modelElementCreationDto.getPaletteConstruct());
+
+		if (!mappedModelingLanguageConstruct.isPresent()) {
+			throw new IllegalArgumentException("Palette Construct must be related to a Modeling Language Construct");
+		}
+
+		String elementId = String.format("%s_%s", mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
+
+		ParameterizedSparqlString query = getShapeAndAbstractElementCreationQuery(modelElementCreationDto, modelId, elementId);
+		ontology.insertQuery(query);
+	}
+
+	@PUT
+	@Path("/model/{modelId}/connection")
+	public Response createConnection(@PathParam("modelId") String modelId,
+								  	String json) {
+
+		Gson gson = new Gson();
+		ConnectionCreationDto connectionCreationDto = gson.fromJson(json, ConnectionCreationDto.class);
+
+		Optional<String> mappedModelingLanguageConstruct = getMappedModelingLanguageConstruct(connectionCreationDto.getPaletteConstruct());
+
+		if (!mappedModelingLanguageConstruct.isPresent()) {
+			throw new IllegalArgumentException("Palette Construct must be related to a Modeling Language Construct");
+		}
+
+		String shapeId = String.format("%s_Shape_%s",
+				connectionCreationDto.getPaletteConstruct(),
+				connectionCreationDto.getUuid());
+
+		String elementId = String.format("%s_%s", mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
+
+		String command = getConnectionCreationCommand(connectionCreationDto, modelId, shapeId, elementId);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ontology.insertQuery(query);
+
+		ModelElementDetailDto modelElement = getModelElementDetail(modelId, shapeId);
+		return Response.status(Status.CREATED).entity(gson.toJson(modelElement)).build();
+	}
+
+	@DELETE
+	@Path("/model/{modelId}/element/{shapeId}")
+	public Response deleteModelElement(@PathParam("modelId") String modelId,
+									   @PathParam("shapeId") String shapeId) {
+
+		deleteElementOfModel(modelId, shapeId);
+
+		return Response.status(Status.OK).build();
+	}
+
+	private void deleteElementOfModel(String modelId, String shapeId) {
+		ModelElementDetailDto modelElementDetailDto = getModelElementDetail(modelId, shapeId);
+		String conceptualElementId = modelElementDetailDto.getModelingLanguageConstructInstance();
+
+		ParameterizedSparqlString deleteQuery = getDeleteShapeQuery(shapeId);
+		ontology.insertQuery(deleteQuery);
+
+		if (StringUtils.isNotBlank(conceptualElementId)
+				&& !isModelingLanguageConstructLinkedInAnotherModel(conceptualElementId)) {
+			deleteModelElementInstance(conceptualElementId);
+		}
+	}
+
+	private boolean isModelingLanguageConstructLinkedInAnotherModel(String instanceId) {
+
+		String command = String.format(
+				"SELECT *\n" +
+				"WHERE {\n" +
+				"    ?shape %1$s:shapeVisualisesConceptualElement %1$s:%2$s\n" +
+				"}",
+				MODEL.getPrefix(),
+				instanceId
+		);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		return resultSet.hasNext();
+	}
+
+	@PUT
+	@Path("/model/{modelId}/element/{shapeId}")
+	public Response updateModelElement(@PathParam("modelId") String modelId,
+									   @PathParam("shapeId") String shapeId,
+									   String json) {
+
+		ModelElementDetailDto modelElementDetailDto = getModelElementDetail(modelId, shapeId);
+
+		if (modelElementDetailDto == null) {
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
+		Gson gson = new Gson();
+		ModelElementDetailDto modelElementToBeStored = gson.fromJson(json, ModelElementDetailDto.class);
+
+		List<ParameterizedSparqlString> queries = new ArrayList<>();
+
+		ParameterizedSparqlString deleteQuery = getDeleteShapeDataQuery(shapeId);
+		queries.add(deleteQuery);
+
+		ParameterizedSparqlString insertQuery = getInsertShapeDataQuery(shapeId, modelElementToBeStored);
+		queries.add(insertQuery);
+
+		if (modelElementToBeStored.hasOptionalValues()) {
+			ParameterizedSparqlString optInsertQuery = getInsertOptionalShapeDataQuery(shapeId, modelElementToBeStored);
+			queries.add(optInsertQuery);
+		}
+
+		if (modelElementDetailDto.getAbstractElementAttributes() != null &&
+			modelElementDetailDto.getAbstractElementAttributes().getValues() != null &&
+			!modelElementDetailDto.getAbstractElementAttributes().getValues().isEmpty()) {
+
+			ParameterizedSparqlString deleteQueryElement = getDeleteModelElementDataQuery(modelElementDetailDto.getModelingLanguageConstructInstance(), modelElementDetailDto.getAbstractElementAttributes().getValues());
+			queries.add(deleteQueryElement);
+		}
+
+		if (modelElementDetailDto.getModelingLanguageConstructInstance().equals(modelElementToBeStored.getModelingLanguageConstructInstance()) &&
+			modelElementToBeStored.getAbstractElementAttributes() != null &&
+			modelElementToBeStored.getAbstractElementAttributes().getValues() != null &&
+			!modelElementToBeStored.getAbstractElementAttributes().getValues().isEmpty()) {
+
+			Optional<ParameterizedSparqlString> insertModelElementDataQuery = getInsertModelElementDataQuery(modelElementDetailDto.getModelingLanguageConstructInstance(), modelElementToBeStored.getAbstractElementAttributes().getValues());
+			insertModelElementDataQuery.ifPresent(queries::add);
+		}
+
+		if ("ModelingContainer".equals(modelElementDetailDto.getModelElementType())) {
+			ParameterizedSparqlString deleteQueryElement = getDeleteContainedModelElementsQuery(modelElementDetailDto.getModelingLanguageConstructInstance());
+			queries.add(deleteQueryElement);
+
+			if (modelElementToBeStored.getContainedShapes() != null && !modelElementToBeStored.getContainedShapes().isEmpty()) {
+				ParameterizedSparqlString insertQueryElement = getInsertContainedModelElementsQuery(modelElementToBeStored.getModelingLanguageConstructInstance(), modelElementToBeStored.getContainedShapes());
+				queries.add(insertQueryElement);
+			}
+		}
+
+		ontology.insertMultipleQueries(queries);
+
+		ModelElementDetailDto modelElementDetail = getModelElementDetail(modelId, shapeId);
+		return Response.status(Status.CREATED).entity(gson.toJson(modelElementDetail)).build();
+	}
+
+	private ParameterizedSparqlString getInsertContainedModelElementsQuery(String containerInstance, List<String> containedShapes) {
+
+		StringBuilder command = new StringBuilder("INSERT DATA {\n");
+		containedShapes.forEach(shape -> {
+			command.append(String.format(
+					"\t%1$s:%2$s lo:modelingContainerContainsModelingLanguageConstruct %1$s:%3$s .\n",
+					MODEL.getPrefix(),
+					containerInstance,
+					shape));
+		});
+		command.append("}");
+
+		return new ParameterizedSparqlString(command.toString());
+	}
+
+	private ParameterizedSparqlString getDeleteContainedModelElementsQuery(String modelingLanguageConstructInstance) {
+
+		String command = String.format(
+				"DELETE\n" +
+				"{\n" +
+				"\t%1$s:%2$s lo:modelingContainerContainsModelingLanguageConstruct ?o\n" +
+				"}\n" +
+				"WHERE {\n" +
+				"\t%1$s:%2$s lo:modelingContainerContainsModelingLanguageConstruct ?o\n" +
+				"}",
+				MODEL.getPrefix(),
+				modelingLanguageConstructInstance
+		);
+
+		return new ParameterizedSparqlString(command);
+	}
+
+	private Optional<ParameterizedSparqlString> getInsertModelElementDataQuery(String modelingLanguageConstruct, List<ModelElementAttribute> modelElementAttributes) {
+
+		List<ModelElementAttribute> nonNullAttributes = modelElementAttributes.stream()
+				.filter(modelElementAttribute -> modelElementAttribute.getValue() != null && !modelElementAttribute.getValue().isEmpty())
+				.collect(Collectors.toList());
+
+		if (nonNullAttributes.isEmpty()) {
+			return Optional.empty();
+		}
+
+		StringBuilder insertQueryBuilder = new StringBuilder("INSERT DATA { \n");
+
+		nonNullAttributes.forEach(modelElementAttribute -> {
+			String line = String.format(
+					" %1$s:%2$s %3$s:%4$s %5$s:%6$s . \n",
+					MODEL.getPrefix(),
+					modelingLanguageConstruct,
+					modelElementAttribute.getRelationPrefix(),
+					modelElementAttribute.getRelation(),
+					modelElementAttribute.getValuePrefix(),
+					modelElementAttribute.getValue()
+			);
+
+			insertQueryBuilder.append(line);
+		});
+
+		insertQueryBuilder.append(" } ");
+
+		return Optional.of(new ParameterizedSparqlString(insertQueryBuilder.toString()));
+	}
+
+	private ParameterizedSparqlString getDeleteModelElementDataQuery(String modelingLanguageConstruct, List<ModelElementAttribute> attributes) {
+
+		StringBuilder deleteQueryBuilder = new StringBuilder("DELETE { \n");
+		StringBuilder whereQueryBuilder = new StringBuilder("WHERE { \n");
+
+		for (int i = 0; i < attributes.size(); i++) {
+			ModelElementAttribute modelElementAttribute = attributes.get(i);
+			String line = String.format(
+					" %1$s:%2$s %3$s:%4$s ?value%5$s . \n",
+					MODEL.getPrefix(),
+					modelingLanguageConstruct,
+					modelElementAttribute.getRelationPrefix(),
+					modelElementAttribute.getRelation(),
+					i
+			);
+			deleteQueryBuilder.append(line);
+			whereQueryBuilder.append(String.format("OPTIONAL { %s } \n", line));
+		}
+
+		deleteQueryBuilder.append("}");
+		whereQueryBuilder.append("}");
+
+		return new ParameterizedSparqlString(deleteQueryBuilder.toString() + whereQueryBuilder.toString());
+	}
+
+	private ParameterizedSparqlString getInsertOptionalShapeDataQuery(String shapeId, ModelElementDetailDto dto) {
+
+		StringBuilder queryBuilder = new StringBuilder();
+		queryBuilder.append("INSERT DATA {\n");
+
+		if (dto.getNote() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasNote \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getNote()));
+		}
+
+		if (dto.getLabel() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s rdfs:label \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getLabel()));
+		}
+
+		if (dto.getShapeRepresentsModel() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeRepresentsModel %1$s:%3$s .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getShapeRepresentsModel()));
+		}
+
+		queryBuilder.append("}");
+
+		return new ParameterizedSparqlString(queryBuilder.toString());
+	}
+
+	private ParameterizedSparqlString getInsertShapeDataQuery(String shapeId, ModelElementDetailDto dto) {
+		String command = String.format(
+				"INSERT DATA {\n" +
+				"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateX %3$s .\n" +
+				"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateY %4$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasHeight %5$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasWidth %6$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct %7$s .\n" +
+				"\t%1$s:%2$s %1$s:shapeVisualisesConceptualElement %1$s:%8$s .\n" +
+				"} ",
+				MODEL.getPrefix(),
+				shapeId,
+				dto.getX(),
+				dto.getY(),
+				dto.getHeight(),
+				dto.getWidth(),
+				dto.getPaletteConstruct(),
+				dto.getModelingLanguageConstructInstance()
+		);
+
+		StringBuilder queryBuilder = new StringBuilder();
+		queryBuilder.append("INSERT DATA {\n");
+
+		if (dto.getNote() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasNote \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getNote()));
+		}
+
+		if (dto.getLabel() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s rdfs:label \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getLabel()));
+		}
+
+		if (dto.getShapeRepresentsModel() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeRepresentsModel %1$s:%3$s .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getShapeRepresentsModel()));
+		}
+
+		queryBuilder.append("}");
+
+		return new ParameterizedSparqlString(command);
+	}
+
+	private ParameterizedSparqlString getDeleteShapeQuery(String shapeId) {
+		String command = String.format(
+				"DELETE {\n" +
+                        "\t%1$s:%2$s rdf:type %1$s:Shape .\n" +
+						"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateX ?x .\n" +
+						"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateY ?y .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasHeight ?h .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasWidth ?w .\n" +
+						"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
+						"\t%1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasNote ?note .\n" +
+						"\t%1$s:%2$s rdfs:label ?label .\n" +
+						"\t%1$s:%2$s %1$s:shapeRepresentsModel ?model .\n" +
+						"\t?parentModel %1$s:modelHasShape %1$s:%2$s .\n" +
+						"} WHERE {\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapePositionsOnCoordinateX ?x }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapePositionsOnCoordinateY ?y }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasHeight ?h }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasWidth ?w }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasNote ?note }\n" +
+						"\tOPTIONAL { %1$s:%2$s rdfs:label ?label }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeRepresentsModel ?model }\n" +
+						"\t?parentModel %1$s:modelHasShape %1$s:%2$s .\n" +
+						"} ",
+				MODEL.getPrefix(),
+				shapeId
+		);
+
+		return new ParameterizedSparqlString(command);
+	}
+
+	private ParameterizedSparqlString getDeleteShapeDataQuery(String shapeId) {
+		String command = String.format(
+				"DELETE {\n" +
+				"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateX ?x .\n" +
+				"\t%1$s:%2$s %1$s:shapePositionsOnCoordinateY ?y .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasHeight ?h .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasWidth ?w .\n" +
+				"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
+				"\t%1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo .\n" +
+				"\t%1$s:%2$s %1$s:shapeHasNote ?note .\n" +
+				"\t%1$s:%2$s rdfs:label ?label .\n" +
+				"\t%1$s:%2$s %1$s:shapeRepresentsModel ?model .\n" +
+				"} WHERE {\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapePositionsOnCoordinateX ?x }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapePositionsOnCoordinateY ?y }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasHeight ?h }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasWidth ?w }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasNote ?note }\n" +
+				"\tOPTIONAL { %1$s:%2$s rdfs:label ?label }\n" +
+				"\tOPTIONAL { %1$s:%2$s %1$s:shapeRepresentsModel ?model }\n" +
+				"} ",
+				MODEL.getPrefix(),
+				shapeId
+		);
+
+		return new ParameterizedSparqlString(command);
+	}
+
+	private ParameterizedSparqlString getShapeCreationQuery(ModelElementCreationDto modelElementCreationDto, String modelId, String elementId) {
+
+		String command = String.format(
+				"INSERT DATA {\n" +
+				"	%1$s:%2$s rdf:type %1$s:Shape .\n" +
+				"	%1$s:%2$s %1$s:shapePositionsOnCoordinateX %6$s .\n" +
+				"	%1$s:%2$s %1$s:shapePositionsOnCoordinateY %7$s .\n" +
+				"	%1$s:%2$s %1$s:shapeHasWidth %8$s .\n" +
+				"	%1$s:%2$s %1$s:shapeHasHeight %9$s .\n" +
+				"	%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct %5$s .\n" +
+				"	%1$s:%2$s %1$s:shapeVisualisesConceptualElement %1$s:%4$s .\n" +
+				"	%1$s:%3$s %1$s:modelHasShape %1$s:%2$s .\n",
+				MODEL.getPrefix(),
+				modelElementCreationDto.getUuid(),
+				modelId,
+				elementId,
+				modelElementCreationDto.getPaletteConstruct(),
+				modelElementCreationDto.getX(),
+				modelElementCreationDto.getY(),
+				modelElementCreationDto.getW(),
+				modelElementCreationDto.getH()
+		);
+
+		StringBuilder commandBuilder = new StringBuilder(command);
+
+		if (modelElementCreationDto.getNote() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeHasNote \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getNote()));
+		}
+
+		if (modelElementCreationDto.getShapeRepresentsModel() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeRepresentsModel %1$s:%3$s .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getShapeRepresentsModel()));
+		}
+
+		if (modelElementCreationDto.getLabel() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s rdfs:label \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getLabel()));
+		}
+
+		commandBuilder.append("}");
+
+		return new ParameterizedSparqlString(commandBuilder.toString());
+	}
+
+	private String getConnectionCreationCommand(ConnectionCreationDto connectionCreationDto, String modelId, String id, String elementId) {
+
+		String instanceCreationBit = "	%7$s:%1$s rdf:type ?type .\n";
+		String classCreationBit = 	"	%7$s:%1$s rdf:type owl:Class .\n" +
+									"	%7$s:%1$s rdfs:subClassOf ?type .\n";
+
+		String creationBit = connectionCreationDto.getInstantiationType() == InstantiationTargetType.Class ? classCreationBit : instanceCreationBit;
+
+		return String.format(
+				"INSERT {\n" +
+				creationBit +
+				"	%7$s:%1$s rdf:type %7$s:ConceptualElement .\n" +
+				"	%7$s:%1$s lo:elementIsMappedWithDOConcept ?concept .\n" +
+				"	%7$s:%1$s lo:modelingRelationHasSourceModelingElement ?fromInstance .\n" +
+				"	%7$s:%1$s lo:modelingRelationHasTargetModelingElement ?toInstance .\n" +
+				"	%7$s:%2$s rdf:type %7$s:Shape .\n" +
+				"	%7$s:%2$s %7$s:shapePositionsOnCoordinateX %5$s .\n" +
+				"	%7$s:%2$s %7$s:shapePositionsOnCoordinateY %6$s .\n" +
+				"	%7$s:%2$s %7$s:shapeHasHeight ?height .\n" +
+				"	%7$s:%2$s %7$s:shapeHasWidth ?width .\n" +
+				"	%7$s:%2$s %7$s:shapeInstantiatesPaletteConstruct po:%3$s .\n" +
+				"	%7$s:%2$s %7$s:shapeVisualisesConceptualElement %7$s:%1$s .\n" +
+				"	%7$s:%4$s %7$s:modelHasShape %7$s:%2$s .\n" +
+				"}" +
+				"WHERE {" +
+				"	po:%3$s po:paletteConstructIsRelatedToModelingLanguageConstruct ?type .\n" +
+				"	po:%3$s po:paletteConstructHasHeight ?height .\n" +
+				"	po:%3$s po:paletteConstructHasWidth ?width .\n" +
+				"   %7$s:%8$s rdf:type %7$s:Shape . \n" +
+				"   %7$s:%9$s rdf:type %7$s:Shape . \n" +
+				"   %7$s:%8$s %7$s:shapeVisualisesConceptualElement ?fromInstance . \n" +
+				"   %7$s:%9$s %7$s:shapeVisualisesConceptualElement ?toInstance . \n" +
+				"	OPTIONAL { ?type lo:elementIsMappedWithDOConcept ?concept }\n" +
+				"}",
+				elementId,
+				id,
+				connectionCreationDto.getPaletteConstruct(),
+				modelId,
+				connectionCreationDto.getX(),
+				connectionCreationDto.getY(),
+				MODEL.getPrefix(),
+				connectionCreationDto.getFrom(),
+				connectionCreationDto.getTo()
+		);
+	}
+
+	private Optional<String> getMappedModelingLanguageConstruct(String paletteConstruct) {
+		String command = String.format(
+				"SELECT ?mlo " +
+				"WHERE " +
+				"{ " +
+				"	po:%s po:paletteConstructIsRelatedToModelingLanguageConstruct ?mlo" +
+				"}",
+				paletteConstruct);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		if (!resultSet.hasNext()) {
+			return Optional.empty();
+		}
+
+		return Optional.ofNullable(extractIdFrom(resultSet.next(), "?mlo"));
+	}
+
+	@POST
+	@Path("model-elements/search")
+	public Response getModelElements(String json) {
+
+		ModellingLanguageConstructInstancesRequest dto = gson.fromJson(json, ModellingLanguageConstructInstancesRequest.class);
+
+		String command = String.format(
+				"SELECT ?model ?shape ?instance \n" +
+				"WHERE { \n" +
+				"{ \n" +
+				"    ?shape %2$s:shapeInstantiatesPaletteConstruct <%1$s> .\n" +
+				"    ?shape %2$s:shapeVisualisesConceptualElement ?instance .  \n" +
+				"    ?model %2$s:modelHasShape ?shape  \n" +
+				"  } " +
+				"  UNION\n" +
+				"  {\n" +
+				"    <%1$s> po:paletteConstructIsRelatedToModelingLanguageConstruct ?mloConstruct . \n" +
+				"\n" +
+				"    ?instance rdf:type mod:ConceptualElement . \n" +
+				"    ?instance rdf:type ?mloConstruct . \n" +
+				"    \n" +
+				"    ?shape %2$s:shapeVisualisesConceptualElement ?instance . \n" +
+				"    ?model %2$s:modelHasShape ?shape \n" +
+				"  }\n" +
+				"  UNION\n" +
+				"  {\n" +
+				"    <%1$s> po:paletteConstructIsRelatedToModelingLanguageConstruct ?mloConstruct . \n" +
+				"    \n" +
+				"    ?instance rdf:type mod:ConceptualElement . \n" +
+				"    ?instance rdfs:subClassOf ?mloConstruct . \n" +
+				"    \n" +
+				"    ?shape %2$s:shapeVisualisesConceptualElement ?instance . \n" +
+				"    ?model %2$s:modelHasShape ?shape \n" +
+				"  }\n" +
+				"  \n" +
+				"}",
+				dto.getId(),
+				MODEL.getPrefix()
+				);
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		List<ModellingLanguageConstructInstance> instances = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			QuerySolution next = resultSet.next();
+			String modelId = extractIdFrom(next, "?model");
+			String shapeId = extractIdFrom(next, "?shape");
+			String instanceId = extractIdFrom(next, "?instance");
+
+			instances.add(new ModellingLanguageConstructInstance(modelId, shapeId, instanceId));
+		}
+
+		String payload = gson.toJson(instances);
+
+		return Response.status(Status.OK).entity(payload).build();
+	}
+
+	/**
+	 * Utility endpoint which can be utilised to find conceptual elements which are not visualised in a model
+	 *
+	 * @param filter
+	 * @return
+	 * @throws MethodNotSupportedException
+	 */
+	@GET
+	@Path("/model-element")
+	public Response getModelElementInstance(@QueryParam("filter") String filter) throws MethodNotSupportedException {
+
+		if (!"HIDDEN".equals(filter)) {
+			throw new MethodNotSupportedException("only searching for HIDDEN elements is allowed right now!");
+		}
+
+		String command = String.format(
+				"SELECT ?instance ?relation ?object\n" +
+				"WHERE\n" +
+				"{\n" +
+				"\t{\n" +
+				"\t\t?instance rdf:type %1$s:ConceptualElement .\n" +
+				"\t\t?instance ?relation ?object\n" +
+				"\n" +
+				"\t\tFILTER NOT EXISTS\n" +
+				"\t\t{\n" +
+				"\t\t\t?shape %1$s:shapeVisualisesConceptualElement ?instance\n" +
+				"\t\t}\n" +
+				"\t}\n" +
+				"\tUNION\n" +
+				"\t{\n" +
+				"\t\t?instance rdf:type %1$s:ConceptualElement .\n" +
+				"\t\t?subject ?relation ?instance\n" +
+				"\n" +
+				"\t\tFILTER NOT EXISTS\n" +
+				"\t\t{\n" +
+				"\t\t\t?shape %1$s:shapeVisualisesConceptualElement ?instance\n" +
+				"\t\t}\n" +
+				"\t}\n" +
+				"}\n",
+				MODEL.getPrefix()
+		);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		Map<String, Map<String, String>> attributes = new HashMap<>();
+
+		while(resultSet.hasNext()) {
+			QuerySolution solution = resultSet.next();
+
+			String instance = extractIdFrom(solution, "?instance");
+			attributes.putIfAbsent(instance, new HashMap<>());
+
+			String relation = extractIdFrom(solution, "?relation");
+			String value = extractValueFrom(solution, "?object");
+
+			attributes.get(instance).putIfAbsent(relation, value);
+		}
+
+		String payload = gson.toJson(attributes);
+
+		return Response.status(Status.OK).entity(payload).build();
+	}
+
+	@DELETE
+	@Path("/model-element/{id}")
+	public Response deleteModelElementInstance(@PathParam("id") String id) {
+
+		String deleteElementCommand = String.format(
+				"DELETE {\n" +
+				"\t%1$s:%2$s ?rOutgoing ?o .\n" +
+				"    ?s ?rIncoming %1$s:%2$s .\n" +
+				"}\n" +
+				"WHERE {\n" +
+				"\t%1$s:%2$s ?rOutgoing ?o .\n" +
+				"    OPTIONAL { ?s ?rIncoming %1$s:%2$s } \n" +
+				"}",
+				MODEL.getPrefix(),
+				id
+		);
+
+		ParameterizedSparqlString deleteElement = new ParameterizedSparqlString(deleteElementCommand);
+
+		ontology.insertQuery(deleteElement);
+
+		return Response.status(Status.OK).build();
+	}
+
+	@GET
+	@Path("/arrow-structures")
+	public Response getArrowDefinitions() {
+
+		// strokes are taken from https://gojs.net/latest/samples/relationships.html
+
+		List<String> arrowHeads = getArrowHeads();
+		List<String> arrowStrokes = getArrowStrokes();
+
+		String payload = gson.toJson(new ArrowStructuresDto(arrowHeads, arrowStrokes));
+
+		return Response.ok().entity(payload).build();
+	}
+
+	private List<String> getArrowHeads() {
+		String command = "SELECT ?label\n" +
+				"WHERE {\n" +
+				"\t?arrowHead rdf:type po:ArrowHead .\n" +
+				"\t?arrowHead rdfs:label ?label\n" +
+				"}\n";
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		List<String> arrowHeads = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			String label = extractValueFrom(resultSet.next(), "?label");
+			arrowHeads.add(label);
+		}
+		return arrowHeads;
+	}
+
+	private List<String> getArrowStrokes() {
+		String command = "SELECT ?label\n" +
+				"WHERE {\n" +
+				"\t?arrowHead rdf:type po:ArrowStroke .\n" +
+				"\t?arrowHead rdfs:label ?label\n" +
+				"}\n";
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		List<String> strokes = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			String label = extractValueFrom(resultSet.next(), "?label");
+			strokes.add(label);
+		}
+		return strokes;
+	}
+
+	@GET
+	@Path("relations/{name}/options")
+	public Response getOptionsForRelation(@PathParam("name") String name) {
+
+		String command = String.format(
+				"SELECT ?class ?instance\n" +
+				"WHERE { \n" +
+				"\t%1$s rdfs:range ?range .\n" +
+				"\t?class rdfs:subClassOf* ?range .\n" +
+				"\tOPTIONAL {\t?instance rdf:type ?class }\n" +
+				"}",
+				name);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		Set<String> classes = new HashSet<>();
+		Set<String> instances = new HashSet<>();
+
+		while (resultSet.hasNext()) {
+			QuerySolution next = resultSet.next();
+			String clazz = extractValueFrom(next, "?class");
+			String instance = extractValueFrom(next, "?instance");
+
+			if (clazz != null) {
+				String prefix = GlobalVariables.getNamespaceMap().get(clazz.split("#")[0]);
+				classes.add(prefix + ":" + clazz.split("#")[1]);
+			}
+
+			if (instance != null) {
+				String prefix = GlobalVariables.getNamespaceMap().get(instance.split("#")[0]);
+				instances.add(prefix + ":" + instance.split("#")[1]);
+			}
+		}
+
+		String payload = gson.toJson(new Options(instances, classes));
+
+		return Response.ok(payload).build();
+	}
+
 	@GET
 	@Path("/getModelingLanguages")
 	public Response getModelingLanguages() {
@@ -222,7 +1520,7 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<PaletteElement> result = new ArrayList<PaletteElement>();
 
-		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?categoryLabel ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness ?comment ?type WHERE {");
+		queryStr.append("SELECT ?element ?label ?representedClass ?hidden ?category ?categoryLabel ?parent ?backgroundColor ?height ?iconPosition ?iconURL ?imageURL ?labelPosition ?shape ?thumbnailURL ?usesImage ?width ?borderColor ?borderType ?borderThickness ?comment ?type ?fromArrow ?toArrow ?arrowStroke WHERE {");
 		queryStr.append("?element rdf:type ?type . FILTER(?type IN (po:PaletteElement, po:PaletteConnector)) .");
 		queryStr.append("?element rdfs:label ?label .");
 		queryStr.append("?element po:paletteConstructIsRelatedToModelingLanguageConstruct ?representedClass .");
@@ -248,6 +1546,10 @@ public class ModellingEnvironment {
 		//queryStr.append("OPTIONAL{ ?element po:paletteElementBorderType ?borderType }."); //future use
 		queryStr.append("OPTIONAL{ ?representedClass rdfs:comment ?comment }.");
 		queryStr.append("OPTIONAL{ ?element po:paletteConstructHasParentPaletteConstruct ?parent }.");
+
+		queryStr.append("OPTIONAL{ ?element po:paletteConnectorConfiguresFromArrowHead ?fromArrow }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteConnectorConfiguresToArrowHead ?toArrow }.");
+		queryStr.append("OPTIONAL{ ?element po:paletteConnectorConfiguresArrowStroke ?arrowStroke }.");
 
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
@@ -314,6 +1616,21 @@ public class ModellingEnvironment {
 					tempPaletteElement.setParentElement(soln.get("?parent").toString());
 					//Read properties of the parent element here
 				}
+
+				if (soln.get("?arrowStroke") != null){
+					tempPaletteElement.setArrowStroke(extractIdFrom(soln, "?arrowStroke"));
+				}
+
+				if (soln.get("?toArrow") != null){
+					tempPaletteElement.setToArrow(extractIdFrom(soln, "?toArrow"));
+				}
+
+				if (soln.get("?fromArrow") != null){
+					tempPaletteElement.setFromArrow(extractIdFrom(soln, "?fromArrow"));
+				}
+
+				String type = extractIdFrom(soln, "?type");
+				tempPaletteElement.setType(type);
 
 				String prefix = GlobalVariables.getNamespaceMap().get(tempPaletteElement.getRepresentedLanguageClass().split("#")[0]);
 				tempPaletteElement.setLanguagePrefix(prefix);
@@ -604,6 +1921,30 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity("{}").build();
 	}
 
+	private boolean hasInstantiatedInstances(PaletteElement element) {
+        String command = String.format("SELECT *\n" +
+                        "WHERE {\n" +
+                        "  {\n" +
+                        "    ?subject %3$s:shapeInstantiatesPaletteConstruct <%1$s>\n" +
+                        "  }\n" +
+                        "  UNION\n" +
+                        "  {\n" +
+                        "\t?subject rdf:type <%2$s>\n" +
+                        "  }\n" +
+                        "  UNION\n" +
+                        "  {\n" +
+                        "    ?subject rdfs:subClassOf <%2$s>\n" +
+                        "  }\n" +
+                        "}",
+                element.getId(),
+                element.getRepresentedLanguageClass(),
+				MODEL.getPrefix());
+
+        ParameterizedSparqlString instantiatedQuery = new ParameterizedSparqlString(command);
+
+        return ontology.query(instantiatedQuery).execSelect().hasNext();
+    }
+
 	@POST
 	@Path("/deletePaletteElement")
 	public Response deletePaletteElement(String json) {
@@ -613,7 +1954,11 @@ public class ModellingEnvironment {
 		Gson gson = new Gson();
 		PaletteElement element = gson.fromJson(json, PaletteElement.class);
 
-		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+        if (hasInstantiatedInstances(element)) {
+            return Response.status(Status.BAD_REQUEST).entity("{}").build();
+        }
+
+        ParameterizedSparqlString querStr = new ParameterizedSparqlString();
 		ParameterizedSparqlString querStr1 = new ParameterizedSparqlString();
 
 		/**
@@ -689,11 +2034,35 @@ public class ModellingEnvironment {
 		querStr.append("<"+element.getId()+"> rdfs:label \"" +element.getLabel()+ "\" . ");
 		querStr.append("<"+element.getId()+"> po:paletteConstructHasModelImage \"" +element.getImageURL()+ "\" . ");
 		querStr.append("<"+element.getId()+"> po:paletteConstructHasPaletteThumbnail \"" +element.getThumbnailURL()+ "\" . ");
+
+		if (element.getToArrow() != null) {
+			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresToArrowHead po:" + element.getToArrow() + " . ");
+		}
+
+		if (element.getFromArrow() != null) {
+			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresFromArrowHead po:" + element.getFromArrow() + " . ");
+		}
+
+		if (element.getArrowStroke() != null) {
+			querStr.append("<" + element.getId() + "> po:paletteConnectorConfiguresArrowStroke po:" + element.getArrowStroke() + " . ");
+		}
+
 		querStr.append(" }");
 		querStr1.append("INSERT DATA { ");
 		querStr1.append("<"+element.getId()+"> rdfs:label \""+modifiedElement.getLabel()+ "\" . ");
 		querStr1.append("<"+element.getId()+"> po:paletteConstructHasModelImage \""+modifiedElement.getImageURL()+ "\" . ");
 		querStr1.append("<"+element.getId()+"> po:paletteConstructHasPaletteThumbnail \"" +modifiedElement.getThumbnailURL()+ "\" . ");
+		if (modifiedElement.getToArrow() != null) {
+			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresToArrowHead po:" + modifiedElement.getToArrow() + " . ");
+		}
+
+		if (modifiedElement.getFromArrow() != null) {
+			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresFromArrowHead po:" + modifiedElement.getFromArrow() + " . ");
+		}
+
+		if (modifiedElement.getArrowStroke() != null) {
+			querStr1.append("<" + element.getId() + "> po:paletteConnectorConfiguresArrowStroke po:" + modifiedElement.getArrowStroke() + " . ");
+		}
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();

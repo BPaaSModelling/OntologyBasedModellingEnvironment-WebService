@@ -38,7 +38,9 @@ public enum NAMESPACE {
 	//APQC( "apqc",								"http://ikm-group.ch/archimeo/apqc#"),
 	DKMM( "dkmm",								"http://fhnw.ch/modelingEnvironment/dkmm#"),
 	ICF( "icf",								"http://who.int/icf#"),
-	SAPSCENES( "sapscenes",						"http://fhnw.ch/SAPScenesOntology#");
+	SAPSCENES( "sapscenes",					"http://fhnw.ch/SAPScenesOntology#"),
+	MODEL("mod", 							"http://fhnw.ch/modelingEnvironment/ModelOntology#")
+	;
 	
 	private String prefix;
 	private String url;
