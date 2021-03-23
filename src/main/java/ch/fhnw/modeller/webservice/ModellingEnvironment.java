@@ -370,9 +370,11 @@ public class ModellingEnvironment {
 			}
 		}
 
-		QuerySolution nextForOtherType = resultSet.next();
-		String otherType = extractNamespaceAndIdFrom(nextForOtherType, "?allTypes");
-		types.add(otherType);
+		if (resultSet.hasNext()) {
+			QuerySolution nextForOtherType = resultSet.next();
+			String otherType = extractNamespaceAndIdFrom(nextForOtherType, "?allTypes");
+			types.add(otherType);
+		}
 
 		if (modelElementType.getType() != null) {
 			if (types.contains("owl:Class")) {
@@ -460,7 +462,8 @@ public class ModellingEnvironment {
 				creationBit +
 				"\t\t?mloConcept rdfs:subClassOf* ?relTarget .\n" +
 				"\n" +
-				"\t\t?objProp rdf:type owl:ObjectProperty .\n" +
+				"\t\t?objProp rdf:type ?objPropType .\n" +
+                "\t\tFILTER(?objPropType IN (owl:ObjectProperty, owl:DatatypeProperty)) .\n" +
 				"\t\t?objProp rdfs:range ?range\n" +
 				"\n" +
 				"\t\tFILTER EXISTS {\n" +
@@ -517,14 +520,28 @@ public class ModellingEnvironment {
 			options.add(relationDto);
 
 			if (actualValue != null) {
-				ModelElementAttribute value = new ModelElementAttribute();
-				value.setRelation(relationDto.getRelation());
-				value.setRelationPrefix(relationDto.getRelationPrefix());
-				value.setValue(actualValue.split("#")[1]);
-				value.setValuePrefix(GlobalVariables.getNamespaceMap().get(actualValue.split("#")[0]));
+				if (actualValue.indexOf("^^") == -1) {
+					ModelElementAttribute value = new ModelElementAttribute();
+					value.setRelation(relationDto.getRelation());
+					value.setRelationPrefix(relationDto.getRelationPrefix());
+					value.setValue(GlobalVariables.getNamespaceMap().get(actualValue.split("#")[0]) + ":" + actualValue.split("#")[1]);
 
-				values.add(value);
+					values.add(value);
+				} else {
+					ModelElementAttribute value = new ModelElementAttribute();
+					value.setRelation(relationDto.getRelation());
+					value.setRelationPrefix(relationDto.getRelationPrefix());
+					String key = actualValue.split("#")[0];
+					String primitiveValuePart = key.split("\\^\\^")[0];
+					String namespacePart = key.split("\\^\\^")[1];
+					String actualNamespacePart = GlobalVariables.getNamespaceMap().get(namespacePart);
+					String typePart = actualValue.split("#")[1];
+					value.setValue(String.format("\"%s\"^^%s:%s", primitiveValuePart, actualNamespacePart, typePart));
+
+					values.add(value);
+				}
 			}
+
 		}
 
         List<String> referencingShapes = getReferencingShapeIds(modelElementId);
@@ -808,12 +825,11 @@ public class ModellingEnvironment {
 
 		nonNullAttributes.forEach(modelElementAttribute -> {
 			String line = String.format(
-					" %1$s:%2$s %3$s:%4$s %5$s:%6$s . \n",
+					" %1$s:%2$s %3$s:%4$s %5$s . \n",
 					MODEL.getPrefix(),
 					modelingLanguageConstruct,
 					modelElementAttribute.getRelationPrefix(),
 					modelElementAttribute.getRelation(),
-					modelElementAttribute.getValuePrefix(),
 					modelElementAttribute.getValue()
 			);
 
@@ -1318,6 +1334,24 @@ public class ModellingEnvironment {
 	@Path("relations/{name}/options")
 	public Response getOptionsForRelation(@PathParam("name") String name) {
 
+		String typeCommand = String.format(
+				"SELECT ?range\n" +
+				"WHERE {\n" +
+				"\t%1$s rdf:type owl:DatatypeProperty .\n" +
+				"\t%1$s rdfs:range ?range \n" +
+				"}",
+				name
+		);
+
+		ParameterizedSparqlString typeQuery = new ParameterizedSparqlString(typeCommand);
+		ResultSet typeResultSet = ontology.query(typeQuery).execSelect();
+
+		if (typeResultSet.hasNext()) {
+			String range = typeResultSet.next().get("?range").toString();
+			String payload = gson.toJson(new Options(null, null, true, range));
+			return Response.ok(payload).build();
+		}
+
 		String command = String.format(
 				"SELECT ?class ?instance\n" +
 				"WHERE { \n" +
@@ -1349,7 +1383,7 @@ public class ModellingEnvironment {
 			}
 		}
 
-		String payload = gson.toJson(new Options(instances, classes));
+		String payload = gson.toJson(new Options(instances, classes, false, null));
 
 		return Response.ok(payload).build();
 	}
