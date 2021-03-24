@@ -36,6 +36,8 @@ import ch.fhnw.modeller.webservice.ontology.FormatConverter;
 import ch.fhnw.modeller.webservice.ontology.NAMESPACE;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import ch.fhnw.modeller.persistence.GlobalVariables;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.impl.LiteralImpl;
 
 import static ch.fhnw.modeller.webservice.ontology.NAMESPACE.MODEL;
 
@@ -2152,11 +2154,13 @@ public class ModellingEnvironment {
 		//querStr.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
 		querStr.append("<"+datatypeProperty.getId() + "> rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
 		querStr.append("<"+datatypeProperty.getId() + "> rdfs:range \"" + datatypeProperty.getRange() + "\" . ");
+		querStr.append("<"+datatypeProperty.getId() + "> "+MODEL.getPrefix()+":objectPropertyIsShownInModel " + datatypeProperty.isAvailableToModel() + " . ");
 		querStr.append(" }");
 		querStr1.append("INSERT DATA { ");
 		//querStr1.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
 		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:label \"" + modifiedDatatypeProperty.getLabel() + "\" . ");
 		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:range " + modifiedDatatypeProperty.getRange() + " . ");
+		querStr1.append("<"+datatypeProperty.getId() + "> "+MODEL.getPrefix()+":objectPropertyIsShownInModel " + modifiedDatatypeProperty.isAvailableToModel() + " . ");
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
@@ -2308,7 +2312,9 @@ public class ModellingEnvironment {
 			System.out.println("    Property Label: " + datatypeProperty.getLabel());
 			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
 			System.out.println("    Property Range: " + datatypeProperty.getRange());
-			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" ");
+			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" . ");
+			System.out.println("    Availability to model: " + datatypeProperty.isAvailableToModel());
+			querStr1.append("lo:" + datatypeProperty.getId() + " " + MODEL.getPrefix() + ":objectPropertyIsShownInModel " + datatypeProperty.isAvailableToModel() + " . ");
 			querStr1.append("}");
 			//querStr1.append(" WHERE { }");
 
@@ -2574,12 +2580,13 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<DatatypeProperty> result = new ArrayList<DatatypeProperty>();
 
-		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label WHERE {");
+		queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label ?isAvailableToModel WHERE {");
 		queryStr.append("?id a ?type . FILTER(?type IN (owl:DatatypeProperty)) . ");
 		queryStr.append("?id rdfs:domain ?domain . ");
 		queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
 		queryStr.append("?id rdfs:label ?label . ");
 		queryStr.append("?id rdfs:range ?range . ");
+		queryStr.append("OPTIONAL {?id " + MODEL.getPrefix() + ":objectPropertyIsShownInModel ?isAvailableToModel} ");
 		//queryStr.append("OPTIONAL {?domain rdf:type owl:DataTypeProperty} ");
 
 		queryStr.append("} ");
@@ -2597,6 +2604,8 @@ public class ModellingEnvironment {
 				datatypeProperty.setLabel(soln.get("?label").toString());
 				datatypeProperty.setDomainName(domainName);
 				datatypeProperty.setRange(soln.get("?range").toString());
+				RDFNode rdfNode = soln.get("?isAvailableToModel");
+				if (rdfNode != null) datatypeProperty.setAvailableToModel(((LiteralImpl) rdfNode).getBoolean());
 
 				result.add(datatypeProperty);
 			}

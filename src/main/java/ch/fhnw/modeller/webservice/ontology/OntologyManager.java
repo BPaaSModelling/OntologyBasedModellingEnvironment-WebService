@@ -28,12 +28,12 @@ import org.apache.jena.update.UpdateRequest;
 public final class OntologyManager {
 
 	private static OntologyManager INSTANCE;
-	private boolean localOntology = false;
+	private boolean localOntology = true;
 	//private Model rdfModel;
 	
-	//private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment"; // endpoint for standalone server
+	private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment"; // endpoint for standalone server
 	//private static String TRIPLESTOREENDPOINT 	= "https://fusekiherokutest.herokuapp.com/modellingEnvironment"; // endpoint for demo server on heroku
-	private static String TRIPLESTOREENDPOINT 	= "https://aoame-fuseki.herokuapp.com/ModEnv"; // endpoint for deployment
+	//private static String TRIPLESTOREENDPOINT 	= "https://aoame-fuseki.herokuapp.com/ModEnv"; // endpoint for deployment
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
 	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
 	private static String READENDPOINT			= TRIPLESTOREENDPOINT + "/get";
