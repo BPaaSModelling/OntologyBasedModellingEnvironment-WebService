@@ -2216,13 +2216,19 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
 
 		/**
-		 * Delete a class and all its predicates and values
+		 * Delete a class,
+		 * all its predicates and values
+		 * and all relations referencing this predicate
+		 *
 		 * DELETE
 		 * WHERE {bpmn:NewSubprocess ?predicate  ?object .}
 		 */
 
 		querStr.append("DELETE "); //Does not work with DELETE DATA
-		querStr.append("WHERE { <"+ property.getId() +"> ?predicate ?object . } ");
+		querStr.append("WHERE { ");
+		querStr.append("<"+ property.getId() +"> ?predicate ?object . ");
+		querStr.append("?subject <"+ property.getId() +"> ?data . ");
+		querStr.append("}");
 
 		ontology.insertQuery(querStr);
 		return Response.status(Status.OK).entity("{}").build();
