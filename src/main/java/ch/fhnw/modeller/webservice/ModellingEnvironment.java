@@ -481,11 +481,11 @@ public class ModellingEnvironment {
 				"\n" +
 				"\t\tFILTER EXISTS {\n" +
 				"\t\t\t?objProp rdfs:subPropertyOf* ?superObjProp .\n" +
-				"\t\t\t?superObjProp %1$s:objectPropertyIsShownInModel true .\n" +
+				"\t\t\t?superObjProp %1$s:propertyIsShownInModel true .\n" +
 				"\n" +
 				"\t\t\tFILTER NOT EXISTS {\n" +
 				"\t\t\t\t?subObjProp rdfs:subPropertyOf+ ?superObjProp .\n" +
-				"\t\t\t\t?subObjProp %1$s:objectPropertyIsShownInModel false .\n" +
+				"\t\t\t\t?subObjProp %1$s:propertyIsShownInModel false .\n" +
 				"\t\t\t\t?objProp rdfs:subPropertyOf* ?subObjProp\n" +
 				"\t\t\t}\n" +
 				"\t\t}\n" +
@@ -2154,13 +2154,13 @@ public class ModellingEnvironment {
 		//querStr.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
 		querStr.append("<"+datatypeProperty.getId() + "> rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
 		querStr.append("<"+datatypeProperty.getId() + "> rdfs:range \"" + datatypeProperty.getRange() + "\" . ");
-		querStr.append("<"+datatypeProperty.getId() + "> "+MODEL.getPrefix()+":objectPropertyIsShownInModel " + datatypeProperty.isAvailableToModel() + " . ");
+		querStr.append("<"+datatypeProperty.getId() + "> "+MODEL.getPrefix()+":propertyIsShownInModel " + datatypeProperty.isAvailableToModel() + " . ");
 		querStr.append(" }");
 		querStr1.append("INSERT DATA { ");
 		//querStr1.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
 		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:label \"" + modifiedDatatypeProperty.getLabel() + "\" . ");
 		querStr1.append("<"+datatypeProperty.getId() + "> rdfs:range " + modifiedDatatypeProperty.getRange() + " . ");
-		querStr1.append("<"+datatypeProperty.getId() + "> "+MODEL.getPrefix()+":objectPropertyIsShownInModel " + modifiedDatatypeProperty.isAvailableToModel() + " . ");
+		querStr1.append("<"+datatypeProperty.getId() + "> "+MODEL.getPrefix()+":propertyIsShownInModel " + modifiedDatatypeProperty.isAvailableToModel() + " . ");
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
@@ -2314,7 +2314,7 @@ public class ModellingEnvironment {
 			System.out.println("    Property Range: " + datatypeProperty.getRange());
 			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" . ");
 			System.out.println("    Availability to model: " + datatypeProperty.isAvailableToModel());
-			querStr1.append("lo:" + datatypeProperty.getId() + " " + MODEL.getPrefix() + ":objectPropertyIsShownInModel " + datatypeProperty.isAvailableToModel() + " . ");
+			querStr1.append("lo:" + datatypeProperty.getId() + " " + MODEL.getPrefix() + ":propertyIsShownInModel " + datatypeProperty.isAvailableToModel() + " . ");
 			querStr1.append("}");
 			//querStr1.append(" WHERE { }");
 
@@ -2586,7 +2586,7 @@ public class ModellingEnvironment {
 		queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
 		queryStr.append("?id rdfs:label ?label . ");
 		queryStr.append("?id rdfs:range ?range . ");
-		queryStr.append("OPTIONAL {?id " + MODEL.getPrefix() + ":objectPropertyIsShownInModel ?isAvailableToModel} ");
+		queryStr.append("OPTIONAL {?id " + MODEL.getPrefix() + ":propertyIsShownInModel ?isAvailableToModel} ");
 		//queryStr.append("OPTIONAL {?domain rdf:type owl:DataTypeProperty} ");
 
 		queryStr.append("} ");
