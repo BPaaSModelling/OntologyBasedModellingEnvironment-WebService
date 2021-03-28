@@ -1349,7 +1349,7 @@ public class ModellingEnvironment {
 		ResultSet typeResultSet = ontology.query(typeQuery).execSelect();
 
 		if (typeResultSet.hasNext()) {
-			String range = typeResultSet.next().get("?range").toString();
+			String range = extractNamespaceAndIdFrom(typeResultSet.next(), "?range");
 			String payload = gson.toJson(new Options(null, null, true, range));
 			return Response.ok(payload).build();
 		}
@@ -2153,7 +2153,7 @@ public class ModellingEnvironment {
 		querStr.append("DELETE DATA { ");
 		//querStr.append(datatypeProperty.getId() + " rdf:type owl:DataTypeProperty .");
 		querStr.append("<"+datatypeProperty.getId() + "> rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
-		querStr.append("<"+datatypeProperty.getId() + "> rdfs:range \"" + datatypeProperty.getRange() + "\" . ");
+		querStr.append("<"+datatypeProperty.getId() + "> rdfs:range " + datatypeProperty.getRange() + " . ");
 		querStr.append("<"+datatypeProperty.getId() + "> "+MODEL.getPrefix()+":propertyIsShownInModel " + datatypeProperty.isAvailableToModel() + " . ");
 		querStr.append(" }");
 		querStr1.append("INSERT DATA { ");
@@ -2312,7 +2312,7 @@ public class ModellingEnvironment {
 			System.out.println("    Property Label: " + datatypeProperty.getLabel());
 			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:label \"" + datatypeProperty.getLabel() + "\" . ");
 			System.out.println("    Property Range: " + datatypeProperty.getRange());
-			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:range \"" + datatypeProperty.getRange() + "\" . ");
+			querStr1.append("lo:" + datatypeProperty.getId() + " rdfs:range " + datatypeProperty.getRange() + " . ");
 			System.out.println("    Availability to model: " + datatypeProperty.isAvailableToModel());
 			querStr1.append("lo:" + datatypeProperty.getId() + " " + MODEL.getPrefix() + ":propertyIsShownInModel " + datatypeProperty.isAvailableToModel() + " . ");
 			querStr1.append("}");
@@ -2603,7 +2603,7 @@ public class ModellingEnvironment {
 				datatypeProperty.setId(soln.get("?id").toString());
 				datatypeProperty.setLabel(soln.get("?label").toString());
 				datatypeProperty.setDomainName(domainName);
-				datatypeProperty.setRange(soln.get("?range").toString());
+				datatypeProperty.setRange(extractNamespaceAndIdFrom(soln, "?range"));
 				RDFNode rdfNode = soln.get("?isAvailableToModel");
 				if (rdfNode != null) datatypeProperty.setAvailableToModel(((LiteralImpl) rdfNode).getBoolean());
 
