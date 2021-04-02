@@ -1,11 +1,17 @@
 package ch.fhnw.modeller.webservice;
 
+import java.awt.Image;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -13,6 +19,8 @@ import javax.ws.rs.core.Response.Status;
 import ch.fhnw.modeller.model.model.Model;
 import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
 import ch.fhnw.modeller.webservice.dto.*;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -38,6 +46,9 @@ import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import ch.fhnw.modeller.persistence.GlobalVariables;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.impl.LiteralImpl;
+
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;  
+import org.glassfish.jersey.media.multipart.FormDataParam;  
 
 import static ch.fhnw.modeller.webservice.ontology.NAMESPACE.MODEL;
 
@@ -2787,4 +2798,69 @@ public class ModellingEnvironment {
 	        
 	        return response.build();
 	    }
+	    
+    @POST
+	@Path("/createNewImage")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response createNewIamge(@FormDataParam("image") InputStream newImageStream,  
+            @FormDataParam("image") FormDataContentDisposition fileDetail) {
+		System.out.println("\n####################<start>####################");
+		System.out.println("creatingNew Imageruuuuuuuuuzzzz" );
+		 String fileLocation = "src/main/resources/" + fileDetail.getFileName();  
+		try {
+            FileOutputStream out = new FileOutputStream(new File(fileLocation));  
+            int read = 0;  
+            byte[] bytes = new byte[1024];  
+            out = new FileOutputStream(new File(fileLocation));  
+            while ((read = newImageStream.read(bytes)) != -1) {  
+                out.write(bytes, 0, read);  
+            }  
+            out.flush();  
+            out.close();  
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
+		}
+		System.out.println("####################<end>####################");
+		/*Gson gson = new Gson();
+		ModelCreationDto modelCreationDto = gson.fromJson(json, ModelCreationDto.class);
+
+		String modelId = String.format("Model_%s", UUID.randomUUID().toString());
+
+		String command = String.format(
+				"INSERT DATA { " +
+				"%1$s:%2$s rdf:type %1$s:Model ." +
+				"%1$s:%2$s rdfs:label \"%3$s\" " +
+				"}",
+				MODEL.getPrefix(),
+				modelId,
+				modelCreationDto.getLabel());
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ontology.insertQuery(query);
+
+		String selectCommand = String.format(
+				"SELECT ?label " +
+						"WHERE { " +
+						"%1$s:%2$s rdf:type %1$s:Model . " +
+						"%1$s:%2$s rdfs:label ?label " +
+						"}",
+				MODEL.getPrefix(),
+				modelId);
+
+		ParameterizedSparqlString selectQuery = new ParameterizedSparqlString(selectCommand);
+		ResultSet resultSet = ontology.query(selectQuery).execSelect();
+
+		if (!resultSet.hasNext()) {
+			throw new IllegalStateException("created model can not be queried");
+		}
+
+		QuerySolution next = resultSet.next();
+		String label = extractValueFrom(next, "?label");
+		Model createdModel = new Model(modelId, label);
+
+		String payload = gson.toJson(createdModel);*/
+
+		return Response.status(Status.CREATED).build();
+	}
 }
