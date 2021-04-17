@@ -2806,7 +2806,7 @@ public class ModellingEnvironment {
             @FormDataParam("image") FormDataContentDisposition fileDetail) {
 		System.out.println("\n####################<start>####################");
 		System.out.println("creatingNew Imageruuuuuuuuuzzzz" );
-		 String fileLocation = "src/main/resources/" + fileDetail.getFileName();  
+		 String fileLocation = "../OntologyBasedModellingEnvironment-WebApp/src/assets/images/Uploaded/" + fileDetail.getFileName();  
 		try {
             FileOutputStream out = new FileOutputStream(new File(fileLocation));  
             int read = 0;  
