@@ -2822,45 +2822,35 @@ public class ModellingEnvironment {
 			System.out.println(e.getMessage());
 		}
 		System.out.println("####################<end>####################");
-		/*Gson gson = new Gson();
-		ModelCreationDto modelCreationDto = gson.fromJson(json, ModelCreationDto.class);
-
-		String modelId = String.format("Model_%s", UUID.randomUUID().toString());
-
-		String command = String.format(
-				"INSERT DATA { " +
-				"%1$s:%2$s rdf:type %1$s:Model ." +
-				"%1$s:%2$s rdfs:label \"%3$s\" " +
-				"}",
-				MODEL.getPrefix(),
-				modelId,
-				modelCreationDto.getLabel());
-
-		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ontology.insertQuery(query);
-
-		String selectCommand = String.format(
-				"SELECT ?label " +
-						"WHERE { " +
-						"%1$s:%2$s rdf:type %1$s:Model . " +
-						"%1$s:%2$s rdfs:label ?label " +
-						"}",
-				MODEL.getPrefix(),
-				modelId);
-
-		ParameterizedSparqlString selectQuery = new ParameterizedSparqlString(selectCommand);
-		ResultSet resultSet = ontology.query(selectQuery).execSelect();
-
-		if (!resultSet.hasNext()) {
-			throw new IllegalStateException("created model can not be queried");
-		}
-
-		QuerySolution next = resultSet.next();
-		String label = extractValueFrom(next, "?label");
-		Model createdModel = new Model(modelId, label);
-
-		String payload = gson.toJson(createdModel);*/
 
 		return Response.status(Status.CREATED).build();
+	}
+    
+    class image {
+    	String imageURL;
+    	String imageName;
+    	String label;
+    	String thumbnailURL;
+    	String thumbnailName;
+    	
+    	public image(String imageName) {
+    		this.imageURL = "../assets/images/Uploaded/" + imageName;
+    		this.imageName = imageName;
+    		this.label = imageName;
+    		this.thumbnailURL = this.imageURL;
+    		this.thumbnailName = imageName;
+    	}
+    }
+    @GET
+	@Path("/getUploadedImagePaths")
+	public Response getUploadedImagePaths() {
+    	File f = new File("../OntologyBasedModellingEnvironment-WebApp/src/assets/images/Uploaded/");
+
+        List<image> imageList = new ArrayList<ModellingEnvironment.image>();
+        
+        for(String pathName : f.list()) {
+        	imageList.add(new image(pathName));
+        }
+		return Response.status(Status.OK).entity(gson.toJson(imageList)).build();
 	}
 }
