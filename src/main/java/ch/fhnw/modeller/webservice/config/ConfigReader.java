@@ -59,7 +59,7 @@ public class ConfigReader {
 
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 
-			br.lines().filter(line -> !line.isBlank()).filter(line -> !line.startsWith(ConfigReader.COMMENT_PREFIX))
+			br.lines().filter(line -> !line.isEmpty()).filter(line -> !line.startsWith(ConfigReader.COMMENT_PREFIX))
 					.forEach(this::readLine);
 
 		} catch (IOException e) {
