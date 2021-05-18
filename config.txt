@@ -1,0 +1,2 @@
+# The endpoint of the fuseki triplestore.
+triplestoreEndpoint=http://localhost:3030/modellingEnvironment

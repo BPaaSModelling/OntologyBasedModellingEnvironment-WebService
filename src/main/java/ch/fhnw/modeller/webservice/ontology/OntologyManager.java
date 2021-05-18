@@ -13,7 +13,6 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
@@ -24,6 +23,8 @@ import org.apache.jena.update.UpdateFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 
+import ch.fhnw.modeller.webservice.config.ConfigReader;
+
 
 public final class OntologyManager {
 
@@ -31,9 +32,9 @@ public final class OntologyManager {
 	private boolean localOntology = true;
 	//private Model rdfModel;
 	
-	private static String TRIPLESTOREENDPOINT 	= "http://localhost:3030/modellingEnvironment"; // endpoint for standalone server
-	//private static String TRIPLESTOREENDPOINT 	= "https://fusekiherokutest.herokuapp.com/modellingEnvironment"; // endpoint for demo server on heroku
-	//private static String TRIPLESTOREENDPOINT 	= "https://aoame-fuseki.herokuapp.com/ModEnv"; // endpoint for deployment
+	// Read the endpoint from a config file. If it does not exist use localhost.
+	private static String TRIPLESTOREENDPOINT 	= ConfigReader.getInstance().getEntry("triplestoreEndpoint", "http://localhost:3030/modellingEnvironment"); 
+
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
 	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
 	private static String READENDPOINT			= TRIPLESTOREENDPOINT + "/get";
