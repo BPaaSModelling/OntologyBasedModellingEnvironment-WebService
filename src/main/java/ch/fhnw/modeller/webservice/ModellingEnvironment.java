@@ -2803,10 +2803,9 @@ public class ModellingEnvironment {
 	@Path("/createNewImage")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response createNewIamge(@FormDataParam("image") InputStream newImageStream,  
-            @FormDataParam("image") FormDataContentDisposition fileDetail) {
-		System.out.println("\n####################<start>####################");
-		System.out.println("creatingNew Imageruuuuuuuuuzzzz" );
-		 String fileLocation = "../OntologyBasedModellingEnvironment-WebApp/src/assets/images/Uploaded/" + fileDetail.getFileName();  
+            @FormDataParam("image") FormDataContentDisposition fileDetail,
+            @FormDataParam("prefix") String prefix) {
+		 String fileLocation = "../OntologyBasedModellingEnvironment-WebApp/src/assets/images/" + prefix + "/" + fileDetail.getFileName();  
 		try {
             FileOutputStream out = new FileOutputStream(new File(fileLocation));  
             int read = 0;  
@@ -2821,7 +2820,6 @@ public class ModellingEnvironment {
 			// TODO Auto-generated catch block
 			System.out.println(e.getMessage());
 		}
-		System.out.println("####################<end>####################");
 
 		return Response.status(Status.CREATED).build();
 	}
