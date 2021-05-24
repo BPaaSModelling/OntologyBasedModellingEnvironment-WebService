@@ -32,8 +32,7 @@ public final class OntologyManager {
 	private boolean localOntology = true;
 	//private Model rdfModel;
 	
-	// Read the endpoint from a config file. If it does not exist use localhost.
-	private static String TRIPLESTOREENDPOINT 	= ConfigReader.getInstance().getEntry("triplestoreEndpoint", "http://localhost:3030/modellingEnvironment"); 
+	private static String TRIPLESTOREENDPOINT 	= ConfigReader.getInstance().getEntry("TRIPLESTORE_ENDPOINT", "http://localhost:3030/modellingEnvironment"); 
 
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
 	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
