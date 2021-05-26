@@ -59,15 +59,15 @@ public class ModelElementDetailDto {
 
         abstractElementAttributes.getValues().forEach(modelElementAttribute -> {
             if ("modelingRelationHasSourceModelingElement".equals(modelElementAttribute.getRelation())) {
-                dto.setFromShape(modelElementAttribute.getValue());
+                dto.setFromShape(modelElementAttribute.getValue().split(":")[1]);
             }
 
             if ("modelingRelationHasTargetModelingElement".equals(modelElementAttribute.getRelation())) {
-                dto.setToShape(modelElementAttribute.getValue());
+                dto.setToShape(modelElementAttribute.getValue().split(":")[1]);
             }
 
             if ("modelingContainerContainsModelingLanguageConstruct".equals(modelElementAttribute.getRelation())) {
-                dto.addContainedShape(modelElementAttribute.getValue());
+                dto.addContainedShape(modelElementAttribute.getValue().split(":")[1]);
             }
         });
 
