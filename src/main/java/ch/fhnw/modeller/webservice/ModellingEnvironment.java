@@ -522,7 +522,14 @@ public class ModellingEnvironment {
 			options.add(relationDto);
 
 			if (actualValue != null) {
-				if (actualValue.indexOf("^^") == -1) {
+				boolean valueHasNamespace = false;
+
+				if (actualValue.contains("#")) {
+					String potentialNamespace = actualValue.split("#")[0];
+					valueHasNamespace = GlobalVariables.getPrefixMap().containsValue(potentialNamespace.concat("#"));
+				}
+
+				if (valueHasNamespace) {
 					ModelElementAttribute value = new ModelElementAttribute();
 					value.setRelation(relationDto.getRelation());
 					value.setRelationPrefix(relationDto.getRelationPrefix());
@@ -533,6 +540,11 @@ public class ModellingEnvironment {
 					ModelElementAttribute value = new ModelElementAttribute();
 					value.setRelation(relationDto.getRelation());
 					value.setRelationPrefix(relationDto.getRelationPrefix());
+
+					if (!actualValue.contains("#")) { // string typings are omitted and must be added manually
+						actualValue = actualValue.concat("^^" + NAMESPACE.XSD.getURI() + "string");
+					}
+
 					String key = actualValue.split("#")[0];
 					String primitiveValuePart = key.split("\\^\\^")[0];
 					String namespacePart = key.split("\\^\\^")[1];
