@@ -1859,7 +1859,7 @@ public class ModellingEnvironment {
 		System.out.println("test: "+pElement.getUuid());
 		querStr.append("INSERT DATA {");
 		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr.append("po:" + pElement.getUuid()  +" rdf:type " + "<http://fhnw.ch/modelingEnvironment/PaletteOntology#PaletteElement>" + " ;");
+		querStr.append("po:" + pElement.getUuid()  +" rdf:type po:" + pElement.getType() + " ;");
 		/*System.out.println("    Element Type: " + pElement.getClassType());
 			querStr.append("lo:graphicalElementClassType \"" + "<"+pElement.getClassType()+">" +"\" ;");*/
 		System.out.println("    Element Label: "+ pElement.getLabel());
@@ -1872,14 +1872,34 @@ public class ModellingEnvironment {
 		querStr.append("po:paletteConstructIsGroupedInPaletteCategory <" + pElement.getPaletteCategory() +"> ;");
 		//System.out.println("    Element UsesImage property: "+ pElement.getUsesImage());
 		//querStr.append("po:paletteElementUsesImage \"" + pElement.getUsesImage() +"\" ;"); //currently not used
-		System.out.println("    Element Palette Image : "+ pElement.getThumbnailURL());
-		querStr.append("po:paletteConstructHasPaletteThumbnail \"" + pElement.getThumbnailURL() +"\" ;");
-		System.out.println("    Element Canvas Image: "+ pElement.getImageURL());
-		querStr.append("po:paletteConstructHasModelImage \"" + pElement.getImageURL() +"\" ;");
-		System.out.println("    Element Image width: "+ pElement.getWidth());
-		querStr.append("po:paletteConstructHasWidth " + pElement.getWidth() +" ;");
-		System.out.println("    Element Image height: "+ pElement.getHeight());
-		querStr.append("po:paletteConstructHasHeight " + pElement.getHeight() +" ;");
+		
+		
+		
+		if( "PaletteElement".equals(pElement.getType()) ){
+			
+			System.out.println("    Element Palette Image : "+ pElement.getThumbnailURL());
+			querStr.append("po:paletteConstructHasPaletteThumbnail \"" + pElement.getThumbnailURL() +"\" ;");
+			System.out.println("    Element Canvas Image: "+ pElement.getImageURL());
+			querStr.append("po:paletteConstructHasModelImage \"" + pElement.getImageURL() +"\" ;");
+			System.out.println("    Element Image width: "+ pElement.getWidth());
+			querStr.append("po:paletteConstructHasWidth " + pElement.getWidth() +" ;");
+			System.out.println("    Element Image height: "+ pElement.getHeight());
+			querStr.append("po:paletteConstructHasHeight " + pElement.getHeight() +" ;");
+			
+		}else if( "PaletteConnector".equals(pElement.getType()) ) {
+			
+			System.out.println("    Element From Arrow: " + pElement.getFromArrow());
+			querStr.append("po:paletteConnectorConfiguresFromArrowHead po:" + pElement.getFromArrow() + ";");
+			System.out.println("    Element To Arrow: " + pElement.getToArrow());
+			querStr.append("po:paletteConnectorConfiguresToArrowHead po:" + pElement.getToArrow() + ";");
+			System.out.println("    Element Arrow Stroke: " + pElement.getArrowStroke());
+			querStr.append("po:paletteConnectorConfiguresArrowStroke po:" + pElement.getArrowStroke() + ";");
+			
+		}else {
+			System.err.println("Invalid element type: \"" + pElement.getType() + "\"");
+			return Response.status(Status.NOT_IMPLEMENTED).build();
+		}
+
 		System.out.println("    Element representedLanguage: "+ pElement.getRepresentedLanguageClass());
 		querStr.append("po:paletteConstructIsRelatedToModelingLanguageConstruct " + pElement.getRepresentedLanguageClass() +" ;");
 		//The below property is not needed any more as object properties will be added separately
