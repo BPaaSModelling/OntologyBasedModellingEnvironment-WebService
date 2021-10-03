@@ -32,6 +32,12 @@ public final class OntologyManager {
 	private boolean localOntology = true;
 	//private Model rdfModel;
 	
+	/**
+	 * The URL of the triplestore server.<br>
+	 * This variable gets set based on the environment variable TRIPLESTORE_ENDPOINT.<br>
+	 * If this environment variable does not exist it is assumed that the software is running
+	 * locally and <i>http://localhost:3030/ModEnv</i> is used.
+	 */
 	private static String TRIPLESTOREENDPOINT 	= ConfigReader.getInstance().getEntry("TRIPLESTORE_ENDPOINT", "http://localhost:3030/ModEnv"); 
 
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
