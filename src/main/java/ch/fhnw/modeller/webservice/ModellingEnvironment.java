@@ -1,8 +1,14 @@
 package ch.fhnw.modeller.webservice;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.*;
@@ -2798,6 +2804,14 @@ public class ModellingEnvironment {
 	}
 
 	@GET
+	@Path("/ping123")
+	public Response getTest() {
+		return Response.ok().entity("Service online").build();
+	}
+
+
+
+	@GET
 	@Path("/getNamespaceMap")
 	public Response getNamespaceMap() {
 		System.out.println("Returning namespace map: " + gson.toJson(GlobalVariables.getNamespaceMap()));
@@ -2819,4 +2833,234 @@ public class ModellingEnvironment {
 	        
 	        return response.build();
 	    }
+
+	@GET
+	@Path("getTTL")
+	public Response getRequestREADENDPOINT() throws IOException {
+
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+		//To close the connection, we can use the disconnect() method:
+
+		con.disconnect();
+
+		String payload = gson.toJson(content);
+		//return Response.ok().entity("Service online").build();
+		return Response.status(Status.OK).entity(payload).build();
+
+	}
+
+	/*@GET
+	@Path("getTTLAd")
+	public Response getRequestREADENDPOINTAdvanced() throws IOException {
+
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+		//To close the connection, we can use the disconnect() method:
+
+		con.disconnect();
+
+		String payload = gson.toJson(content);
+		//System.out.print(payload);
+
+		String sPrefix = NAMESPACE.BPMN.getPrefix();
+		//REGEX ESATTA
+		String sRegex= "\\\\r\\\\n(?s)cmmn:(.*?)\\.";
+
+		//String sRegex ="bpmn";
+		//String payload = "ne uovo ne";
+
+
+		Pattern pattern = Pattern.compile(sRegex);
+		Matcher matcher = pattern.matcher(payload);
+
+		String sResult ="";
+		// Check all occurrences
+		while (matcher.find()) {
+			sResult = sResult+matcher.group();
+		}
+
+		String replacedString = sResult.replace("\\r\\n", "\r\n");
+		String sResultOff= gson.toJson(replacedString);
+		//String sResultOff2= gson.toJson(sResultOff);
+		//sResult="'"+sResult+"'";
+		//return Response.ok().entity("Service online").build();
+		return Response.status(Status.OK).entity(sResultOff).build();
+
+	}
+*/
+//EXPORT AVANZATO CORRETTO
+	@GET
+	@Path("getTTLAd")
+	public Response getRequestREADENDPOINTAdvanced() throws IOException {
+
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+		//To close the connection, we can use the disconnect() method:
+
+		con.disconnect();
+
+		//String payload = gson.toJson(content);
+		//System.out.print(payload);
+		//REGEX ESATTA
+		String sRegex= "\\r\\n(?s)cmmn:(.*?)\\.";
+
+		//String sRegex ="bpmn";
+		//String payload = "ne uovo ne";
+
+
+		Pattern pattern = Pattern.compile(sRegex);
+		Matcher matcher = pattern.matcher(content);
+
+		String sResult ="";
+		// Check all occurrences
+		while (matcher.find()) {
+			sResult = sResult+matcher.group();
+		}
+
+
+		String prefixxino="";
+
+
+		for (NAMESPACE day : NAMESPACE.values()) {
+
+			prefixxino=prefixxino+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
+			//System.out.println(day);
+		}
+
+
+		//String sPrefix = NAMESPACE.BPMN.getPrefix();
+		//String sNamespace = NAMESPACE.CMMN.getURI();
+
+		//String replacedString = sResult.replace("\\r\\n", "\r\n");
+		//String sResultOff= gson.toJson(replacedString);
+		//String sResultOff2= gson.toJson(sResultOff);
+		//sResult="'"+sResult+"'";
+		//return Response.ok().entity("Service online").build();
+		prefixxino=prefixxino+sResult;
+		String sResultJson=gson.toJson(prefixxino);
+
+		return Response.status(Status.OK).entity(sResultJson).build();
+
+	}
+
+//TENTATIVO DI POST
+	@POST
+	@Path("getTTLAdwithDistinction")
+	public Response getRequestREADENDPOINTAdvancedwithDistinction(String sPrefix) throws IOException {
+
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+		//To close the connection, we can use the disconnect() method:
+
+		con.disconnect();
+
+		String sPrefixForRegex = sPrefix;
+		//REGEX ESATTA
+		String sRegex= "\\r\\n(?s)"+sPrefixForRegex+":(.*?) \\.";
+
+		Pattern pattern = Pattern.compile(sRegex);
+		Matcher matcher = pattern.matcher(content);
+
+		String sResult ="";
+		// Check all occurrences
+		while (matcher.find()) {
+			sResult = sResult+matcher.group();
+
+		}
+
+
+		String prefixxino="";
+
+
+		for (NAMESPACE day : NAMESPACE.values()) {
+
+			prefixxino=prefixxino+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
+		}
+		prefixxino=prefixxino+sResult;
+		String sResultJson=gson.toJson(prefixxino);
+
+		return Response.status(Status.OK).entity(sResultJson).build();
+
+	}
+
+
+
+
 }
