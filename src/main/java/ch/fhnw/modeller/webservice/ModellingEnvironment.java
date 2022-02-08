@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import ch.fhnw.modeller.model.LanguageSelected;
 import ch.fhnw.modeller.model.model.Model;
 import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
 import ch.fhnw.modeller.webservice.dto.*;
@@ -2976,12 +2977,12 @@ public class ModellingEnvironment {
 		}
 
 
-		String prefixxino="";
+		String sPrefixNamespace="";
 
 
 		for (NAMESPACE day : NAMESPACE.values()) {
 
-			prefixxino=prefixxino+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
+			sPrefixNamespace=sPrefixNamespace+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
 			//System.out.println(day);
 		}
 
@@ -2994,8 +2995,8 @@ public class ModellingEnvironment {
 		//String sResultOff2= gson.toJson(sResultOff);
 		//sResult="'"+sResult+"'";
 		//return Response.ok().entity("Service online").build();
-		prefixxino=prefixxino+sResult;
-		String sResultJson=gson.toJson(prefixxino);
+		sPrefixNamespace=sPrefixNamespace+sResult;
+		String sResultJson=gson.toJson(sPrefixNamespace);
 
 		return Response.status(Status.OK).entity(sResultJson).build();
 
@@ -3046,6 +3047,147 @@ public class ModellingEnvironment {
 		}
 
 
+		String sPrefixNamespace="";
+
+
+		for (NAMESPACE day : NAMESPACE.values()) {
+
+			sPrefixNamespace=sPrefixNamespace+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
+		}
+		sPrefixNamespace=sPrefixNamespace+sResult;
+		String sResultJson=gson.toJson(sPrefixNamespace);
+
+		return Response.status(Status.OK).entity(sResultJson).build();
+
+	}
+
+	@POST
+	@Path("getTTLAdwithDistinction2")
+	public Response getRequestREADENDPOINTAdvancedwithDistinction2(List <String> sPrefix) throws IOException {
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+		//To close the connection, we can use the disconnect() method:
+
+		con.disconnect();
+		String sFinalResult = "";
+		for (String element : sPrefix
+		) {
+
+
+
+		String sPrefixForRegex = element;
+		//REGEX ESATTA
+		String sRegex = "\\r\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
+
+		Pattern pattern = Pattern.compile(sRegex);
+		Matcher matcher = pattern.matcher(content);
+
+		String sResult = "";
+		// Check all occurrences
+		while (matcher.find()) {
+			sResult = sResult + matcher.group();
+
+		}
+
+
+		sFinalResult = sFinalResult + sResult;
+	}
+
+
+
+		String sPrefixNamespace="";
+
+
+
+		for (NAMESPACE day : NAMESPACE.values()) {
+
+			sPrefixNamespace=sPrefixNamespace+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
+		}
+		sPrefixNamespace=sPrefixNamespace+sFinalResult;
+		String sResultJson=gson.toJson(sPrefixNamespace);
+
+		return Response.status(Status.OK).entity(sResultJson).build();
+
+	}
+
+
+	/*@POST
+	@Path("getTTLAdwithDistinction3")
+	public Response getRequestREADENDPOINTAdvancedwithDistinction2(String json) throws IOException {
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		String sFINALRESULT = "";
+
+		Gson gson = new Gson(); // Or use new GsonBuilder().create();
+		LanguageSelected languageS = gson.fromJson(json, LanguageSelected.class);
+
+
+
+		for(String element : sPrefix ){
+
+			BufferedReader in = new BufferedReader(
+					new InputStreamReader(con.getInputStream()));
+			String inputLine;
+			StringBuffer content = new StringBuffer();
+			while ((inputLine = in.readLine()) != null) {
+				content.append(inputLine);
+				content.append(System.getProperty("line.separator"));
+			}
+			in.close();
+			//To close the connection, we can use the disconnect() method:
+
+			con.disconnect();
+
+			String sPrefixForRegex = element;
+			//REGEX ESATTA
+			String sRegex= "\\r\\n(?s)"+sPrefixForRegex+":(.*?) \\.";
+
+			Pattern pattern = Pattern.compile(sRegex);
+			Matcher matcher = pattern.matcher(content);
+
+			String sResult ="";
+			// Check all occurrences
+			while (matcher.find()) {
+				sResult = sResult+matcher.group();
+
+			}
+
+			sFINALRESULT = sFINALRESULT+sResult;
+
+
+		}
+
 		String prefixxino="";
 
 
@@ -3053,12 +3195,16 @@ public class ModellingEnvironment {
 
 			prefixxino=prefixxino+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
 		}
-		prefixxino=prefixxino+sResult;
+		prefixxino=prefixxino+sFINALRESULT;
 		String sResultJson=gson.toJson(prefixxino);
 
 		return Response.status(Status.OK).entity(sResultJson).build();
 
 	}
+
+*/
+
+
 
 
 
