@@ -2848,7 +2848,6 @@ public class ModellingEnvironment {
 
 
 		int status = con.getResponseCode();
-		//Finally, let's read the response of the request and place it in a content String:
 
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(con.getInputStream()));
@@ -2859,150 +2858,18 @@ public class ModellingEnvironment {
 			content.append(System.getProperty("line.separator"));
 		}
 		in.close();
-		//To close the connection, we can use the disconnect() method:
 
 		con.disconnect();
 
 		String payload = gson.toJson(content);
-		//return Response.ok().entity("Service online").build();
 		return Response.status(Status.OK).entity(payload).build();
 
 	}
 
-	/*@GET
-	@Path("getTTLAd")
-	public Response getRequestREADENDPOINTAdvanced() throws IOException {
 
 
-		URL url = new URL(OntologyManager.getREADENDPOINT());
-		HttpURLConnection con = (HttpURLConnection) url.openConnection();
-		con.setRequestMethod("GET");
-
-		con.setRequestProperty("Content-Type", "text/trig");
-		String contentType = con.getHeaderField("Content-Type");
-
-
-		int status = con.getResponseCode();
-		//Finally, let's read the response of the request and place it in a content String:
-
-		BufferedReader in = new BufferedReader(
-				new InputStreamReader(con.getInputStream()));
-		String inputLine;
-		StringBuffer content = new StringBuffer();
-		while ((inputLine = in.readLine()) != null) {
-			content.append(inputLine);
-			content.append(System.getProperty("line.separator"));
-		}
-		in.close();
-		//To close the connection, we can use the disconnect() method:
-
-		con.disconnect();
-
-		String payload = gson.toJson(content);
-		//System.out.print(payload);
-
-		String sPrefix = NAMESPACE.BPMN.getPrefix();
-		//REGEX ESATTA
-		String sRegex= "\\\\r\\\\n(?s)cmmn:(.*?)\\.";
-
-		//String sRegex ="bpmn";
-		//String payload = "ne uovo ne";
-
-
-		Pattern pattern = Pattern.compile(sRegex);
-		Matcher matcher = pattern.matcher(payload);
-
-		String sResult ="";
-		// Check all occurrences
-		while (matcher.find()) {
-			sResult = sResult+matcher.group();
-		}
-
-		String replacedString = sResult.replace("\\r\\n", "\r\n");
-		String sResultOff= gson.toJson(replacedString);
-		//String sResultOff2= gson.toJson(sResultOff);
-		//sResult="'"+sResult+"'";
-		//return Response.ok().entity("Service online").build();
-		return Response.status(Status.OK).entity(sResultOff).build();
-
-	}
-*/
-//EXPORT AVANZATO CORRETTO
-	@GET
-	@Path("getTTLAd")
-	public Response getRequestREADENDPOINTAdvanced() throws IOException {
-
-
-		URL url = new URL(OntologyManager.getREADENDPOINT());
-		HttpURLConnection con = (HttpURLConnection) url.openConnection();
-		con.setRequestMethod("GET");
-
-		con.setRequestProperty("Content-Type", "text/trig");
-		String contentType = con.getHeaderField("Content-Type");
-
-
-		int status = con.getResponseCode();
-		//Finally, let's read the response of the request and place it in a content String:
-
-		BufferedReader in = new BufferedReader(
-				new InputStreamReader(con.getInputStream()));
-		String inputLine;
-		StringBuffer content = new StringBuffer();
-		while ((inputLine = in.readLine()) != null) {
-			content.append(inputLine);
-			content.append(System.getProperty("line.separator"));
-		}
-		in.close();
-		//To close the connection, we can use the disconnect() method:
-
-		con.disconnect();
-
-		//String payload = gson.toJson(content);
-		//System.out.print(payload);
-		//REGEX ESATTA
-		String sRegex= "\\r\\n(?s)cmmn:(.*?)\\.";
-
-		//String sRegex ="bpmn";
-		//String payload = "ne uovo ne";
-
-
-		Pattern pattern = Pattern.compile(sRegex);
-		Matcher matcher = pattern.matcher(content);
-
-		String sResult ="";
-		// Check all occurrences
-		while (matcher.find()) {
-			sResult = sResult+matcher.group();
-		}
-
-
-		String sPrefixNamespace="";
-
-
-		for (NAMESPACE day : NAMESPACE.values()) {
-
-			sPrefixNamespace=sPrefixNamespace+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
-			//System.out.println(day);
-		}
-
-
-		//String sPrefix = NAMESPACE.BPMN.getPrefix();
-		//String sNamespace = NAMESPACE.CMMN.getURI();
-
-		//String replacedString = sResult.replace("\\r\\n", "\r\n");
-		//String sResultOff= gson.toJson(replacedString);
-		//String sResultOff2= gson.toJson(sResultOff);
-		//sResult="'"+sResult+"'";
-		//return Response.ok().entity("Service online").build();
-		sPrefixNamespace=sPrefixNamespace+sResult;
-		String sResultJson=gson.toJson(sPrefixNamespace);
-
-		return Response.status(Status.OK).entity(sResultJson).build();
-
-	}
-
-//TENTATIVO DI POST
-	@POST
+//Export based on a single prefix
+/*	@POST
 	@Path("getTTLAdwithDistinction")
 	public Response getRequestREADENDPOINTAdvancedwithDistinction(String sPrefix) throws IOException {
 
@@ -3016,7 +2883,6 @@ public class ModellingEnvironment {
 
 
 		int status = con.getResponseCode();
-		//Finally, let's read the response of the request and place it in a content String:
 
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(con.getInputStream()));
@@ -3027,12 +2893,11 @@ public class ModellingEnvironment {
 			content.append(System.getProperty("line.separator"));
 		}
 		in.close();
-		//To close the connection, we can use the disconnect() method:
 
 		con.disconnect();
 
 		String sPrefixForRegex = sPrefix;
-		//REGEX ESATTA
+
 		String sRegex= "\\r\\n(?s)"+sPrefixForRegex+":(.*?) \\.";
 
 		Pattern pattern = Pattern.compile(sRegex);
@@ -3045,9 +2910,7 @@ public class ModellingEnvironment {
 
 		}
 
-
 		String sPrefixNamespace="";
-
 
 		for (NAMESPACE day : NAMESPACE.values()) {
 
@@ -3059,7 +2922,7 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity(sResultJson).build();
 
 	}
-
+*/
 	@POST
 	@Path("getTTLAdwithDistinction2")
 	public Response getRequestREADENDPOINTAdvancedwithDistinction2(List <String> sPrefix) throws IOException {
@@ -3073,7 +2936,6 @@ public class ModellingEnvironment {
 
 
 		int status = con.getResponseCode();
-		//Finally, let's read the response of the request and place it in a content String:
 
 
 
@@ -3086,11 +2948,10 @@ public class ModellingEnvironment {
 			content.append(System.getProperty("line.separator"));
 		}
 		in.close();
-		//To close the connection, we can use the disconnect() method:
 
 		con.disconnect();
-		//String sFinalResult = "";
-//ATTEMPT FOR GETTING PREFIXES FROM TTL
+
+// GETPREFIXES FROM TTL
         String sRegex = "@prefix(.*?) \\.";
 
         Pattern pattern = Pattern.compile(sRegex);
@@ -3102,17 +2963,9 @@ public class ModellingEnvironment {
             sResult = sResult + matcher.group()+"\r\n";
 
         }
-
-
-
-
 		for (String element : sPrefix
 		) {
-
-
-
 		String sPrefixForRegex = element;
-		//REGEX ESATTA
 		String sRegex2 = "\\r\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
 
 		Pattern pattern2 = Pattern.compile(sRegex2);
@@ -3121,24 +2974,8 @@ public class ModellingEnvironment {
 		// Check all occurrences
 		while (matcher2.find()) {
 			sResult = sResult + matcher2.group();
-
 		}
-
-
-		//sFinalResult = sFinalResult + sResult;
 	}
-
-
-
-		/*String sPrefixNamespace="";
-
-
-
-		for (NAMESPACE day : NAMESPACE.values()) {
-
-			sPrefixNamespace=sPrefixNamespace+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
-		}
-		sPrefixNamespace=sPrefixNamespace+sFinalResult;*/
 		String sResultJson=gson.toJson(sResult);
 
 		return Response.status(Status.OK).entity(sResultJson).build();
@@ -3174,25 +3011,15 @@ public class ModellingEnvironment {
 
 		con.disconnect();
 
-		//String payload = gson.toJson(content);
-		//System.out.print(payload);
-		//REGEX ESATTA
+
 		String sRegex= "\\r\\n(?s)([^@ ].*?):";
-
-		//String sRegex ="bpmn";
-		//String payload = "ne uovo ne";
-
 
 		Pattern pattern = Pattern.compile(sRegex);
 		Matcher matcher = pattern.matcher(content);
 
-
-
 		String sResult ="";
 		// Check all occurrences
-
 		while (matcher.find()) {
-		//	sResult = sResult+matcher.group();
 
 			if(!sResult.contains(matcher.group())){
 
@@ -3202,98 +3029,13 @@ public class ModellingEnvironment {
 
 			}
 
-
-		//System.out.println(sResult);
 		sResult=sResult.replace("\r\n","");
 
 		sResult=sResult.replace(":",",");
 		String jsonPrefixes = new Gson().toJson(sResult);
-		
 
 		return Response.status(Status.OK).entity(jsonPrefixes).build();
 
 	}
-
-
-
-
-
-
-	/*@POST
-	@Path("getTTLAdwithDistinction3")
-	public Response getRequestREADENDPOINTAdvancedwithDistinction2(String json) throws IOException {
-
-		URL url = new URL(OntologyManager.getREADENDPOINT());
-		HttpURLConnection con = (HttpURLConnection) url.openConnection();
-		con.setRequestMethod("GET");
-
-		con.setRequestProperty("Content-Type", "text/trig");
-		String contentType = con.getHeaderField("Content-Type");
-
-
-		int status = con.getResponseCode();
-		//Finally, let's read the response of the request and place it in a content String:
-
-		String sFINALRESULT = "";
-
-		Gson gson = new Gson(); // Or use new GsonBuilder().create();
-		LanguageSelected languageS = gson.fromJson(json, LanguageSelected.class);
-
-
-
-		for(String element : sPrefix ){
-
-			BufferedReader in = new BufferedReader(
-					new InputStreamReader(con.getInputStream()));
-			String inputLine;
-			StringBuffer content = new StringBuffer();
-			while ((inputLine = in.readLine()) != null) {
-				content.append(inputLine);
-				content.append(System.getProperty("line.separator"));
-			}
-			in.close();
-			//To close the connection, we can use the disconnect() method:
-
-			con.disconnect();
-
-			String sPrefixForRegex = element;
-			//REGEX ESATTA
-			String sRegex= "\\r\\n(?s)"+sPrefixForRegex+":(.*?) \\.";
-
-			Pattern pattern = Pattern.compile(sRegex);
-			Matcher matcher = pattern.matcher(content);
-
-			String sResult ="";
-			// Check all occurrences
-			while (matcher.find()) {
-				sResult = sResult+matcher.group();
-
-			}
-
-			sFINALRESULT = sFINALRESULT+sResult;
-
-
-		}
-
-		String prefixxino="";
-
-
-		for (NAMESPACE day : NAMESPACE.values()) {
-
-			prefixxino=prefixxino+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
-		}
-		prefixxino=prefixxino+sFINALRESULT;
-		String sResultJson=gson.toJson(prefixxino);
-
-		return Response.status(Status.OK).entity(sResultJson).build();
-
-	}
-
-*/
-
-
-
-
-
 
 }
