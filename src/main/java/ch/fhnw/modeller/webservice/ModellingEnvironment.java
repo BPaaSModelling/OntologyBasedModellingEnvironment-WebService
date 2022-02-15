@@ -16,7 +16,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
-import ch.fhnw.modeller.model.LanguageSelected;
 import ch.fhnw.modeller.model.model.Model;
 import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
 import ch.fhnw.modeller.webservice.dto.*;
@@ -3090,7 +3089,23 @@ public class ModellingEnvironment {
 		//To close the connection, we can use the disconnect() method:
 
 		con.disconnect();
-		String sFinalResult = "";
+		//String sFinalResult = "";
+//ATTEMPT FOR GETTING PREFIXES FROM TTL
+        String sRegex = "@prefix(.*?) \\.";
+
+        Pattern pattern = Pattern.compile(sRegex);
+        Matcher matcher = pattern.matcher(content);
+
+        String sResult = "";
+        // Check all occurrences
+        while (matcher.find()) {
+            sResult = sResult + matcher.group()+"\r\n";
+
+        }
+
+
+
+
 		for (String element : sPrefix
 		) {
 
@@ -3098,25 +3113,24 @@ public class ModellingEnvironment {
 
 		String sPrefixForRegex = element;
 		//REGEX ESATTA
-		String sRegex = "\\r\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
+		String sRegex2 = "\\r\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
 
-		Pattern pattern = Pattern.compile(sRegex);
-		Matcher matcher = pattern.matcher(content);
+		Pattern pattern2 = Pattern.compile(sRegex2);
+		Matcher matcher2 = pattern2.matcher(content);
 
-		String sResult = "";
 		// Check all occurrences
-		while (matcher.find()) {
-			sResult = sResult + matcher.group();
+		while (matcher2.find()) {
+			sResult = sResult + matcher2.group();
 
 		}
 
 
-		sFinalResult = sFinalResult + sResult;
+		//sFinalResult = sFinalResult + sResult;
 	}
 
 
 
-		String sPrefixNamespace="";
+		/*String sPrefixNamespace="";
 
 
 
@@ -3124,12 +3138,85 @@ public class ModellingEnvironment {
 
 			sPrefixNamespace=sPrefixNamespace+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
 		}
-		sPrefixNamespace=sPrefixNamespace+sFinalResult;
-		String sResultJson=gson.toJson(sPrefixNamespace);
+		sPrefixNamespace=sPrefixNamespace+sFinalResult;*/
+		String sResultJson=gson.toJson(sResult);
 
 		return Response.status(Status.OK).entity(sResultJson).build();
 
 	}
+
+	@GET
+	@Path("getPrefixesFromFuseki")
+	public Response getPrefixesFromFuseki() throws IOException {
+
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+		//To close the connection, we can use the disconnect() method:
+
+		con.disconnect();
+
+		//String payload = gson.toJson(content);
+		//System.out.print(payload);
+		//REGEX ESATTA
+		String sRegex= "\\r\\n(?s)([^@ ].*?):";
+
+		//String sRegex ="bpmn";
+		//String payload = "ne uovo ne";
+
+
+		Pattern pattern = Pattern.compile(sRegex);
+		Matcher matcher = pattern.matcher(content);
+
+
+
+		String sResult ="";
+		// Check all occurrences
+
+		while (matcher.find()) {
+		//	sResult = sResult+matcher.group();
+
+			if(!sResult.contains(matcher.group())){
+
+				sResult=sResult+matcher.group();
+
+			}
+
+			}
+
+
+		//System.out.println(sResult);
+		sResult=sResult.replace("\r\n","");
+
+		sResult=sResult.replace(":",",");
+		String jsonPrefixes = new Gson().toJson(sResult);
+		
+
+		return Response.status(Status.OK).entity(jsonPrefixes).build();
+
+	}
+
+
+
+
 
 
 	/*@POST
