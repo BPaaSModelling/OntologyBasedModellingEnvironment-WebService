@@ -1,8 +1,14 @@
 package ch.fhnw.modeller.webservice;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.*;
@@ -2798,6 +2804,14 @@ public class ModellingEnvironment {
 	}
 
 	@GET
+	@Path("/ping123")
+	public Response getTest() {
+		return Response.ok().entity("Service online").build();
+	}
+
+
+
+	@GET
 	@Path("/getNamespaceMap")
 	public Response getNamespaceMap() {
 		System.out.println("Returning namespace map: " + gson.toJson(GlobalVariables.getNamespaceMap()));
@@ -2819,4 +2833,209 @@ public class ModellingEnvironment {
 	        
 	        return response.build();
 	    }
+
+	@GET
+	@Path("getTTL")
+	public Response getRequestREADENDPOINT() throws IOException {
+
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+
+		con.disconnect();
+
+		String payload = gson.toJson(content);
+		return Response.status(Status.OK).entity(payload).build();
+
+	}
+
+
+
+//Export based on a single prefix
+/*	@POST
+	@Path("getTTLAdwithDistinction")
+	public Response getRequestREADENDPOINTAdvancedwithDistinction(String sPrefix) throws IOException {
+
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+
+		con.disconnect();
+
+		String sPrefixForRegex = sPrefix;
+
+		String sRegex= "\\r\\n(?s)"+sPrefixForRegex+":(.*?) \\.";
+
+		Pattern pattern = Pattern.compile(sRegex);
+		Matcher matcher = pattern.matcher(content);
+
+		String sResult ="";
+		// Check all occurrences
+		while (matcher.find()) {
+			sResult = sResult+matcher.group();
+
+		}
+
+		String sPrefixNamespace="";
+
+		for (NAMESPACE day : NAMESPACE.values()) {
+
+			sPrefixNamespace=sPrefixNamespace+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
+		}
+		sPrefixNamespace=sPrefixNamespace+sResult;
+		String sResultJson=gson.toJson(sPrefixNamespace);
+
+		return Response.status(Status.OK).entity(sResultJson).build();
+
+	}
+*/
+	@POST
+	@Path("getTTLAdwithDistinction2")
+	public Response getRequestREADENDPOINTAdvancedwithDistinction2(List <String> sPrefix) throws IOException {
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+
+
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+
+		con.disconnect();
+
+// GETPREFIXES FROM TTL
+        String sRegex = "@prefix(.*?) \\.";
+
+        Pattern pattern = Pattern.compile(sRegex);
+        Matcher matcher = pattern.matcher(content);
+
+        String sResult = "";
+        // Check all occurrences
+        while (matcher.find()) {
+            sResult = sResult + matcher.group()+"\r\n";
+
+        }
+		for (String element : sPrefix
+		) {
+		String sPrefixForRegex = element;
+		String sRegex2 = "\\r\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
+
+		Pattern pattern2 = Pattern.compile(sRegex2);
+		Matcher matcher2 = pattern2.matcher(content);
+
+		// Check all occurrences
+		while (matcher2.find()) {
+			sResult = sResult + matcher2.group();
+		}
+	}
+		String sResultJson=gson.toJson(sResult);
+
+		return Response.status(Status.OK).entity(sResultJson).build();
+
+	}
+
+	@GET
+	@Path("getPrefixesFromFuseki")
+	public Response getPrefixesFromFuseki() throws IOException {
+
+
+		URL url = new URL(OntologyManager.getREADENDPOINT());
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		in.close();
+		//To close the connection, we can use the disconnect() method:
+
+		con.disconnect();
+
+
+		String sRegex= "\\r\\n(?s)([^@ ].*?):";
+
+		Pattern pattern = Pattern.compile(sRegex);
+		Matcher matcher = pattern.matcher(content);
+
+		String sResult ="";
+		// Check all occurrences
+		while (matcher.find()) {
+
+			if(!sResult.contains(matcher.group())){
+
+				sResult=sResult+matcher.group();
+
+			}
+
+			}
+
+		sResult=sResult.replace("\r\n","");
+
+		sResult=sResult.replace(":",",");
+		String jsonPrefixes = new Gson().toJson(sResult);
+
+		return Response.status(Status.OK).entity(jsonPrefixes).build();
+
+	}
+
 }
