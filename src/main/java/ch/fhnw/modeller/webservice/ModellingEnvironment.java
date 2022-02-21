@@ -3042,6 +3042,7 @@ public class ModellingEnvironment {
 	@Path("getPrefixesFromFuseki2")
 	public Response getPrefixesFromFuseki2() throws IOException {
 
+		System.out.println("Prefix 2 function active");
 
 		URL url = new URL(OntologyManager.getREADENDPOINT());
 		HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -3052,7 +3053,6 @@ public class ModellingEnvironment {
 
 
 		int status = con.getResponseCode();
-		//Finally, let's read the response of the request and place it in a content String:
 
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(con.getInputStream()));
@@ -3063,13 +3063,11 @@ public class ModellingEnvironment {
 			content.append(System.getProperty("line.separator"));
 		}
 		in.close();
-		//To close the connection, we can use the disconnect() method:
 
 		con.disconnect();
 
-		String jsonPrefixes = new Gson().toJson(content);
-
-		return Response.status(Status.OK).entity(jsonPrefixes).build();
-
+		String payload = gson.toJson(content);
+		System.out.println("Reached end of function");
+		return Response.status(Status.OK).entity(payload).build();
 	}
 }
