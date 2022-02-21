@@ -3087,7 +3087,7 @@ public class ModellingEnvironment {
 		System.out.println("Questo è il contenuto di sResult dopo la regex: "+sResult);
 
 		//sResult= sRegex;
-		sResult=sResult.replace("\r\n","");
+		sResult=sResult.replace("\n","");
 
 		sResult=sResult.replace(":",",");
 		String jsonPrefixes = gson.toJson(sResult);
