@@ -3032,7 +3032,7 @@ public class ModellingEnvironment {
 		sResult=sResult.replace("\r\n","");
 
 		sResult=sResult.replace(":",",");
-		String jsonPrefixes = new Gson().toJson(sResult);
+		String jsonPrefixes = gson.toJson(sResult);
 
 		return Response.status(Status.OK).entity(jsonPrefixes).build();
 
