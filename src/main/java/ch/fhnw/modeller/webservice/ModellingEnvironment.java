@@ -3067,7 +3067,7 @@ public class ModellingEnvironment {
 		con.disconnect();
 
 		System.out.println("Prima della regex: "+content);
-		String sRegex= "(?s)([^@ ].*?):";
+		String sRegex= "\\n(?s)([^@ ].*?):";
 
 
 		Pattern pattern = Pattern.compile(sRegex);
