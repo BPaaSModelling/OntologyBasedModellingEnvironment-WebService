@@ -3067,14 +3067,14 @@ public class ModellingEnvironment {
 		con.disconnect();
 
 		System.out.println("Prima della regex: "+content);
-		String sRegex= "\\r\\n(?s)([^@ ].*?):";
+		String sRegex= "@prefix(.*?) \\.";
 
 		Pattern pattern = Pattern.compile(sRegex);
 		Matcher matcher = pattern.matcher(content);
 
 		String sResult ="";
 		// Check all occurrences
-		/*while (matcher.find()) {
+		while (matcher.find()) {
 
 			if(!sResult.contains(matcher.group())){
 
@@ -3082,10 +3082,10 @@ public class ModellingEnvironment {
 
 			}
 
-		}*/
+		}
 		System.out.println("Questo è il contenuto di sResult dopo la regex: "+sResult);
 
-		sResult= sRegex;
+		//sResult= sRegex;
 		sResult=sResult.replace("\r\n","");
 
 		sResult=sResult.replace(":",",");
