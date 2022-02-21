@@ -3067,7 +3067,8 @@ public class ModellingEnvironment {
 		con.disconnect();
 
 		System.out.println("Prima della regex: "+content);
-		String sRegex= "@prefix(.*?) \\.";
+		String sRegex= "(?s)([^@ ].*?):";
+
 
 		Pattern pattern = Pattern.compile(sRegex);
 		Matcher matcher = pattern.matcher(content);
