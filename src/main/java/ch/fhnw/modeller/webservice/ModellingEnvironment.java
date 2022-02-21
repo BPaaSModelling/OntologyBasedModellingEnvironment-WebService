@@ -3074,7 +3074,7 @@ public class ModellingEnvironment {
 
 		String sResult ="";
 		// Check all occurrences
-		while (matcher.find()) {
+		/*while (matcher.find()) {
 
 			if(!sResult.contains(matcher.group())){
 
@@ -3082,10 +3082,10 @@ public class ModellingEnvironment {
 
 			}
 
-		}
+		}*/
 		System.out.println("Questo è il contenuto di sResult dopo la regex: "+sResult);
 
-
+		sResult= sRegex;
 		sResult=sResult.replace("\r\n","");
 
 		sResult=sResult.replace(":",",");
