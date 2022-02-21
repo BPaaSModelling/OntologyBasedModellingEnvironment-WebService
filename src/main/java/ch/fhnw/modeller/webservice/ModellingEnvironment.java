@@ -2960,15 +2960,21 @@ public class ModellingEnvironment {
         String sResult = "";
         // Check all occurrences
         while (matcher.find()) {
-            sResult = sResult + matcher.group()+"\r\n";
+			//for local version
+            //sResult = sResult + matcher.group()+"\r\n";
 
-        }
+			//for deployed
+			sResult = sResult + matcher.group()+"\n";
+
+		}
 		for (String element : sPrefix
 		) {
 		String sPrefixForRegex = element;
-		String sRegex2 = "\\r\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
-
-		Pattern pattern2 = Pattern.compile(sRegex2);
+		//this is for local version
+		//String sRegex2 = "\\r\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
+		//this is for deployed app
+			String sRegex2 = "\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
+			Pattern pattern2 = Pattern.compile(sRegex2);
 		Matcher matcher2 = pattern2.matcher(content);
 
 		// Check all occurrences
