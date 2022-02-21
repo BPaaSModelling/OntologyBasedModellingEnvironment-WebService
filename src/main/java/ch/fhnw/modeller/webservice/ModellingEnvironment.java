@@ -3042,8 +3042,6 @@ public class ModellingEnvironment {
 	@Path("getPrefixesFromFuseki2")
 	public Response getPrefixesFromFuseki2() throws IOException {
 
-		System.out.println("Prefix 2 function active");
-
 		URL url = new URL(OntologyManager.getREADENDPOINT());
 		HttpURLConnection con = (HttpURLConnection) url.openConnection();
 		con.setRequestMethod("GET");
@@ -3053,6 +3051,7 @@ public class ModellingEnvironment {
 
 
 		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
 
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(con.getInputStream()));
@@ -3063,11 +3062,33 @@ public class ModellingEnvironment {
 			content.append(System.getProperty("line.separator"));
 		}
 		in.close();
+		//To close the connection, we can use the disconnect() method:
 
 		con.disconnect();
 
-		String payload = gson.toJson(content);
-		System.out.println("Reached end of function");
-		return Response.status(Status.OK).entity(payload).build();
+
+		String sRegex= "\\r\\n(?s)([^@ ].*?):";
+
+		Pattern pattern = Pattern.compile(sRegex);
+		Matcher matcher = pattern.matcher(content);
+
+		String sResult ="";
+		// Check all occurrences
+		while (matcher.find()) {
+
+			if(!sResult.contains(matcher.group())){
+
+				sResult=sResult+matcher.group();
+
+			}
+
+		}
+
+		//sResult=sResult.replace("\r\n","");
+
+		//sResult=sResult.replace(":",",");
+		String jsonPrefixes = gson.toJson(sResult);
+
+		return Response.status(Status.OK).entity(jsonPrefixes).build();
 	}
 }
