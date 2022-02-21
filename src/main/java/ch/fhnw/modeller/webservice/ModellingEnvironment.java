@@ -3066,7 +3066,7 @@ public class ModellingEnvironment {
 
 		con.disconnect();
 
-
+		System.out.println("Prima della regex: "+content);
 		String sRegex= "\\r\\n(?s)([^@ ].*?):";
 
 		Pattern pattern = Pattern.compile(sRegex);
@@ -3083,11 +3083,14 @@ public class ModellingEnvironment {
 			}
 
 		}
+		System.out.println("Questo è il contenuto di sResult dopo la regex: "+sResult);
 
-		//sResult=sResult.replace("\r\n","");
 
-		//sResult=sResult.replace(":",",");
+		sResult=sResult.replace("\r\n","");
+
+		sResult=sResult.replace(":",",");
 		String jsonPrefixes = gson.toJson(sResult);
+		System.out.println("Questo è il contenuto Json alla fine: "+jsonPrefixes);
 
 		return Response.status(Status.OK).entity(jsonPrefixes).build();
 	}
