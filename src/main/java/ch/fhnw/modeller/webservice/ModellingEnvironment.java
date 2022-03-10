@@ -44,6 +44,8 @@ import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import ch.fhnw.modeller.persistence.GlobalVariables;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.impl.LiteralImpl;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import static ch.fhnw.modeller.webservice.ontology.NAMESPACE.MODEL;
 
@@ -3101,4 +3103,55 @@ public class ModellingEnvironment {
 
 		return Response.status(Status.OK).entity(jsonPrefixes).build();
 	}
+
+	@GET
+	@Path("getLanguagesFromGithub")
+	public Response getLanguagesFromGithub() throws IOException {
+
+		URL url = new URL("https://api.github.com/repos/MarcoDiIanni/PublicOntology/contents/");
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		//con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			//content.append(System.getProperty("line.separator"));
+		}
+
+		List<String> lLanguagesFromGithub = new ArrayList<String>();
+
+
+		//String jsonPrefixes = gson.toJson(content);
+
+		JSONArray jLanguagesGithub = new JSONArray(content.toString());
+
+		for(int i=0;i<jLanguagesGithub.length();i++){
+
+			JSONObject joLanguagesGithub = jLanguagesGithub.getJSONObject(i);
+			lLanguagesFromGithub.add(joLanguagesGithub.getString("name"));
+
+		}
+
+		in.close();
+		//To close the connection, we can use the disconnect() method:
+
+		con.disconnect();
+
+		String jsonFromGithub = gson.toJson(lLanguagesFromGithub);
+
+		return Response.status(Status.OK).entity(jsonFromGithub).build();
+	}
+
+
+
 }
