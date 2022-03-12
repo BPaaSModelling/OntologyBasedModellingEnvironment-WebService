@@ -98,6 +98,53 @@
 		  <artifactId>jaxb-runtime</artifactId>
 		  <version>2.3.2</version>
 	  </dependency>
+      <dependency>
+          <groupId>org.apache.jena</groupId>
+          <artifactId>jena-arq</artifactId>
+          <version>3.0.1</version>
+      </dependency>
+	  <!-- https://mvnrepository.com/artifact/org.json/json -->
+	  <dependency>
+		  <groupId>org.json</groupId>
+		  <artifactId>json</artifactId>
+		  <version>20211205</version>
+	  </dependency>
+	  <!-- https://mvnrepository.com/artifact/org.apache.jena/jena-rdfconnection -->
+	  <dependency>
+		  <groupId>org.apache.jena</groupId>
+		  <artifactId>jena-rdfconnection</artifactId>
+		  <version>4.4.0</version>
+	  </dependency>
+	  <!-- https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-model -->
+	  <dependency>
+		  <groupId>org.eclipse.rdf4j</groupId>
+		  <artifactId>rdf4j-model</artifactId>
+		  <version>4.0.0-M2</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.eclipse.rdf4j</groupId>
+		  <artifactId>rdf4j-rio</artifactId>
+		  <version>4.0.0-M2</version>
+		  <type>pom</type>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.eclipse.rdf4j</groupId>
+		  <artifactId>rdf4j-rio-turtle</artifactId>
+		  <version>4.0.0-M2</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.jena</groupId>
+		  <artifactId>jena-core</artifactId>
+		  <version>3.0.1</version>
+	  </dependency>
+
+
+	  <!-- Thanks for using https://jar-download.com -->
+
+
+
+
   </dependencies>
+
   <artifactId>OntologyBasedModellingEnvironment-WebService</artifactId>
 </project>
