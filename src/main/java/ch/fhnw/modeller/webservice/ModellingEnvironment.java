@@ -2,6 +2,7 @@ package ch.fhnw.modeller.webservice;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
@@ -3142,7 +3143,7 @@ public class ModellingEnvironment {
 	public Response postLanguagesSelectedtoFuseki(List<String> sLanguageSelection) throws IOException {
 
 		FileWriter myWriter = new FileWriter("AOAME.ttl");
-		String sPathTtl= readFileFromGithub(sLanguageSelection);
+		String sPathTtl= readFilesFromGithub(sLanguageSelection);
 		uploadRDF(new File(sPathTtl), "http://localhost:3030/ModEnv/data");
 
 		return Response.status(Status.OK).build();
@@ -3165,7 +3166,7 @@ public class ModellingEnvironment {
 	}
 
 
-	public static String readFileFromGithub(List <String> sLanguageSelection)
+	public static String readFilesFromGithub(List <String> sLanguageSelection)
 			throws IOException {
 
 		StringBuffer content = new StringBuffer();
@@ -3205,6 +3206,65 @@ public class ModellingEnvironment {
 		}
 
 		return tempPath;
+	}
+
+	@POST
+	@Path("postTtlFromDesktop")
+	public Response postLanguagesSelectedtoFuseki(String sUrlFileIo) throws IOException {
+
+		String sTtl= fileioToString(sUrlFileIo);
+		String sPathTtl= makeTempFile(sTtl);
+		uploadRDF(new File(sPathTtl), "http://localhost:3030/ModEnv/data");
+		return Response.status(Status.OK).build();
+	}
+
+
+
+
+	public static String makeTempFile (String sContentToUpload){
+
+		String tempPath="";
+		try {
+			java.nio.file.Path tempFile = Files.createTempFile(null, null);
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile.toFile()))) {
+				bw.write(sContentToUpload);
+				tempPath= tempFile.toAbsolutePath().toString();
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return tempPath;
+
+
+	}
+
+
+	public static String fileioToString (String sKey) throws IOException {
+
+		URL url = new URL(sKey);
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+
+		con.setRequestProperty("Content-Type", "text/trig");
+		String contentType = con.getHeaderField("Content-Type");
+
+
+		int status = con.getResponseCode();
+		//Finally, let's read the response of the request and place it in a content String:
+
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer content = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			content.append(inputLine);
+			content.append(System.getProperty("line.separator"));
+		}
+		String sContent = content.toString();
+		return sContent;
+
 	}
 
 
