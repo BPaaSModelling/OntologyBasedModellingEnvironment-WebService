@@ -2853,63 +2853,6 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity(payload).build();
 
 	}
-
-
-	//Export based on a single prefix
-/*	@POST
-	@Path("getTTLAdwithDistinction")
-	public Response getRequestREADENDPOINTAdvancedwithDistinction(String sPrefix) throws IOException {
-
-
-		URL url = new URL(OntologyManager.getREADENDPOINT());
-		HttpURLConnection con = (HttpURLConnection) url.openConnection();
-		con.setRequestMethod("GET");
-
-		con.setRequestProperty("Content-Type", "text/trig");
-		String contentType = con.getHeaderField("Content-Type");
-
-
-		int status = con.getResponseCode();
-
-		BufferedReader in = new BufferedReader(
-				new InputStreamReader(con.getInputStream()));
-		String inputLine;
-		StringBuffer content = new StringBuffer();
-		while ((inputLine = in.readLine()) != null) {
-			content.append(inputLine);
-			content.append(System.getProperty("line.separator"));
-		}
-		in.close();
-
-		con.disconnect();
-
-		String sPrefixForRegex = sPrefix;
-
-		String sRegex= "\\r\\n(?s)"+sPrefixForRegex+":(.*?) \\.";
-
-		Pattern pattern = Pattern.compile(sRegex);
-		Matcher matcher = pattern.matcher(content);
-
-		String sResult ="";
-		// Check all occurrences
-		while (matcher.find()) {
-			sResult = sResult+matcher.group();
-
-		}
-
-		String sPrefixNamespace="";
-
-		for (NAMESPACE day : NAMESPACE.values()) {
-
-			sPrefixNamespace=sPrefixNamespace+"@prefix "+day.getPrefix()+": <"+day.getURI()+"> ."+"\r\n";
-		}
-		sPrefixNamespace=sPrefixNamespace+sResult;
-		String sResultJson=gson.toJson(sPrefixNamespace);
-
-		return Response.status(Status.OK).entity(sResultJson).build();
-
-	}
-*/
 	@POST
 	@Path("getTTLAdwithDistinction2")
 	public Response getRequestREADENDPOINTAdvancedwithDistinction2(List<String> sPrefix) throws IOException {
@@ -3142,27 +3085,41 @@ public class ModellingEnvironment {
 	@Path("postLanguagesSelectedtoFuseki")
 	public Response postLanguagesSelectedtoFuseki(List<String> sLanguageSelection) throws IOException {
 
-		FileWriter myWriter = new FileWriter("AOAME.ttl");
-		String sPathTtl= readFilesFromGithub(sLanguageSelection);
-		uploadRDF(new File(sPathTtl), "http://localhost:3030/ModEnv/data");
 
+
+		try {
+
+
+			FileWriter myWriter = new FileWriter("AOAME.ttl");
+			String sPathTtl = readFilesFromGithub(sLanguageSelection);
+			uploadRDF(new File(sPathTtl), "http://localhost:3030/ModEnv/data");
+		}
+		catch(Exception e){
+
+			e.printStackTrace();
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 		return Response.status(Status.OK).build();
 	}
 
-	public static void uploadRDF(File rdf, String serviceURI)
+
+	public static Response uploadRDF(File rdf, String serviceURI)
 			throws IOException {
 
-		//String serviceURI = "http://localhost:3030/MyEndpoint/data";
 		org.apache.jena.rdf.model.Model m = ModelFactory.createDefaultModel();
-		//File rdf = new File("C:/Users/Mazuiozuzzzddddxscc/Documents/GitHub/Ontology4ModelingEnvironment/BMM.ttl");
 		try (FileInputStream in = new FileInputStream(rdf)) {
 			m.read(in, null, "TURTLE");
-		}
+
 
 		// upload the resulting model
 		DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(serviceURI);
 		accessor.add(m);
-
+		}
+		catch (Exception e){
+			e.printStackTrace();
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+		return Response.status(Status.OK).build();
 	}
 
 
@@ -3212,12 +3169,16 @@ public class ModellingEnvironment {
 	@Path("postTtlFromDesktop")
 	public Response postLanguagesSelectedtoFuseki(String sUrlFileIo) throws IOException {
 
+		try {
 		String sTtl= fileioToString(sUrlFileIo);
 		String sPathTtl= makeTempFile(sTtl);
 		uploadRDF(new File(sPathTtl), "http://localhost:3030/ModEnv/data");
-		return Response.status(Status.OK).build();
+		return Response.status(Status.OK).build();}
+		catch(Exception e){
+			e.printStackTrace();
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 	}
-
 
 
 
