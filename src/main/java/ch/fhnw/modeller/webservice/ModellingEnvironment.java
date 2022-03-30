@@ -3092,7 +3092,7 @@ public class ModellingEnvironment {
 
 			FileWriter myWriter = new FileWriter("AOAME.ttl");
 			String sPathTtl = readFilesFromGithub(sLanguageSelection);
-			uploadRDF(new File(sPathTtl), OntologyManager.getREADENDPOINT());
+			uploadRDF(new File(sPathTtl), "https://aoame-fuseki-test123.herokuapp.com/ModEnv/data");
 		}
 		catch(Exception e){
 
@@ -3172,7 +3172,7 @@ public class ModellingEnvironment {
 		try {
 		String sTtl= fileioToString(sUrlFileIo);
 		String sPathTtl= makeTempFile(sTtl);
-		uploadRDF(new File(sPathTtl), OntologyManager.getREADENDPOINT());
+		uploadRDF(new File(sPathTtl), "https://aoame-fuseki-test123.herokuapp.com/ModEnv/data");
 		return Response.status(Status.OK).build();}
 		catch(Exception e){
 			e.printStackTrace();
