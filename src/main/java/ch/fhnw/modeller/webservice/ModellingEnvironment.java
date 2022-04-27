@@ -52,6 +52,10 @@ public class ModellingEnvironment {
 	private OntologyManager ontology = OntologyManager.getInstance();
 	private boolean debug_properties = false;
 
+	private String sListTtlfromGithub= "https://api.github.com/repos/MarcoDiIanni/PublicOntology/contents/";
+	private String sRawContentTtlFromGithub= "https://raw.githubusercontent.com/MarcoDiIanni/PublicOntology/main/";
+
+
 	private String extractIdFrom(QuerySolution querySolution, String label) {
 
 		if (querySolution.get(label) == null) return null;
@@ -71,6 +75,8 @@ public class ModellingEnvironment {
 	private String extractValueFrom(QuerySolution querySolution, String label) {
 		return querySolution.get(label) != null ? querySolution.get(label).toString() : null;
 	}
+
+
 
 	@GET
 	@Path("/model")
@@ -3035,7 +3041,7 @@ public class ModellingEnvironment {
 	@Path("getLanguagesFromGithub")
 	public Response getLanguagesFromGithub() throws IOException {
 
-		URL url = new URL("https://api.github.com/repos/MarcoDiIanni/PublicOntology/contents/");
+		URL url = new URL(this.sListTtlfromGithub);
 		HttpURLConnection con = (HttpURLConnection) url.openConnection();
 		con.setRequestMethod("GET");
 
@@ -3092,7 +3098,7 @@ public class ModellingEnvironment {
 
 			FileWriter myWriter = new FileWriter("AOAME.ttl");
 			String sPathTtl = readFilesFromGithub(sLanguageSelection);
-			uploadRDF(new File(sPathTtl), "https://aoame-fuseki-test123.herokuapp.com/ModEnv/data");
+			uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
 		}
 		catch(Exception e){
 
@@ -3123,14 +3129,14 @@ public class ModellingEnvironment {
 	}
 
 
-	public static String readFilesFromGithub(List <String> sLanguageSelection)
+	public String readFilesFromGithub(List<String> sLanguageSelection)
 			throws IOException {
 
 		StringBuffer content = new StringBuffer();
 		for (String element : sLanguageSelection
 		) {
 			String sPrefixForRegex = element;
-			URL url = new URL("https://raw.githubusercontent.com/MarcoDiIanni/PublicOntology/main/"+sPrefixForRegex);
+			URL url = new URL(this.sRawContentTtlFromGithub+sPrefixForRegex);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setRequestMethod("GET");
 
@@ -3172,7 +3178,7 @@ public class ModellingEnvironment {
 		try {
 		String sTtl= fileioToString(sUrlFileIo);
 		String sPathTtl= makeTempFile(sTtl);
-		uploadRDF(new File(sPathTtl), "https://aoame-fuseki-test123.herokuapp.com/ModEnv/data");
+		uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
 		return Response.status(Status.OK).build();}
 		catch(Exception e){
 			e.printStackTrace();
