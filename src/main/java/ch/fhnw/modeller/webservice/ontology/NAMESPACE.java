@@ -39,7 +39,8 @@ public enum NAMESPACE {
 	DKMM( "dkmm",								"http://fhnw.ch/modelingEnvironment/dkmm#"),
 	ICF( "icf",								"http://who.int/icf#"),
 	SAPSCENES( "sapscenes",					"http://fhnw.ch/SAPScenesOntology#"),
-	MODEL("mod", 							"http://fhnw.ch/modelingEnvironment/ModelOntology#")
+	MODEL("mod", 							"http://fhnw.ch/modelingEnvironment/ModelOntology#"),
+	BPMN4PP("bpmn4pp", 							"http://ikm-group.ch/archiMEO/BPMN4PP#")
 	;
 	
 	private String prefix;
