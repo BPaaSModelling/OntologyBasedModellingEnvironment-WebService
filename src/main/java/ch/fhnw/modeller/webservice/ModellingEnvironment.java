@@ -52,8 +52,8 @@ public class ModellingEnvironment {
 	private OntologyManager ontology = OntologyManager.getInstance();
 	private boolean debug_properties = false;
 
-	private String sListTtlfromGithub= "https://api.github.com/repos/MarcoDiIanni/PublicOntology/contents/";
-	private String sRawContentTtlFromGithub= "https://raw.githubusercontent.com/MarcoDiIanni/PublicOntology/main/";
+	private String sListTtlfromGithub= "https://api.github.com/repos/BPaaSModelling/Ontologies4Import/contents/";
+	private String sRawContentTtlFromGithub= "https://raw.githubusercontent.com/BPaaSModelling/Ontologies4Import/main/";
 
 
 	private String extractIdFrom(QuerySolution querySolution, String label) {
@@ -3149,8 +3149,11 @@ public class ModellingEnvironment {
 					new InputStreamReader(con.getInputStream()));
 			String inputLine;
 			while ((inputLine = in.readLine()) != null) {
-				content.append(inputLine);
-				content.append(System.getProperty("line.separator"));
+
+				//if(!inputLine.contains("rdfs:comment")) {
+					content.append(inputLine);
+					content.append(System.getProperty("line.separator"));
+				//}
 			}
 			con.disconnect();
 		}
