@@ -43,6 +43,7 @@ public final class OntologyManager {
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
 	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
 	private static String READENDPOINT			= TRIPLESTOREENDPOINT + "/get";
+	private static String DATAENDPOINT			= TRIPLESTOREENDPOINT + "/data";
 
 	public static synchronized OntologyManager getInstance() {
 		if (INSTANCE == null) {
@@ -202,6 +203,8 @@ public final class OntologyManager {
 	public static String getREADENDPOINT() {
 		return READENDPOINT;
 	}
-
+	public static String getDATAENDPOINT() {
+		return DATAENDPOINT;
+	}
 	
 }
