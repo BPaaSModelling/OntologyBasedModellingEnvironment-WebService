@@ -2897,18 +2897,33 @@ public class ModellingEnvironment {
 		while (matcher.find()) {
 			//for local version
 			//sResult = sResult + matcher.group()+"\r\n";
+			//If local version the regex has to change
+			if(OntologyManager.getTRIPLESTOREENDPOINT()=="http://localhost:3030/ModEnv") {
+				sResult = sResult + matcher.group() + "\r\n";
+			}
+			else{
+				//for deployed
+				sResult = sResult + matcher.group() + "\n";
 
-			//for deployed
-			sResult = sResult + matcher.group() + "\n";
+			}
 
 		}
-		for (String element : sPrefix
-		) {
+		for (String element : sPrefix)
+
+		{
+
 			String sPrefixForRegex = element;
 			//this is for local version
 			//String sRegex2 = "\\r\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
 			//this is for deployed app
 			String sRegex2 = "\\n(?s)" + sPrefixForRegex + ":(.*?) \\.";
+
+
+			//if local version the regex change
+			if(OntologyManager.getTRIPLESTOREENDPOINT()=="http://localhost:3030/ModEnv"){
+				String sPrefixForRegex2=sPrefixForRegex.replace("\r","");
+				sRegex2 = "\\r\\n(?s)" + sPrefixForRegex2 + ":(.*?) \\.";
+				}
 			Pattern pattern2 = Pattern.compile(sRegex2);
 			Matcher matcher2 = pattern2.matcher(content);
 

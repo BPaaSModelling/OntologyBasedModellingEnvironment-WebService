@@ -203,6 +203,10 @@ public final class OntologyManager {
 	public static String getREADENDPOINT() {
 		return READENDPOINT;
 	}
+	public static String getTRIPLESTOREENDPOINT() {
+		return TRIPLESTOREENDPOINT;
+	}
+
 	public static String getDATAENDPOINT() {
 		return DATAENDPOINT;
 	}
