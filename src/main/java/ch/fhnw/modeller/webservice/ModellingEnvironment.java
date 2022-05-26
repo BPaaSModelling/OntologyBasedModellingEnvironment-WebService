@@ -282,11 +282,11 @@ public class ModellingEnvironment {
 						"WHERE\n" +
 						"{\n" +
 						"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
-						"\t?po po:paletteConstructIsGroupedInPaletteCategory ?cat\n" +
-						"\tOPTIONAL { ?po po:paletteConstructHasModelImage ?imgUrl }\n" +
-						"\tOPTIONAL { ?po po:paletteConnectorConfiguresFromArrowHead ?fromArrow }\n" +
-						"\tOPTIONAL { ?po po:paletteConnectorConfiguresToArrowHead ?toArrow }\n" +
-						"\tOPTIONAL { ?po po:paletteConnectorConfiguresArrowStroke ?arrowStroke }\n" +
+						"\t?po po:paletteConstructIsGroupedInPaletteCategory ?cat .\n" +
+						"\tOPTIONAL { ?po po:paletteConstructHasModelImage ?imgUrl .}\n" +
+						"\tOPTIONAL { ?po po:paletteConnectorConfiguresFromArrowHead ?fromArrow .}\n" +
+						"\tOPTIONAL { ?po po:paletteConnectorConfiguresToArrowHead ?toArrow .}\n" +
+						"\tOPTIONAL { ?po po:paletteConnectorConfiguresArrowStroke ?arrowStroke .}\n" +
 						"}",
 				MODEL.getPrefix(),
 				shapeId);
