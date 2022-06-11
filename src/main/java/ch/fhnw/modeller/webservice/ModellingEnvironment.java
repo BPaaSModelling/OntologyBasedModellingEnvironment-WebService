@@ -52,8 +52,9 @@ public class ModellingEnvironment {
 	private OntologyManager ontology = OntologyManager.getInstance();
 	private boolean debug_properties = false;
 
-	private String sListTtlfromGithub= "https://api.github.com/repos/BPaaSModelling/Ontologies4Import/contents/";
-	private String sRawContentTtlFromGithub= "https://raw.githubusercontent.com/BPaaSModelling/Ontologies4Import/main/";
+	private String sListTtlfromGithub = "https://api.github.com/repos/BPaaSModelling/Ontology4ModelingEnvironment/contents/";
+	//private String sRawContentTtlFromGithub= "https://raw.githubusercontent.com/BPaaSModelling/Ontologies4Import/main/";
+	private String sRawContentTtlFromGithub = "https://raw.githubusercontent.com/BPaaSModelling/Ontology4ModelingEnvironment/master/";
 
 
 	private String extractIdFrom(QuerySolution querySolution, String label) {
@@ -75,7 +76,6 @@ public class ModellingEnvironment {
 	private String extractValueFrom(QuerySolution querySolution, String label) {
 		return querySolution.get(label) != null ? querySolution.get(label).toString() : null;
 	}
-
 
 
 	@GET
@@ -2859,6 +2859,7 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity(payload).build();
 
 	}
+
 	@POST
 	@Path("getTTLAdwithDistinction2")
 	public Response getRequestREADENDPOINTAdvancedwithDistinction2(List<String> sPrefix) throws IOException {
@@ -2898,19 +2899,16 @@ public class ModellingEnvironment {
 			//for local version
 			//sResult = sResult + matcher.group()+"\r\n";
 			//If local version the regex has to change
-			if(OntologyManager.getTRIPLESTOREENDPOINT()=="http://localhost:3030/ModEnv") {
+			if (OntologyManager.getTRIPLESTOREENDPOINT() == "http://localhost:3030/ModEnv") {
 				sResult = sResult + matcher.group() + "\r\n";
-			}
-			else{
+			} else {
 				//for deployed
 				sResult = sResult + matcher.group() + "\n";
 
 			}
 
 		}
-		for (String element : sPrefix)
-
-		{
+		for (String element : sPrefix) {
 
 			String sPrefixForRegex = element;
 			//this is for local version
@@ -2920,10 +2918,10 @@ public class ModellingEnvironment {
 
 
 			//if local version the regex change
-			if(OntologyManager.getTRIPLESTOREENDPOINT()=="http://localhost:3030/ModEnv"){
-				String sPrefixForRegex2=sPrefixForRegex.replace("\r","");
+			if (OntologyManager.getTRIPLESTOREENDPOINT() == "http://localhost:3030/ModEnv") {
+				String sPrefixForRegex2 = sPrefixForRegex.replace("\r", "");
 				sRegex2 = "\\r\\n(?s)" + sPrefixForRegex2 + ":(.*?) \\.";
-				}
+			}
 			Pattern pattern2 = Pattern.compile(sRegex2);
 			Matcher matcher2 = pattern2.matcher(content);
 
@@ -3072,7 +3070,7 @@ public class ModellingEnvironment {
 		String inputLine;
 		StringBuffer content = new StringBuffer();
 		while ((inputLine = in.readLine()) != null) {
-			content.append(inputLine);
+				content.append(inputLine);
 			//content.append(System.getProperty("line.separator"));
 		}
 
@@ -3086,8 +3084,11 @@ public class ModellingEnvironment {
 		for (int i = 0; i < jLanguagesGithub.length(); i++) {
 
 			JSONObject joLanguagesGithub = jLanguagesGithub.getJSONObject(i);
-			lLanguagesFromGithub.add(joLanguagesGithub.getString("name"));
 
+			if (joLanguagesGithub.getString("name").endsWith(".ttl")){
+
+				lLanguagesFromGithub.add(joLanguagesGithub.getString("name"));
+			}
 		}
 
 		in.close();
@@ -3107,15 +3108,13 @@ public class ModellingEnvironment {
 	public Response postLanguagesSelectedtoFuseki(List<String> sLanguageSelection) throws IOException {
 
 
-
 		try {
 
 
 			FileWriter myWriter = new FileWriter("AOAME.ttl");
 			String sPathTtl = readFilesFromGithub(sLanguageSelection);
 			uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).build();
@@ -3132,11 +3131,10 @@ public class ModellingEnvironment {
 			m.read(in, null, "TURTLE");
 
 
-		// upload the resulting model
-		DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(serviceURI);
-		accessor.add(m);
-		}
-		catch (Exception e){
+			// upload the resulting model
+			DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(serviceURI);
+			accessor.add(m);
+		} catch (Exception e) {
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).build();
 		}
@@ -3151,7 +3149,7 @@ public class ModellingEnvironment {
 		for (String element : sLanguageSelection
 		) {
 			String sPrefixForRegex = element;
-			URL url = new URL(this.sRawContentTtlFromGithub+sPrefixForRegex);
+			URL url = new URL(this.sRawContentTtlFromGithub + sPrefixForRegex);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setRequestMethod("GET");
 
@@ -3166,20 +3164,21 @@ public class ModellingEnvironment {
 			while ((inputLine = in.readLine()) != null) {
 
 				//if(!inputLine.contains("rdfs:comment")) {
-					content.append(inputLine);
-					content.append(System.getProperty("line.separator"));
+				content.append(inputLine);
+				content.append(System.getProperty("line.separator"));
 				//}
 			}
 			con.disconnect();
 		}
 		String sTtlToUpload = content.toString();
+		sTtlToUpload = normalizeTtlString(sTtlToUpload);
 
-		String tempPath="";
+		String tempPath = "";
 		try {
 			java.nio.file.Path tempFile = Files.createTempFile(null, null);
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile.toFile()))) {
 				bw.write(sTtlToUpload);
-				tempPath= tempFile.toAbsolutePath().toString();
+				tempPath = tempFile.toAbsolutePath().toString();
 			}
 
 		} catch (IOException e) {
@@ -3194,26 +3193,28 @@ public class ModellingEnvironment {
 	public Response postLanguagesSelectedtoFuseki(String sUrlFileIo) throws IOException {
 
 		try {
-		String sTtl= fileioToString(sUrlFileIo);
-		String sPathTtl= makeTempFile(sTtl);
-		uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
-		return Response.status(Status.OK).build();}
-		catch(Exception e){
+			String sTtl = fileioToString(sUrlFileIo);
+			String sPathTtl = makeTempFile(sTtl);
+			uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
+			return Response.status(Status.OK).build();
+		} catch (Exception e) {
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
 
 
+	public static String makeTempFile(String sContentToUpload) {
 
-	public static String makeTempFile (String sContentToUpload){
 
-		String tempPath="";
+		sContentToUpload = normalizeTtlString(sContentToUpload);
+		//sContentToUpload= sContentToUpload.replaceAll("[\\x00-\\x1F\\x7F][^\\s.]", "");
+		String tempPath = "";
 		try {
 			java.nio.file.Path tempFile = Files.createTempFile(null, null);
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile.toFile()))) {
 				bw.write(sContentToUpload);
-				tempPath= tempFile.toAbsolutePath().toString();
+				tempPath = tempFile.toAbsolutePath().toString();
 			}
 
 		} catch (IOException e) {
@@ -3226,7 +3227,18 @@ public class ModellingEnvironment {
 	}
 
 
-	public static String fileioToString (String sKey) throws IOException {
+	public static String normalizeTtlString(String sTtl) {
+
+		sTtl = sTtl.replaceAll("\\u001E", "");
+		sTtl = sTtl.replaceAll("\\u001C", "");
+		sTtl = sTtl.replaceAll("\\u2013", "");
+
+		return sTtl;
+
+	}
+
+
+	public static String fileioToString(String sKey) throws IOException {
 
 		URL url = new URL(sKey);
 		HttpURLConnection con = (HttpURLConnection) url.openConnection();
