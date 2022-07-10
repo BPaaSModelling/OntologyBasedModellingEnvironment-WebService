@@ -3070,7 +3070,7 @@ public class ModellingEnvironment {
 		String inputLine;
 		StringBuffer content = new StringBuffer();
 		while ((inputLine = in.readLine()) != null) {
-				content.append(inputLine);
+			content.append(inputLine);
 			//content.append(System.getProperty("line.separator"));
 		}
 
@@ -3085,7 +3085,7 @@ public class ModellingEnvironment {
 
 			JSONObject joLanguagesGithub = jLanguagesGithub.getJSONObject(i);
 
-			if (joLanguagesGithub.getString("name").endsWith(".ttl")){
+			if (joLanguagesGithub.getString("name").endsWith(".ttl")) {
 
 				lLanguagesFromGithub.add(joLanguagesGithub.getString("name"));
 			}
@@ -3263,6 +3263,355 @@ public class ModellingEnvironment {
 		return sContent;
 
 	}
+
+	//query da testare
+	private boolean singlePointOfContactForStudent(String model) throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<ModelingLanguage> result = new ArrayList<ModelingLanguage>();
+
+		queryStr.append("SELECT ?businessService (COUNT(?concept) AS ?numconcept) WHERE {");
+		queryStr.append("mod:" + model + " mod:modelHasShape ?listOfShapes .");
+		queryStr.append("?listOfShapes mod:shapeVisualisesConceptualElement ?concept .");
+		queryStr.append("?concept lo:modelingRelationHasTargetModelingElement ?businessService .");
+		queryStr.append("?concept lo:modelingRelationHasSourceModelingElement ?businessInterface .");
+		queryStr.append("?businessInterface a archi:BusinessInterface .");
+		queryStr.append("?concept a archi:Assignment .");
+		queryStr.append("?businessService a archi:BusinessService .");
+		queryStr.append("?serve lo:modelingRelationHasSourceModelingElement ?businessService .");
+		queryStr.append("?serve lo:modelingRelationHasTargetModelingElement ?businessRole .");
+		queryStr.append("?businessRole a archi:BusinessRole .");
+		queryStr.append("?serve a archi:Serve .");
+		queryStr.append("?businessRoleShape mod:shapeVisualisesConceptualElement ?businessRole .");
+		queryStr.append("?businessRoleShape rdfs:label \"Student\" .");
+		queryStr.append("}");
+		queryStr.append("GROUP BY ?businessService");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+	/*	List<String> listResults =results.getResultVars();
+		String [] sListResult = new String [2];
+		int i=0;
+		for (String element:listResults) {
+
+			sListResult[i]= element;
+			i++;
+		}
+		if (sListResult[1]=="1"){
+			return true;
+		}else {return false;}
+
+*/
+		String typeOfInterface = "";
+		String numConcept = "";
+
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+
+				QuerySolution soln = results.next();
+				typeOfInterface = soln.get("?businessService").toString();
+				numConcept = soln.get("?numconcept").toString();
+
+			}
+
+		}
+
+		String sConditionCount = "1^^http://www.w3.org/2001/XMLSchema#integer";
+
+		if (numConcept.equals(sConditionCount)) {
+			return true;
+		} else {
+			return false;
+
+
+		}
+
+
+	}
+
+	private boolean singleSourceOfTruth(String model) throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<ModelingLanguage> result = new ArrayList<ModelingLanguage>();
+
+		queryStr.append("SELECT ?applicationComponent (COUNT(?concept) AS ?numconcept) WHERE {");
+		queryStr.append("mod:" + model + " mod:modelHasShape ?listOfShapes . ");
+		queryStr.append("?listOfShapes mod:shapeVisualisesConceptualElement ?applicationComponent .");
+		queryStr.append("?applicationComponent a archi:ApplicationComponent .");
+		queryStr.append("?concept a archi:ApplicationComponent .");
+		queryStr.append("?concept lo:elementIsMappedWithDOConcept do:MDM .");
+		queryStr.append("?applicationComponent lo:elementIsMappedWithDOConcept do:MDM .");
+		queryStr.append("}");
+		queryStr.append("GROUP BY ?applicationComponent");
+
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+	/*	List<String> listResults =results.getResultVars();
+		String [] sListResult = new String [2];
+		int i=0;
+		for (String element:listResults) {
+
+			sListResult[i]= element;
+			i++;
+		}
+		if (sListResult[1]=="1"){
+			return true;
+		}else {return false;}
+
+*/
+		String typeOfInterface = "";
+		String numConcept = "";
+
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+
+				QuerySolution soln = results.next();
+				//	typeOfInterface = soln.get("?applicationComponent").toString();
+				numConcept = soln.get("?numconcept").toString();
+
+			}
+
+		}
+
+		String sConditionCount = "1^^http://www.w3.org/2001/XMLSchema#integer";
+
+		if (numConcept.equals(sConditionCount)) {
+			return true;
+		} else {
+			return false;
+
+
+		}
+	}
+
+
+	private boolean msTeamsAppComponent(String model) throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		//ArrayList<ModelingLanguage> result = new ArrayList<ModelingLanguage>();
+
+		queryStr.append("SELECT ?applicationComponent (COUNT(?concept) AS ?numconcept) WHERE {");
+		queryStr.append("mod:" + model + " mod:modelHasShape ?listOfShapes . ");
+		queryStr.append("?listOfShapes mod:shapeVisualisesConceptualElement ?applicationComponent .");
+		queryStr.append("?applicationComponent a archi:ApplicationComponent .");
+		queryStr.append("?concept a archi:ApplicationComponent .");
+		queryStr.append("?concept lo:elementIsMappedWithDOConcept do:MSTeams .");
+		queryStr.append("?applicationComponent lo:elementIsMappedWithDOConcept do:MSTeams  .");
+		queryStr.append("}");
+		queryStr.append("GROUP BY ?applicationComponent");
+
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+	/*	List<String> listResults =results.getResultVars();
+		String [] sListResult = new String [2];
+		int i=0;
+		for (String element:listResults) {
+
+			sListResult[i]= element;
+			i++;
+		}
+		if (sListResult[1]=="1"){
+			return true;
+		}else {return false;}
+
+*/
+		String typeOfInterface = "";
+		String numConcept = "";
+
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+
+				QuerySolution soln = results.next();
+				//	typeOfInterface = soln.get("?applicationComponent").toString();
+				numConcept = soln.get("?numconcept").toString();
+
+			}
+
+		}
+
+		//second query
+		ParameterizedSparqlString queryStr2 = new ParameterizedSparqlString();
+		//ArrayList<ModelingLanguage> result2 = new ArrayList<ModelingLanguage>();
+
+		queryStr2.append("SELECT ?applicationComponent2 (COUNT(?concept2) AS ?numconcept2) WHERE {");
+		queryStr2.append("mod:" + model + " mod:modelHasShape ?listOfShapes . ");
+		queryStr2.append("?listOfShapes mod:shapeVisualisesConceptualElement ?applicationComponent2 .");
+		queryStr2.append("?applicationComponent2 a archi:ApplicationComponent .");
+		queryStr2.append("?concept2 a archi:ApplicationComponent .");
+		queryStr2.append("}");
+		queryStr2.append("GROUP BY ?applicationComponent2");
+
+
+		QueryExecution qexec2 = ontology.query(queryStr2);
+		ResultSet results2 = qexec2.execSelect();
+	/*	List<String> listResults =results.getResultVars();
+		String [] sListResult = new String [2];
+		int i=0;
+		for (String element:listResults) {
+
+			sListResult[i]= element;
+			i++;
+		}
+		if (sListResult[1]=="1"){
+			return true;
+		}else {return false;}
+
+*/
+
+		String numConcept2 = "";
+
+		if (results2.hasNext()) {
+			while (results2.hasNext()) {
+
+				QuerySolution soln2 = results2.next();
+				numConcept2 = soln2.get("?numconcept2").toString();
+
+			}
+
+		}
+
+
+		if (numConcept.equals(numConcept2)) {
+			return true;
+		} else {
+			return false;
+
+
+		}
+	}
+
+	@POST
+	@Path("/validatePrinciple")
+	public Response ValidatePrinciple(List<String> sEAPdata) {
+
+		String[] sArray = new String[2];
+		int i = 0;
+		for (String element : sEAPdata
+		) {
+			sArray[i] = element;
+			i++;
+		}
+
+		String sModel = sArray[0];
+		String sEAP = sArray[1];
+
+		System.out.println("/Model received: " + sModel);
+
+		System.out.println("/Eap received: " + sEAP);
+
+		switch (sEAP) {
+			//single point of contact
+			case "spoc": {
+				try {
+					if (singlePointOfContactForStudent(sModel)) {
+						return Response.status(Status.OK).entity(true).build();
+					} else {
+
+						return Response.status(Status.OK).entity(false).build();
+					}
+				} catch (NoResultsException e) {
+					e.printStackTrace();
+				}
+				break;
+				//single source of truth
+			}
+			case "ssot":
+				// code block
+			{
+				try {
+					if (singleSourceOfTruth(sModel)) {
+						return Response.status(Status.OK).entity(true).build();
+					} else {
+
+						return Response.status(Status.OK).entity(false).build();
+					}
+				} catch (NoResultsException e) {
+					e.printStackTrace();
+				}
+				break;
+			}
+			case "msteams":
+				// code block
+			{
+				try {
+
+					if (msTeamsAppComponent(sModel)) {
+						return Response.status(Status.OK).entity(true).build();
+					} else {
+
+						return Response.status(Status.OK).entity(false).build();
+					}
+				} catch (NoResultsException e) {
+					e.printStackTrace();
+				}
+				break;
+			}
+			default:
+				// code block
+		}
+
+		return Response.status(Status.OK).entity("{}").build();
+	}
+
+
+	@POST
+	@Path("/validatePrincipleEAP")
+	public Response ValidatePrincipleEAP(List<String> sEAPdata) {
+
+
+		String[] sArray = new String[2];
+		int i = 0;
+		for (String element : sEAPdata
+		) {
+			sArray[i] = element;
+			i++;
+		}
+
+		String sModel = sArray[0];
+		String sLinkFileio = sArray[1];
+
+		System.out.println("/Model received: " + sModel);
+
+		System.out.println("/Eap received: " + sLinkFileio);
+
+		System.out.println("Stop here");
+		boolean bResult;
+		try {
+			String sEAP = fileioToString(sLinkFileio);
+			String sEAPreplaced= sEAP.replaceAll("MFEAP",sModel);
+			bResult = exequtequeryFromTxt(sEAPreplaced);
+			return Response.status(Status.OK).entity(bResult).build();
+
+		} catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
+
+
+		return Response.status(Status.OK).entity("{}").build();
+	}
+
+
+	public boolean exequtequeryFromTxt(String sText) {
+
+		String[] sEAPsplitted = sText.split("\r\n\t\t");
+
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+
+		for (int i = 0; i < sEAPsplitted.length; i++) {
+			queryStr.append(sEAPsplitted[i]);
+		}
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+		String numConcept = "";
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				QuerySolution soln = results.next();
+			//	numConcept = soln.get("?numconcept").toString();
+				return true;
+			}
+		}
+return false;
+	}
+
 
 
 }
