@@ -40,7 +40,8 @@ public enum NAMESPACE {
 	ICF( "icf",								"http://who.int/icf#"),
 	SAPSCENES( "sapscenes",					"http://fhnw.ch/SAPScenesOntology#"),
 	MODEL("mod", 							"http://fhnw.ch/modelingEnvironment/ModelOntology#"),
-	BPMN4PP("bpmn4pp", 							"http://ikm-group.ch/archiMEO/BPMN4PP#")
+	BPMN4PP("bpmn4pp", 							"http://ikm-group.ch/archiMEO/BPMN4PP#"),
+	GPML("gpml", 							"http://ikm-group.ch/archiMEO/gpml#")
 	;
 	
 	private String prefix;
