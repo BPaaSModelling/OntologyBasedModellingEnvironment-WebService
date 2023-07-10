@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import ch.fhnw.modeller.model.metamodel.*;
 import ch.fhnw.modeller.model.model.Model;
 import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
 import ch.fhnw.modeller.webservice.dto.*;
@@ -25,14 +26,8 @@ import org.apache.jena.query.*;
 import com.google.gson.Gson;
 
 import ch.fhnw.modeller.model.graphEnvironment.Answer;
-import ch.fhnw.modeller.model.metamodel.DomainElement;
-import ch.fhnw.modeller.model.metamodel.GraphicalElement;
-import ch.fhnw.modeller.model.metamodel.ModelingLanguage;
-import ch.fhnw.modeller.model.metamodel.ModelingView;
 import ch.fhnw.modeller.model.palette.PaletteCategory;
 import ch.fhnw.modeller.model.palette.PaletteElement;
-import ch.fhnw.modeller.model.metamodel.DatatypeProperty;
-import ch.fhnw.modeller.model.metamodel.ObjectProperty;
 import ch.fhnw.modeller.webservice.exception.NoResultsException;
 import ch.fhnw.modeller.webservice.ontology.FormatConverter;
 import ch.fhnw.modeller.webservice.ontology.NAMESPACE;
@@ -2458,6 +2453,58 @@ public class ModellingEnvironment {
 
 	}
 
+	@POST
+	@Path("/createShaclConstraint")
+	public Response insertSCObjectProperty(String json) {
+
+		System.out.println("/element received: " + json);
+
+		Gson gson = new Gson();
+		ShaclConstraint shaclConstraint = gson.fromJson(json, ShaclConstraint.class);
+		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
+
+		if (shaclConstraint.getDomainName() != null) {
+			String domainName = shaclConstraint.getDomainName();
+
+			if (!domainName.contains("#")) {
+				String[] domainArr = domainName.split(":");
+				domainName = GlobalVariables.getNamespaceMap().get(domainArr[0]) + "#" + domainArr[1];
+				System.out.println("Domain range to insert :" + domainName);
+			}
+
+			String constraintName = shaclConstraint.getName();
+			System.out.println("Constraint name to insert :" + constraintName);
+
+			ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+			queryStr.append("INSERT DATA {");
+			System.out.println("    Property ID: " + shaclConstraint.getId());
+			queryStr.append("lo:" + shaclConstraint.getId() + " rdf:type owl:ObjectProperty .");
+			queryStr.append("lo:" + shaclConstraint.getId() + " rdfs:subPropertyOf lo:elementIsMappedWithDOConcept . ");
+			System.out.println("    Language Class: " + shaclConstraint.getDomainName());
+			queryStr.append("lo:" + shaclConstraint.getId() + " rdfs:domain " + "<" + domainName + "> . ");
+
+			queryStr.append("lo:" + shaclConstraint.getId() + " rdf:type sh:ShaclConstraint . ");
+			queryStr.append("lo:" + shaclConstraint.getId() + " sh:name \"" + shaclConstraint.getName() + "\" . ");
+			System.out.println("    Name Class: " + shaclConstraint.getName());
+			queryStr.append("lo:" + shaclConstraint.getId() + " sh:description \"" + shaclConstraint.getDescription() + "\" . ");
+			System.out.println("    Description Class: " + shaclConstraint.getDescription());
+			//queryStr.append("lo:" + shaclConstraint.getId() + " sh:path lo: " + shaclConstraint.getPath() + " . ");
+			//System.out.println("    Property path: " + shaclConstraint.getPath());
+			queryStr.append("lo:" + shaclConstraint.getId() + " sh:minCount " + shaclConstraint.getMinCount() + " . ");
+			queryStr.append("lo:" + shaclConstraint.getId() + " sh:maxCount " + shaclConstraint.getMaxCount() + " . ");
+			System.out.println("    Property Min and Max: " + shaclConstraint.getMinCount() + " and " + shaclConstraint.getMaxCount());
+			//queryStr.append("lo:" + shaclConstraint.getId() + " rdfs:range <" + shaclConstraint.getMaxCount() + "> . ");
+			queryStr.append("}");
+			//queryStr.append(" WHERE { }");
+
+			System.out.println("Create Shacl Constraint");
+			System.out.println(queryStr.toString());
+			ontology.insertQuery(queryStr);
+		}
+
+		return Response.status(Status.OK).entity("{}").build();
+	}
+
 	@GET
 	@Path("/getDomainOntologyClasses")
 	public Response getDomainOntologyElements() {
@@ -2781,6 +2828,72 @@ public class ModellingEnvironment {
 				objectProperty.setRange(soln.get("?range").toString());
 
 				result.add(objectProperty);
+			}
+		}
+		qexec.close();
+		return result;
+	}
+
+	@GET
+	@Path("/getShaclConstraints/{domainName}")
+	public Response getShaclConstraints(@PathParam("domainName") String domainName) {
+		System.out.println("\n####################<start>####################");
+		System.out.println("/requested shacl constraints for " + domainName);
+		System.out.println("####################<end>####################");
+		ArrayList<ShaclConstraint> shacl_constraints = new ArrayList<>();
+
+		try {
+			if (domainName != null) {
+				String[] domainNameArr = domainName.split(":");
+				domainName = GlobalVariables.getNamespaceMap().get(domainNameArr[0].toLowerCase()) + "#" + domainNameArr[1];
+				System.out.println("domain range for query is : " + domainName);
+				shacl_constraints = queryAllShaclConstraints(domainName);
+
+				if (debug_properties) {
+					for (int index = 0; index < shacl_constraints.size(); index++) {
+						System.out.println("Domain " + index + ": ");
+					}
+				}
+			}
+		} catch (NoResultsException e) {
+			e.printStackTrace();
+		}
+
+		String json = gson.toJson(shacl_constraints);
+		System.out.println("\n####################<start>####################");
+		System.out.println("/search genereated json: " + json);
+		System.out.println("####################<end>####################");
+		return Response.status(Status.OK).entity(json).build();
+	}
+
+	private ArrayList<ShaclConstraint> queryAllShaclConstraints(String domainName) throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<ShaclConstraint> result = new ArrayList<ShaclConstraint>();
+
+		queryStr.append("SELECT DISTINCT ?id ?name ?path ?minCount ?maxCount WHERE {");
+		queryStr.append("?id rdf:type sh:ObjectProperty . ");
+		queryStr.append("?id sh:name ?name . ");
+		queryStr.append("?id sh:path ?path . ");
+		queryStr.append("?id sh:minCount ?minCount . ");
+		queryStr.append("?id sh:maxCount ?maxCount . ");
+		queryStr.append("FILTER EXISTS { ?id rdfs:domain ?domain . FILTER(?domain IN (<" + domainName + ">)) }");
+		queryStr.append("}");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				ShaclConstraint shaclConstraint = new ShaclConstraint();
+
+				QuerySolution soln = results.next();
+				shaclConstraint.setId(soln.get("?id").toString());
+				shaclConstraint.setName(soln.get("?name").toString());
+				shaclConstraint.setPath(soln.get("?path").toString());
+				shaclConstraint.setMinCount(soln.get("?minCount").toString());
+				shaclConstraint.setMaxCount(soln.get("?maxCount").toString());
+
+				result.add(shaclConstraint);
 			}
 		}
 		qexec.close();
