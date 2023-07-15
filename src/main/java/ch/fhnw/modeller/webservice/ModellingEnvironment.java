@@ -21,6 +21,8 @@ import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
 import ch.fhnw.modeller.webservice.dto.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.MethodNotSupportedException;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
 import org.apache.jena.query.*;
 
 import com.google.gson.Gson;
@@ -34,8 +36,19 @@ import ch.fhnw.modeller.webservice.ontology.NAMESPACE;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import ch.fhnw.modeller.persistence.GlobalVariables;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.impl.LiteralImpl;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.shacl.ShaclValidator;
+import org.apache.jena.shacl.Shapes;
+import org.apache.jena.shacl.ValidationReport;
+import org.apache.jena.shacl.lib.ShLib;
+import org.apache.jena.shacl.validation.ReportEntry;
+import org.apache.jena.shacl.validation.Severity;
+import org.apache.jena.shacl.vocabulary.SHACL;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -2455,7 +2468,7 @@ public class ModellingEnvironment {
 
 	@POST
 	@Path("/createShaclConstraint")
-	public Response insertSCObjectProperty(String json) {
+	public Response insertShaclConstraints(String json) {
 
 		System.out.println("/element received: " + json);
 
@@ -2480,7 +2493,7 @@ public class ModellingEnvironment {
 			System.out.println("    Property ID: " + shaclConstraint.getId());
 			//queryStr.append("lo:" + shaclConstraint.getId() + " rdf:type owl:ObjectProperty .");
 			//queryStr.append("lo:" + shaclConstraint.getId() + " rdfs:subPropertyOf lo:elementIsMappedWithDOConcept . ");
-			System.out.println("    Language Class: " + shaclConstraint.getDomainName());
+			//System.out.println("    Language Class: " + shaclConstraint.getDomainName());
 			//queryStr.append("sh:" + shaclConstraint.getId() + " rdfs:domain " + "<" + domainName + "> . ");
 
 			queryStr.append("sh:" + shaclConstraint.getId() + " rdf:type sh:ShaclConstraint . ");
@@ -2491,7 +2504,7 @@ public class ModellingEnvironment {
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:description \"" + shaclConstraint.getDescription() + "\" . ");
 			System.out.println("    Description Class: " + shaclConstraint.getDescription());
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:path \"" + shaclConstraint.getPath() + "\" . ");
-			//System.out.println("    Property path: " + shaclConstraint.getPath());
+			System.out.println("    Property path: " + shaclConstraint.getPath());
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:minCount " + shaclConstraint.getMinCount() + " . ");
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:maxCount " + shaclConstraint.getMaxCount() + " . ");
 			System.out.println("    Property Min and Max: " + shaclConstraint.getMinCount() + " and " + shaclConstraint.getMaxCount());
@@ -2505,6 +2518,68 @@ public class ModellingEnvironment {
 		}
 
 		return Response.status(Status.OK).entity("{}").build();
+	}
+
+	@GET
+	@Path("/validateShacl")
+	public Response validateShacl () {
+		final String DATA = "C:/Users/Kiril/eclipse-workspace/AOAME/OntologyBasedModellingEnvironment-WebApp-scripts/aoame/OntologyBasedModellingEnvironment-WebService/AOAME.ttl";
+		final String SHACLData = "C:/Users/Kiril/eclipse-workspace/AOAME/OntologyBasedModellingEnvironment-WebApp-scripts/aoame/OntologyBasedModellingEnvironment-WebService/SHACL.ttl";
+		// Load data and SHACL constraints into Jena model
+
+		org.apache.jena.rdf.model.Model model = ModelFactory.createDefaultModel();
+
+		Graph shapesGraph = RDFDataMgr.loadGraph(SHACLData);
+		Graph dataGraph = RDFDataMgr.loadGraph(DATA);
+
+		// Create a ShapesGraph from the model
+		Shapes shapes = Shapes.parse(shapesGraph);
+
+		// Perform SHACL validation
+		ShaclValidator validator = ShaclValidator.get();
+		ValidationReport report = validator.validate(shapes, dataGraph);
+
+		// Print validation report
+		ShLib.printReport(report);
+		System.out.println("Valid: " + report.conforms());
+
+		// Check if the data is valid
+		if (report.conforms()) {
+			return Response.ok("Data is valid").build();
+		}
+
+
+		// Extract report Entries
+		List<ReportEntry> reportEntries = new ArrayList<>();
+		Iterator<ReportEntry> iterator = report.getEntries().iterator();
+
+		while(iterator.hasNext()) {
+			ReportEntry reportEntry = iterator.next();
+			reportEntries.add(reportEntry);
+		}
+
+		JSONArray jsonArray = new JSONArray();
+
+		for(ReportEntry reportEntry : reportEntries) {
+			// Extract information from the report entry
+			Node focusNode = reportEntry.focusNode();
+			org.apache.jena.sparql.path.Path resultPath = reportEntry.resultPath();
+			Severity severity = reportEntry.severity();
+			String message = reportEntry.message();
+
+			JSONObject jsonEntry = new JSONObject();
+			jsonEntry.put("FocusNode", focusNode.toString());
+			jsonEntry.put("Path", resultPath.toString());
+			jsonEntry.put("Severity", severity.toString());
+			jsonEntry.put("Message", message);
+
+			jsonArray.put(jsonEntry);
+		}
+
+		// Convert validation report to JSON
+		String json = jsonArray.toString();
+
+		return Response.status(Status.OK).entity(json).build();
 	}
 
 	@GET
