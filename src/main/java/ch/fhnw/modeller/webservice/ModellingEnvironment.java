@@ -23,6 +23,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.query.*;
 
 import com.google.gson.Gson;
@@ -35,24 +37,27 @@ import ch.fhnw.modeller.webservice.ontology.FormatConverter;
 import ch.fhnw.modeller.webservice.ontology.NAMESPACE;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import ch.fhnw.modeller.persistence.GlobalVariables;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdf.model.impl.LiteralImpl;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.ShaclValidator;
 import org.apache.jena.shacl.Shapes;
 import org.apache.jena.shacl.ValidationReport;
+import org.apache.jena.shacl.engine.Shacl;
+import org.apache.jena.shacl.engine.ShaclPaths;
 import org.apache.jena.shacl.lib.ShLib;
+import org.apache.jena.shacl.parser.PropertyShape;
 import org.apache.jena.shacl.validation.ReportEntry;
 import org.apache.jena.shacl.validation.Severity;
 import org.apache.jena.shacl.vocabulary.SHACL;
+import org.apache.jena.sparql.graph.GraphFactory;
+import org.apache.jena.vocabulary.RDF;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static ch.fhnw.modeller.webservice.ontology.NAMESPACE.MODEL;
+import static ch.fhnw.modeller.webservice.ontology.NAMESPACE.SH;
 
 @Path("/ModEnv")
 public class ModellingEnvironment {
@@ -2513,7 +2518,7 @@ public class ModellingEnvironment {
 			//queryStr.append(" WHERE { }");
 
 			System.out.println("Create Shacl Constraint");
-			System.out.println(queryStr.toString());
+			System.out.println(queryStr);
 			ontology.insertQuery(queryStr);
 		}
 
@@ -2521,19 +2526,50 @@ public class ModellingEnvironment {
 	}
 
 	@GET
-	@Path("/validateShacl")
-	public Response validateShacl () {
-		final String DATA = "C:/Users/Kiril/eclipse-workspace/AOAME/OntologyBasedModellingEnvironment-WebApp-scripts/aoame/OntologyBasedModellingEnvironment-WebService/AOAME.ttl";
-		final String SHACLData = "C:/Users/Kiril/eclipse-workspace/AOAME/OntologyBasedModellingEnvironment-WebApp-scripts/aoame/OntologyBasedModellingEnvironment-WebService/SHACL.ttl";
+	@Path("/validateShacl/{modelId}" )
+	public Response validateShacl(@PathParam("modelId") String modelId) {
 		// Load data and SHACL constraints into Jena model
 
 		org.apache.jena.rdf.model.Model model = ModelFactory.createDefaultModel();
 
-		Graph shapesGraph = RDFDataMgr.loadGraph(SHACLData);
-		Graph dataGraph = RDFDataMgr.loadGraph(DATA);
+		ArrayList<ShaclConstraint> shaclConstraints;
+
+		try {
+			shaclConstraints = queryAllShaclConstraints();
+		} catch (NoResultsException e) {
+			return Response.ok("No constraints were found").build();
+		}
+
+		for (ShaclConstraint constraint : shaclConstraints) {
+			Resource resource = model.createResource()
+					.addProperty(RDF.type, SHACL.PropertyShape.getURI())
+					.addProperty(model.createProperty(constraint.getPath()), SHACL.path.getURI());
+
+			if(constraint.getDescription() != null)
+				resource.addProperty(model.createProperty(SHACL.description.getURI()), constraint.getDescription());
+			if(constraint.getName() != null)
+				resource.addProperty(model.createProperty(SHACL.name.getURI()), constraint.getName());
+			if(constraint.getPath() != null)
+				resource.addProperty(model.createProperty(SHACL.path.getURI()), constraint.getPath());
+			if(constraint.getMinCount() != null)
+				resource.addProperty(model.createProperty(SHACL.minCount.getURI()), constraint.getMinCount());
+			if(constraint.getMaxCount() != null)
+				resource.addProperty(model.createProperty(SHACL.maxCount.getURI()), constraint.getMaxCount());
+
+			model.write(System.out, "TURTLE");
+		}
+
+
+		List<ModelElementDetailDto> elements = getModelElementDetailDtos(modelId); //TODO: query all editor elements
+		System.out.println(elements);
+
+
+		Graph dataGraph = GraphFactory.createDefaultGraph();
+
+		//dataGraph.add(triple);
 
 		// Create a ShapesGraph from the model
-		Shapes shapes = Shapes.parse(shapesGraph);
+		Shapes shapes = Shapes.parse(model);
 
 		// Perform SHACL validation
 		ShaclValidator validator = ShaclValidator.get();
@@ -2550,13 +2586,8 @@ public class ModellingEnvironment {
 
 
 		// Extract report Entries
-		List<ReportEntry> reportEntries = new ArrayList<>();
-		Iterator<ReportEntry> iterator = report.getEntries().iterator();
 
-		while(iterator.hasNext()) {
-			ReportEntry reportEntry = iterator.next();
-			reportEntries.add(reportEntry);
-		}
+		List<ReportEntry> reportEntries = new ArrayList<>(report.getEntries());
 
 		JSONArray jsonArray = new JSONArray();
 
@@ -2580,6 +2611,35 @@ public class ModellingEnvironment {
 		String json = jsonArray.toString();
 
 		return Response.status(Status.OK).entity(json).build();
+	}
+
+	private ArrayList<Answer> queryShaclConstraints() throws NoResultsException {
+		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+		ArrayList<Answer> result = new ArrayList<Answer>();
+
+		queryStr.append("SELECT ?id ?label WHERE { " +
+						"?id ?label  . \n" +
+						"FILTER (str(?object) = \"bpmn\") }");
+
+		QueryExecution qexec = ontology.query(queryStr);
+		ResultSet results = qexec.execSelect();
+
+		if (results.hasNext()) {
+			while (results.hasNext()) {
+				Answer ans = new Answer();
+
+				QuerySolution soln = results.next();
+				String nm = soln.get("?id").toString().split("#")[0];
+				//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
+				ans.setId(soln.get("?id").toString());
+				ans.setLabel(GlobalVariables.getNamespaceMap().get(nm) + ":" + soln.get("?label").toString());
+
+				result.add(ans);
+			}
+		}
+		qexec.close();
+
+		return result;
 	}
 
 	@GET
@@ -2924,7 +2984,7 @@ public class ModellingEnvironment {
 				String[] domainNameArr = domainName.split(":");
 				domainName = GlobalVariables.getNamespaceMap().get(domainNameArr[0].toLowerCase()) + "#" + domainNameArr[1];
 				System.out.println("domain range for query is : " + domainName);
-				shacl_constraints = queryAllShaclConstraints(domainName);
+				shacl_constraints = queryAllShaclConstraints();
 
 				if (debug_properties) {
 					for (int index = 0; index < shacl_constraints.size(); index++) {
@@ -2943,7 +3003,7 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity(json).build();
 	}
 
-	private ArrayList<ShaclConstraint> queryAllShaclConstraints(String domainName) throws NoResultsException {
+	private ArrayList<ShaclConstraint> queryAllShaclConstraints() throws NoResultsException {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<ShaclConstraint> result = new ArrayList<ShaclConstraint>();
 
@@ -3223,13 +3283,13 @@ public class ModellingEnvironment {
 		Pattern pattern = Pattern.compile(sRegex);
 		Matcher matcher = pattern.matcher(content);
 
-		String sResult = "";
+		StringBuilder sResult = new StringBuilder();
 		// Check all occurrences
 		while (matcher.find()) {
 
-			if (!sResult.contains(matcher.group())) {
+			if (!sResult.toString().contains(matcher.group())) {
 
-				sResult = sResult + matcher.group();
+				sResult.append(matcher.group());
 
 			}
 
@@ -3237,10 +3297,10 @@ public class ModellingEnvironment {
 		System.out.println("Questo è il contenuto di sResult dopo la regex: " + sResult);
 
 		//sResult= sRegex;
-		sResult = sResult.replace("\n", "");
+		sResult = new StringBuilder(sResult.toString().replace("\n", ""));
 
-		sResult = sResult.replace(":", ",");
-		String jsonPrefixes = gson.toJson(sResult);
+		sResult = new StringBuilder(sResult.toString().replace(":", ","));
+		String jsonPrefixes = gson.toJson(sResult.toString());
 		System.out.println("Questo è il contenuto Json alla fine: " + jsonPrefixes);
 
 		return Response.status(Status.OK).entity(jsonPrefixes).build();
