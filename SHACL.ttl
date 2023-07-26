@@ -53,9 +53,37 @@
 @prefix po:    <http://fhnw.ch/modelingEnvironment/PaletteOntology#> .
 @prefix ex:    <http://example.org/ns#> .
 
-<mod:DataObject_2957e089-e060-4c50-a380-833c33e10212>
-    a       "http://ikm-group.ch/archiMEO/BPMN#DataObject" , "http://fhnw.ch/modelingEnvironment/ModelOntology#ConceptualElement" ;
-    <http://fhnw.ch/modelingEnvironment/LanguageOntology#Price3>
-            "234^^http://www.w3.org/2001/XMLSchema#boolean" ;
-    <http://fhnw.ch/modelingEnvironment/LanguageOntology#Price4>
-            "123^^http://www.w3.org/2001/XMLSchema#integer" .
+
+
+
+ sh:Price4 a       "http://www.w3.org/ns/shacl#PropertyShape" ;
+  <http://fhnw.ch/modelingEnvironment/LanguageOntology#Price4>
+          "http://www.w3.org/ns/shacl#path" ;
+  <http://www.w3.org/ns/shacl#datatype>
+          "http://www.w3.org/2001/XMLSchema#decimal" ;
+  <http://www.w3.org/ns/shacl#description>
+          "asdf" ;
+  <http://www.w3.org/ns/shacl#maxCount>
+          "1^^http://www.w3.org/2001/XMLSchema#integer" ;
+  <http://www.w3.org/ns/shacl#minCount>
+          "1^^http://www.w3.org/2001/XMLSchema#integer" ;
+  <http://www.w3.org/ns/shacl#name>
+          "Price4" ;
+  <http://www.w3.org/ns/shacl#path>
+          "http://fhnw.ch/modelingEnvironment/LanguageOntology#Price4" .
+
+sh:Price3 a       "http://www.w3.org/ns/shacl#PropertyShape" ;
+  <http://fhnw.ch/modelingEnvironment/LanguageOntology#Price3>
+          "http://www.w3.org/ns/shacl#path" ;
+  <http://www.w3.org/ns/shacl#datatype>
+          "http://www.w3.org/2001/XMLSchema#decimal" ;
+  <http://www.w3.org/ns/shacl#description>
+          "price3" ;
+  <http://www.w3.org/ns/shacl#maxCount>
+          "1^^http://www.w3.org/2001/XMLSchema#integer" ;
+  <http://www.w3.org/ns/shacl#minCount>
+          "1^^http://www.w3.org/2001/XMLSchema#integer" ;
+  <http://www.w3.org/ns/shacl#name>
+          "Price" ;
+  <http://www.w3.org/ns/shacl#path>
+          "http://fhnw.ch/modelingEnvironment/LanguageOntology#Price3" .

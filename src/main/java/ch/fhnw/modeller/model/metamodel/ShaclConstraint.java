@@ -15,11 +15,12 @@ public class ShaclConstraint {
     private String domainName;
     private String name;
     private String description;
+    private String targetClass;
     private String path;
+    private String datatype;
     private String minCount;
     private String maxCount;
 
-    private String label;
     private String range;
     private String defaultValue;
 
