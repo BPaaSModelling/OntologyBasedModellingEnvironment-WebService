@@ -54,36 +54,38 @@
 @prefix ex:    <http://example.org/ns#> .
 
 
+#This file is used for testing with /validateShaclTest endpoint
 
+<http://www.w3.org/ns/shacl#Email_d780e859-df9f-cfa6-700f-1d077c64a312>
+    a       "http://www.w3.org/ns/shacl#PropertyShape" ;
+    <http://www.w3.org/2001/XMLSchema#>
+            "http://www.w3.org/2001/XMLSchema#string" ;
+    <http://www.w3.org/ns/shacl#description>
+            "Email" ;
+    <http://www.w3.org/ns/shacl#maxCount>
+            "2"^^<http://www.w3.org/2001/XMLSchema#int> ;
+    <http://www.w3.org/ns/shacl#minCount>
+            "1"^^<http://www.w3.org/2001/XMLSchema#int> ;
+    <http://www.w3.org/ns/shacl#name>
+            "Email" ;
+    <http://www.w3.org/ns/shacl#path>
+            <http://fhnw.ch/modelingEnvironment/LanguageOntology#Email> ;
+    <http://www.w3.org/ns/shacl#targetClass>
+            "http://ikm-group.ch/archiMEO/BPMN#DataObject" .
 
- sh:Price4 a       "http://www.w3.org/ns/shacl#PropertyShape" ;
-  <http://fhnw.ch/modelingEnvironment/LanguageOntology#Price4>
-          "http://www.w3.org/ns/shacl#path" ;
-  <http://www.w3.org/ns/shacl#datatype>
-          "http://www.w3.org/2001/XMLSchema#decimal" ;
-  <http://www.w3.org/ns/shacl#description>
-          "asdf" ;
-  <http://www.w3.org/ns/shacl#maxCount>
-          "1^^http://www.w3.org/2001/XMLSchema#integer" ;
-  <http://www.w3.org/ns/shacl#minCount>
-          "1^^http://www.w3.org/2001/XMLSchema#integer" ;
-  <http://www.w3.org/ns/shacl#name>
-          "Price4" ;
-  <http://www.w3.org/ns/shacl#path>
-          "http://fhnw.ch/modelingEnvironment/LanguageOntology#Price4" .
-
-sh:Price3 a       "http://www.w3.org/ns/shacl#PropertyShape" ;
-  <http://fhnw.ch/modelingEnvironment/LanguageOntology#Price3>
-          "http://www.w3.org/ns/shacl#path" ;
-  <http://www.w3.org/ns/shacl#datatype>
-          "http://www.w3.org/2001/XMLSchema#decimal" ;
-  <http://www.w3.org/ns/shacl#description>
-          "price3" ;
-  <http://www.w3.org/ns/shacl#maxCount>
-          "1^^http://www.w3.org/2001/XMLSchema#integer" ;
-  <http://www.w3.org/ns/shacl#minCount>
-          "1^^http://www.w3.org/2001/XMLSchema#integer" ;
-  <http://www.w3.org/ns/shacl#name>
-          "Price" ;
-  <http://www.w3.org/ns/shacl#path>
-          "http://fhnw.ch/modelingEnvironment/LanguageOntology#Price3" .
+<http://www.w3.org/ns/shacl#Payed_fda599a9-fd08-60d1-7040-b464f13888e4>
+    a       "http://www.w3.org/ns/shacl#PropertyShape" ;
+    <http://www.w3.org/2001/XMLSchema#>
+            "http://www.w3.org/2001/XMLSchema#boolean" ;
+    <http://www.w3.org/ns/shacl#description>
+            "null" ;
+    <http://www.w3.org/ns/shacl#maxCount>
+            "1"^^<http://www.w3.org/2001/XMLSchema#int> ;
+    <http://www.w3.org/ns/shacl#minCount>
+            "1"^^<http://www.w3.org/2001/XMLSchema#int> ;
+    <http://www.w3.org/ns/shacl#name>
+            "Payed" ;
+    <http://www.w3.org/ns/shacl#path>
+            <http://fhnw.ch/modelingEnvironment/LanguageOntology#Payed> ;
+    <http://www.w3.org/ns/shacl#targetClass>
+            "http://ikm-group.ch/archiMEO/BPMN#DataObject" .

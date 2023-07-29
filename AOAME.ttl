@@ -53,9 +53,56 @@
 @prefix po:    <http://fhnw.ch/modelingEnvironment/PaletteOntology#> .
 @prefix ex:    <http://example.org/ns#> .
 
-<mod:DataObject_2957e089-e060-4c50-a380-833c33e10212>
+@prefix apqc:                 <http://ikm-group.ch/archimeo/apqc#> .
+@prefix archi:                <http://ikm-group.ch/archiMEO/archimate#> .
+@prefix archimeo:             <http://ikm-group.ch/archiMEO#> .
+@prefix bmm:                  <http://ikm-group.ch/archiMEO/BMM#> .
+@prefix bpaas:                <http://ikm-group.ch/archimeo/bpaas#> .
+@prefix bpmn:                 <http://ikm-group.ch/archiMEO/BPMN#> .
+@prefix bpmn4pp:              <http://ikm-group.ch/archiMEO/BPMN4PP#> .
+@prefix cc:                   <http://creativecommons.org/ns#> .
+@prefix cmmn:                 <http://ikm-group.ch/archimeo/cmmn#> .
+@prefix dc:                   <http://purl.org/dc/elements/1.1/> .
+@prefix dcmi-type-vocabulary: <http://dublincore.org/documents/2000/07/11/dcmi-type-vocabulary#> .
+@prefix dcterms:              <http://purl.org/dcterms#> .
+@prefix dkmm:                 <http://fhnw.ch/modelingEnvironment/dkmm#> .
+@prefix do:                   <http://fhnw.ch/modelingEnvironment/DomainOntology#> .
+@prefix dsml4ptm:             <http://fhnw.ch/modelingEnvironment/DSML4PTM#> .
+@prefix elements:             <http://purl.org/dc/elements/1.1#> .
+@prefix emo:                  <http://ikm-group.ch/archiMEO/emo#> .
+@prefix eo:                   <http://ikm-group.ch/archiMEO/eo#> .
+@prefix fbpdo:                <http://ikm-group.ch/archimeo/fbpdo#> .
+@prefix foaf:                 <http://xmlns.com/foaf/spec#> .
+@prefix gpml:                 <http://ikm-group.ch/archiMEO/gpml#> .
+@prefix icf:                  <http://who.int/icf#> .
+@prefix iso42010:             <http://ikm-group.ch/archimeo/iso42010#> .
+@prefix lo:                   <http://fhnw.ch/modelingEnvironment/LanguageOntology#> .
+@prefix media-types:          <http://www.iana.org/assignments/media-types#> .
+@prefix mod:                  <http://fhnw.ch/modelingEnvironment/ModelOntology#> .
+@prefix nco:                  <http://ikm-group.ch/archiMEO/nco#> .
+@prefix ontogov:              <http://ch.fhnw.ontogov#> .
+@prefix owl:                  <http://www.w3.org/2002/07/owl#> .
+@prefix po:                   <http://fhnw.ch/modelingEnvironment/PaletteOntology#> .
+@prefix questiondata:         <http://ikm-group.ch/archiMEO/questiondata#> .
+@prefix questionnaire:        <http://ikm-group.ch/archiMEO/questionnaire#> .
+@prefix rdf:                  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:                 <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdfsplus:             <http://topbraid.org/spin/rdfsplus#> .
+@prefix sapscenes:            <http://fhnw.ch/SAPScenesOntology#> .
+@prefix sh:                   <http://www.w3.org/ns/shacl#> .
+@prefix top:                  <http://ikm-group.ch/archiMEO/top#> .
+@prefix util:                 <http://ikm-group.ch/archiMEO/util#> .
+@prefix xsd:                  <http://www.w3.org/2001/XMLSchema#> .
+
+<DataObject_Shape_d6d7af3b-1ac9-2c82-6807-452de67515da>
     a       "http://ikm-group.ch/archiMEO/BPMN#DataObject" , "http://fhnw.ch/modelingEnvironment/ModelOntology#ConceptualElement" ;
-    <http://fhnw.ch/modelingEnvironment/LanguageOntology#Price3>
-            "234^^http://www.w3.org/2001/XMLSchema#boolean" ;
-    <http://fhnw.ch/modelingEnvironment/LanguageOntology#Price4>
-            "123^^http://www.w3.org/2001/XMLSchema#integer" .
+    <lo:Email>  "email@fhnw.ch^^http://www.w3.org/2001/XMLSchema#string" ;
+    <lo:Payed>  "Untrue^^http://www.w3.org/2001/XMLSchema#boolean" ;
+    <lo:Price>  "price^^http://www.w3.org/2001/XMLSchema#decimal" .
+
+<DataObject_Shape_6169b18b-f8c7-4c63-69d8-abded14715b2>
+    a       "http://ikm-group.ch/archiMEO/BPMN#DataObject" , "http://fhnw.ch/modelingEnvironment/ModelOntology#ConceptualElement" ;
+    <lo:Date>   "29.07.2023^^http://www.w3.org/2001/XMLSchema#date" ;
+    <lo:Email>  "1234^^http://www.w3.org/2001/XMLSchema#string" , "email@fhnw.ch^^http://www.w3.org/2001/XMLSchema#string" ;
+    <lo:Payed>  "1234^^http://www.w3.org/2001/XMLSchema#boolean" ;
+    <lo:Price>  "12.0^^http://www.w3.org/2001/XMLSchema#decimal" .

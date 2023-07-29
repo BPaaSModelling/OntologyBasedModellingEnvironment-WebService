@@ -2496,16 +2496,19 @@ public class ModellingEnvironment {
 			ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 			queryStr.append("INSERT DATA {\n");
 			System.out.println("    Property ID: " + shaclConstraint.getId());
-			queryStr.append("sh:" + shaclConstraint.getId() + " rdf:type sh:NodeShape . ");
+			queryStr.append("sh:" + shaclConstraint.getId() + " rdf:type sh:PropertyShape . ");
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:targetClass <" + domainName + "> . ");
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:name \"" + shaclConstraint.getName() + "\" . ");
 			queryStr.append("sh:" + shaclConstraint.getId() + " rdfs:domain <" + domainName + "> . ");
-			queryStr.append("sh:" + shaclConstraint.getId() + " sh:description \"" + shaclConstraint.getDescription() + "\" . ");
+			if (shaclConstraint.getDescription() != null && !shaclConstraint.getDescription().equals("null"))
+				queryStr.append("sh:" + shaclConstraint.getId() + " sh:description \"" + shaclConstraint.getDescription() + "\" . ");
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:path <" + shaclConstraint.getPath() + "> . ");
-			queryStr.append("sh:" + shaclConstraint.getId() + " sh:datatype " + shaclConstraint.getDatatype() + " . ");
-			queryStr.append("sh:" + shaclConstraint.getId() + " sh:minCount " + shaclConstraint.getMinCount() + " . ");
-			queryStr.append("sh:" + shaclConstraint.getId() + " sh:maxCount " + shaclConstraint.getMaxCount() + " . ");
-			System.out.println("    Property Min and Max: " + shaclConstraint.getMinCount() + " and " + shaclConstraint.getMaxCount());
+			if(shaclConstraint.getDatatype() != null)
+				queryStr.append("sh:" + shaclConstraint.getId() + " sh:datatype " + shaclConstraint.getDatatype() + " . ");
+			if(shaclConstraint.getMinCount() != null)
+				queryStr.append("sh:" + shaclConstraint.getId() + " sh:minCount " + shaclConstraint.getMinCount() + " . ");
+			if(shaclConstraint.getMaxCount() != null)
+				queryStr.append("sh:" + shaclConstraint.getId() + " sh:maxCount " + shaclConstraint.getMaxCount() + " . ");
 			queryStr.append("}");
 
 			System.out.println("Create Shacl Constraint");
@@ -2568,7 +2571,7 @@ public class ModellingEnvironment {
 
 	@GET
 	@Path("/validateShacl/{modelId}" )
-	public Response validateShacl(@PathParam("modelId") String modelId) {
+	public Response validateShacl(@PathParam("modelId") String modelId) throws NoResultsException {
 		// Load data and SHACL constraints into Jena model
 
 		org.apache.jena.rdf.model.Model model = ModelFactory.createDefaultModel();
@@ -2604,7 +2607,7 @@ public class ModellingEnvironment {
 				resource.addProperty(model.createProperty(SHACL.targetClass.getURI()), constraint.getTargetClass());
 			}
 			if(constraint.getDatatype() != null) {
-				resource.addProperty(model.createProperty(NAMESPACE.XSD.getURI()), constraint.getDatatype());
+				resource.addProperty(model.createProperty(SHACL.datatype.getURI()), model.createResource(constraint.getDatatype()));
 			}
 			if(constraint.getMinCount() != null) {
 				String minCountStr = constraint.getMinCount().split("\\^\\^")[0];
@@ -2626,7 +2629,7 @@ public class ModellingEnvironment {
 		//for (String domainName : domainNames){
 
 		try {
-			objectProperties = queryElementInstances("mod:DataObject_6c1335ec-9102-42c5-b3bd-4b4815ff8de3");
+			objectProperties = queryElementInstances(modelId);
 		} catch (NoResultsException e) {
 			throw new RuntimeException(e);
 		}
@@ -2681,9 +2684,9 @@ public class ModellingEnvironment {
 		System.out.println("Valid: " + report.conforms());
 
 		// Check if the data is valid
-		if (report.conforms()) {
+		/*if (report.conforms()) {
 			return Response.status(Status.OK).entity("Data is valid").build();
-		}
+		}*/
 
 
 		// Extract report Entries and return as JSON
@@ -2714,30 +2717,79 @@ public class ModellingEnvironment {
 	}
 
 	private ArrayList<ObjectProperty> queryElementInstances(String id) throws NoResultsException {
-		ParameterizedSparqlString query = new ParameterizedSparqlString();
+		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);
+
+		String command = String.format(
+				"SELECT ?diag\n" +
+						"WHERE {\n" +
+						"\t%1$s %2$s:modelHasShape ?diag .\n" +
+						"}",
+				modelId,
+				MODEL.getPrefix()
+		);
+
+		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		ResultSet resultSet = ontology.query(query).execSelect();
+
+		List<String> shapeIds = new ArrayList<>();
+
+		while (resultSet.hasNext()) {
+			QuerySolution solution = resultSet.next();
+			shapeIds.add(MODEL.getPrefix() + ':' + extractIdFrom(solution, "?diag"));
+		}
+
 		ArrayList<ObjectProperty> result = new ArrayList<>();
 
-		query.append("SELECT ?property ?value " +
-		"WHERE { " +
-    		id +" ?property ?value . " +
-		"} ");
-		QueryExecution qexec = ontology.query(query);
-		ResultSet results = qexec.execSelect();
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				ObjectProperty objectProperty = new ObjectProperty();
-				QuerySolution soln = results.next();
-				//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
-				objectProperty.setId(id);
-				objectProperty.setLabel(soln.get("?property").toString());
-				objectProperty.setRange(soln.get("?value").toString());
+		shapeIds.forEach(shapeId -> {
 
-				result.add(objectProperty);
+			String command2 = String.format(
+					"SELECT ?diag\n" +
+							"WHERE {\n" +
+							"\t%1$s %2$s:shapeVisualisesConceptualElement ?diag .\n" +
+							"}",
+					shapeId,
+					MODEL.getPrefix()
+			);
+			System.out.println(command2);
+
+			ParameterizedSparqlString query2 = new ParameterizedSparqlString(command2);
+			ResultSet resultSet2 = ontology.query(query2).execSelect();
+
+			List<String> elementsIds = new ArrayList<>();
+
+			if (resultSet2.hasNext()) {
+				while (resultSet2.hasNext()) {
+					QuerySolution solution = resultSet2.next();
+					elementsIds.add(MODEL.getPrefix() + ':'+extractIdFrom(solution, "?diag"));
+				}
 			}
-		} else {
-			throw new NoResultsException("No results found");
-		}
-		qexec.close();
+			ParameterizedSparqlString query3 = new ParameterizedSparqlString();
+
+			for (String elementId: elementsIds) {
+				query3.append("SELECT ?property ?value " +
+						"WHERE { " +
+						elementId + " ?property ?value . " +
+						"} ");
+				QueryExecution qexec = ontology.query(query3);
+				ResultSet results = qexec.execSelect();
+				if (results.hasNext()) {
+					while (results.hasNext()) {
+						ObjectProperty objectProperty = new ObjectProperty();
+						QuerySolution soln = results.next();
+						//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
+						objectProperty.setId(elementId);
+						objectProperty.setLabel(soln.get("?property").toString());
+						objectProperty.setRange(soln.get("?value").toString());
+
+						result.add(objectProperty);
+					}
+				} else try {
+					throw new NoResultsException("No results found");
+				} catch (NoResultsException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
 
 		return result;
 	}
@@ -3216,17 +3268,16 @@ public class ModellingEnvironment {
 		ArrayList<ShaclConstraint> result = new ArrayList<>();
 
 		queryStr.append("SELECT DISTINCT ?id ?name ?domainName ?description ?targetClass ?path ?datatype ?minCount ?maxCount WHERE {");
-		queryStr.append("?id a sh:NodeShape . ");
+		queryStr.append("?id a sh:PropertyShape . ");
 		queryStr.append("?id sh:name ?name . ");
 		queryStr.append("FILTER(?targetClass IN (<" + targetClass + ">)) . ");
-		queryStr.append("OPTIONAL {");
-		queryStr.append("?id sh:description ?description . ");
-		queryStr.append("?id sh:targetClass ?targetClass . ");
-		queryStr.append("?id sh:path ?path . ");
-		queryStr.append("?id sh:datatype ?datatype . ");
-		queryStr.append("?id sh:minCount ?minCount . ");
-		queryStr.append("?id sh:maxCount ?maxCount . ");
-		queryStr.append("}}");
+		queryStr.append("OPTIONAL { ?id sh:description ?description . }");
+		queryStr.append("OPTIONAL { ?id sh:targetClass ?targetClass . }");
+		queryStr.append("OPTIONAL { ?id sh:path ?path . }");
+		queryStr.append("OPTIONAL { ?id sh:datatype ?datatype . }");
+		queryStr.append("OPTIONAL { ?id sh:minCount ?minCount . }");
+		queryStr.append("OPTIONAL { ?id sh:maxCount ?maxCount . }");
+		queryStr.append("}");
 
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
@@ -3238,17 +3289,17 @@ public class ModellingEnvironment {
 				QuerySolution soln = results.next();
 				shaclConstraint.setId(soln.get("?id").toString());
 				shaclConstraint.setName(soln.get("?name").toString());
-				if(soln.get("?description").toString() != null)
+				if(soln.contains("?description"))
 					shaclConstraint.setDescription(soln.get("?description").toString());
-				if(soln.get("?targetClass").toString() != null)
+				if(soln.contains("?targetClass"))
 					shaclConstraint.setTargetClass(soln.get("?targetClass").toString());
-				if(soln.get("?path").toString() != null)
+				if(soln.contains("?path"))
 					shaclConstraint.setPath(soln.get("?path").toString());
-				if(soln.get("?datatype").toString() != null)
+				if(soln.contains("?datatype"))
 					shaclConstraint.setDatatype(soln.get("?datatype").toString());
-				if(soln.get("?minCount").toString() != null)
+				if(soln.contains("?minCount"))
 					shaclConstraint.setMinCount(soln.get("?minCount").toString());
-				if(soln.get("?maxCount").toString() != null)
+				if(soln.contains("?maxCount"))
 					shaclConstraint.setMaxCount(soln.get("?maxCount").toString());
 
 
@@ -3265,17 +3316,16 @@ public class ModellingEnvironment {
 		ArrayList<ShaclConstraint> result = new ArrayList<>();
 
 		queryStr.append("SELECT DISTINCT ?id ?name ?domainName ?description ?targetClass ?path ?datatype ?minCount ?maxCount WHERE {");
-		queryStr.append("?id a sh:NodeShape . ");
+		queryStr.append("?id a sh:PropertyShape . ");
 		queryStr.append("?id sh:name ?name . ");
-		queryStr.append("OPTIONAL {");
 		queryStr.append("?id rdfs:domain ?domainName . ");
-		queryStr.append("?id sh:description ?description . ");
-		queryStr.append("?id sh:targetClass ?targetClass . ");
-		queryStr.append("?id sh:path ?path . ");
-		queryStr.append("?id sh:datatype ?datatype . ");
-		queryStr.append("?id sh:minCount ?minCount . ");
-		queryStr.append("?id sh:maxCount ?maxCount . ");
-		queryStr.append("}}");
+		queryStr.append("OPTIONAL { ?id sh:description ?description . }");
+		queryStr.append("OPTIONAL { ?id sh:targetClass ?targetClass . }");
+		queryStr.append("OPTIONAL { ?id sh:path ?path . }");
+		queryStr.append("OPTIONAL { ?id sh:datatype ?datatype . }");
+		queryStr.append("OPTIONAL { ?id sh:minCount ?minCount . }");
+		queryStr.append("OPTIONAL { ?id sh:maxCount ?maxCount . }");
+		queryStr.append("}");
 
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
@@ -3287,19 +3337,18 @@ public class ModellingEnvironment {
 				QuerySolution soln = results.next();
 				shaclConstraint.setId(soln.get("?id").toString());
 				shaclConstraint.setName(soln.get("?name").toString());
-				if(soln.get("?description").toString() != null)
+				if(soln.contains("?description"))
 					shaclConstraint.setDescription(soln.get("?description").toString());
-				if(soln.get("?targetClass").toString() != null)
+				if(soln.contains("?targetClass"))
 					shaclConstraint.setTargetClass(soln.get("?targetClass").toString());
-				if(soln.get("?path").toString() != null)
+				if(soln.contains("?path"))
 					shaclConstraint.setPath(soln.get("?path").toString());
-				if(soln.get("?datatype").toString() != null)
+				if(soln.contains("?datatype"))
 					shaclConstraint.setDatatype(soln.get("?datatype").toString());
-				if(soln.get("?minCount").toString() != null)
+				if(soln.contains("?minCount"))
 					shaclConstraint.setMinCount(soln.get("?minCount").toString());
-				if(soln.get("?maxCount").toString() != null)
+				if(soln.contains("?maxCount"))
 					shaclConstraint.setMaxCount(soln.get("?maxCount").toString());
-
 
 				result.add(shaclConstraint);
 			}
