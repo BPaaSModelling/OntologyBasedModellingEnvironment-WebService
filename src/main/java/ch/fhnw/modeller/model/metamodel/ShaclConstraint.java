@@ -18,6 +18,7 @@ public class ShaclConstraint {
     private String targetClass;
     private String path;
     private String datatype;
+    private String pattern;
     private String minCount;
     private String maxCount;
 

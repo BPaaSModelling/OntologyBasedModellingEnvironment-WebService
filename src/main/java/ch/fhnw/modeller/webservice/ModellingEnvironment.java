@@ -2481,13 +2481,13 @@ public class ModellingEnvironment {
 		ShaclConstraint shaclConstraint = gson.fromJson(json, ShaclConstraint.class);
 		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
 
-		if (shaclConstraint.getDomainName() != null) {
-			String domainName = shaclConstraint.getDomainName();
+		if (shaclConstraint.getTargetClass() != null) {
+			String targetClass = shaclConstraint.getTargetClass();
 
-			if (!domainName.contains("#")) {
-				String[] domainArr = domainName.split(":");
-				domainName = GlobalVariables.getNamespaceMap().get(domainArr[0]) + "#" + domainArr[1];
-				System.out.println("Domain range to insert :" + domainName);
+			if (!targetClass.contains("#")) {
+				String[] targetClassArr = targetClass.split(":");
+				targetClass = GlobalVariables.getNamespaceMap().get(targetClassArr[0]) + "#" + targetClassArr[1];
+				System.out.println("Domain range to insert :" + targetClass);
 			}
 
 			String constraintName = shaclConstraint.getName();
@@ -2497,14 +2497,18 @@ public class ModellingEnvironment {
 			queryStr.append("INSERT DATA {\n");
 			System.out.println("    Property ID: " + shaclConstraint.getId());
 			queryStr.append("sh:" + shaclConstraint.getId() + " rdf:type sh:PropertyShape . ");
-			queryStr.append("sh:" + shaclConstraint.getId() + " sh:targetClass <" + domainName + "> . ");
+			queryStr.append("sh:" + shaclConstraint.getId() + " sh:targetClass <" + targetClass + "> . ");
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:name \"" + shaclConstraint.getName() + "\" . ");
-			queryStr.append("sh:" + shaclConstraint.getId() + " rdfs:domain <" + domainName + "> . ");
+			queryStr.append("sh:" + shaclConstraint.getId() + " rdfs:domain <" + targetClass + "> . ");
 			if (shaclConstraint.getDescription() != null && !shaclConstraint.getDescription().equals("null"))
 				queryStr.append("sh:" + shaclConstraint.getId() + " sh:description \"" + shaclConstraint.getDescription() + "\" . ");
 			queryStr.append("sh:" + shaclConstraint.getId() + " sh:path <" + shaclConstraint.getPath() + "> . ");
 			if(shaclConstraint.getDatatype() != null)
 				queryStr.append("sh:" + shaclConstraint.getId() + " sh:datatype " + shaclConstraint.getDatatype() + " . ");
+			if(shaclConstraint.getPattern() != null) {
+				String escapedPattern = shaclConstraint.getPattern().replace("\\", "\\\\");
+				queryStr.append("sh:" + shaclConstraint.getId() + " sh:pattern \"" + escapedPattern + "\" . ");
+			}
 			if(shaclConstraint.getMinCount() != null)
 				queryStr.append("sh:" + shaclConstraint.getId() + " sh:minCount " + shaclConstraint.getMinCount() + " . ");
 			if(shaclConstraint.getMaxCount() != null)
@@ -2608,6 +2612,9 @@ public class ModellingEnvironment {
 			}
 			if(constraint.getDatatype() != null) {
 				resource.addProperty(model.createProperty(SHACL.datatype.getURI()), model.createResource(constraint.getDatatype()));
+			}
+			if(constraint.getPattern() != null) {
+				resource.addProperty(model.createProperty(SHACL.pattern.getURI()), model.createTypedLiteral(constraint.getPattern()));
 			}
 			if(constraint.getMinCount() != null) {
 				String minCountStr = constraint.getMinCount().split("\\^\\^")[0];
@@ -3230,19 +3237,19 @@ public class ModellingEnvironment {
 	}
 
 	@GET
-	@Path("/getShaclConstraints/{domainName}")
-	public Response getShaclConstraints(@PathParam("domainName") String domainName) {
+	@Path("/getShaclConstraints/{targetClass}")
+	public Response getShaclConstraints(@PathParam("targetClass") String targetClass) {
 		System.out.println("\n####################<start>####################");
-		System.out.println("/requested shacl constraints for " + domainName);
+		System.out.println("/requested shacl constraints for " + targetClass);
 		System.out.println("####################<end>####################");
 		ArrayList<ShaclConstraint> shacl_constraints = new ArrayList<>();
 
 		try {
-			if (domainName != null) {
-				String[] domainNameArr = domainName.split(":");
-				domainName = GlobalVariables.getNamespaceMap().get(domainNameArr[0].toLowerCase()) + "#" + domainNameArr[1];
-				System.out.println("domain range for query is : " + domainName);
-				shacl_constraints = queryShaclConstraints(domainName);
+			if (targetClass != null) {
+				String[] targetClassArr = targetClass.split(":");
+				targetClass = GlobalVariables.getNamespaceMap().get(targetClassArr[0].toLowerCase()) + "#" + targetClassArr[1];
+				System.out.println("domain range for query is : " + targetClass);
+				shacl_constraints = queryShaclConstraints(targetClass);
 
 				if (debug_properties) {
 					for (int index = 0; index < shacl_constraints.size(); index++) {
@@ -3267,7 +3274,7 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<ShaclConstraint> result = new ArrayList<>();
 
-		queryStr.append("SELECT DISTINCT ?id ?name ?domainName ?description ?targetClass ?path ?datatype ?minCount ?maxCount WHERE {");
+		queryStr.append("SELECT DISTINCT ?id ?name ?domainName ?description ?targetClass ?path ?datatype ?pattern ?minCount ?maxCount WHERE {");
 		queryStr.append("?id a sh:PropertyShape . ");
 		queryStr.append("?id sh:name ?name . ");
 		queryStr.append("FILTER(?targetClass IN (<" + targetClass + ">)) . ");
@@ -3275,6 +3282,7 @@ public class ModellingEnvironment {
 		queryStr.append("OPTIONAL { ?id sh:targetClass ?targetClass . }");
 		queryStr.append("OPTIONAL { ?id sh:path ?path . }");
 		queryStr.append("OPTIONAL { ?id sh:datatype ?datatype . }");
+		queryStr.append("OPTIONAL { ?id sh:pattern ?pattern . }");
 		queryStr.append("OPTIONAL { ?id sh:minCount ?minCount . }");
 		queryStr.append("OPTIONAL { ?id sh:maxCount ?maxCount . }");
 		queryStr.append("}");
@@ -3297,11 +3305,12 @@ public class ModellingEnvironment {
 					shaclConstraint.setPath(soln.get("?path").toString());
 				if(soln.contains("?datatype"))
 					shaclConstraint.setDatatype(soln.get("?datatype").toString());
+				if(soln.contains("?pattern"))
+					shaclConstraint.setPattern(soln.get("?pattern").toString());
 				if(soln.contains("?minCount"))
 					shaclConstraint.setMinCount(soln.get("?minCount").toString());
 				if(soln.contains("?maxCount"))
 					shaclConstraint.setMaxCount(soln.get("?maxCount").toString());
-
 
 				result.add(shaclConstraint);
 			}
@@ -3315,7 +3324,7 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<ShaclConstraint> result = new ArrayList<>();
 
-		queryStr.append("SELECT DISTINCT ?id ?name ?domainName ?description ?targetClass ?path ?datatype ?minCount ?maxCount WHERE {");
+		queryStr.append("SELECT DISTINCT ?id ?name ?domainName ?description ?targetClass ?path ?datatype ?pattern ?minCount ?maxCount WHERE {");
 		queryStr.append("?id a sh:PropertyShape . ");
 		queryStr.append("?id sh:name ?name . ");
 		queryStr.append("?id rdfs:domain ?domainName . ");
@@ -3323,6 +3332,7 @@ public class ModellingEnvironment {
 		queryStr.append("OPTIONAL { ?id sh:targetClass ?targetClass . }");
 		queryStr.append("OPTIONAL { ?id sh:path ?path . }");
 		queryStr.append("OPTIONAL { ?id sh:datatype ?datatype . }");
+		queryStr.append("OPTIONAL { ?id sh:pattern ?pattern . }");
 		queryStr.append("OPTIONAL { ?id sh:minCount ?minCount . }");
 		queryStr.append("OPTIONAL { ?id sh:maxCount ?maxCount . }");
 		queryStr.append("}");
@@ -3345,6 +3355,8 @@ public class ModellingEnvironment {
 					shaclConstraint.setPath(soln.get("?path").toString());
 				if(soln.contains("?datatype"))
 					shaclConstraint.setDatatype(soln.get("?datatype").toString());
+				if(soln.contains("?pattern"))
+					shaclConstraint.setPattern(soln.get("?pattern").toString());
 				if(soln.contains("?minCount"))
 					shaclConstraint.setMinCount(soln.get("?minCount").toString());
 				if(soln.contains("?maxCount"))
