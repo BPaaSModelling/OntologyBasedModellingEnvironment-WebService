@@ -366,6 +366,7 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
+		System.out.println("Executing query: " + query.toString());
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		List<String> types = new ArrayList<>();
@@ -1877,7 +1878,7 @@ public class ModellingEnvironment {
 		System.out.println("test: " + pElement.getUuid());
 		querStr.append("INSERT DATA {");
 		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr.append("po:" + pElement.getUuid() + " rdf:type po:" + pElement.getType() + " ;");
+		querStr.append("po:" + pElement.getId() + " rdf:type po:" + pElement.getType() + " ;");
 		/*System.out.println("    Element Type: " + pElement.getClassType());
 			querStr.append("lo:graphicalElementClassType \"" + "<"+pElement.getClassType()+">" +"\" ;");*/
 		System.out.println("    Element Label: " + pElement.getLabel());
@@ -1951,11 +1952,11 @@ public class ModellingEnvironment {
 		 * Map multiple domain concepts to the modeling language concept (new element)
 		 */
 		querStr1.append("INSERT DATA {");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdf:type rdfs:Class . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:subClassOf <" + pElement.getParentLanguageClass() + "> . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:label \"" + pElement.getLabel() + "\" . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getId() + " rdf:type rdfs:Class . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getId() + " rdfs:subClassOf <" + pElement.getParentLanguageClass() + "> . ");
+		querStr1.append(pElement.getLanguagePrefix() + pElement.getId() + " rdfs:label \"" + pElement.getLabel() + "\" . ");
 		if (pElement.getComment() != null && !"".equals(pElement.getComment()))
-			querStr1.append(pElement.getLanguagePrefix() + pElement.getUuid() + " rdfs:comment \"" + pElement.getComment() + "\" . ");
+			querStr1.append(pElement.getLanguagePrefix() + pElement.getId() + " rdfs:comment \"" + pElement.getComment() + "\" . ");
 		//The below property is not needed any more as object properties will be added separately
 		/*if(pElement.getRepresentedDomainClass()!=null && pElement.getRepresentedDomainClass().size()!=0) {
 			for(String repDomainClass: pElement.getRepresentedDomainClass()) {
@@ -1981,7 +1982,6 @@ public class ModellingEnvironment {
 
 
 		return Response.status(Status.OK).entity(ontology.insertMultipleQueries(queryList)).build();
-
 	}
 
 	@POST
@@ -2474,12 +2474,10 @@ public class ModellingEnvironment {
 	@POST
 	@Path("/createShaclConstraint")
 	public Response insertShaclConstraints(String json) {
-
 		System.out.println("/element received: " + json);
 
 		Gson gson = new Gson();
 		ShaclConstraint shaclConstraint = gson.fromJson(json, ShaclConstraint.class);
-		//pElement.setClassType("http://fhnw.ch/modelingEnvironment/LanguageOntology#PaletteElement");
 
 		if (shaclConstraint.getTargetClass() != null) {
 			String targetClass = shaclConstraint.getTargetClass();
@@ -2624,16 +2622,14 @@ public class ModellingEnvironment {
 				String maxCountStr = constraint.getMaxCount().split("\\^\\^")[0];
 				resource.addProperty(model.createProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(Integer.parseInt(maxCountStr)));
 			}
-
 			//Add each domain name only once
 			if (!domainNames.contains(constraint.getDomainName())){
 				domainNames.add(constraint.getDomainName());
 			}
 		}
 		model.write(System.out, "TURTLE");
-		// TO DO: make sure it returns all properties from all domains
+		// make sure it returns all properties from all domains
 		List<ObjectProperty> objectProperties = new ArrayList<>();
-		//for (String domainName : domainNames){
 
 		try {
 			objectProperties = queryElementInstances(modelId);
@@ -2649,36 +2645,8 @@ public class ModellingEnvironment {
 			resource.addProperty(property, value);
 		}
 		propertiesModel.write(System.out, "TURTLE");
-		/*
-		System.out.println(objectProperties);
-		// Add them to the model
-		for (ObjectProperty objectProperty : objectProperties){
-			Resource resource = propertiesModel.createResource()
-					.addProperty(RDF.type, OWL.ObjectProperty.getURI())
-					.addProperty(propertiesModel.createProperty(objectProperty.getRange()), RDFS.range.getURI());
-
-			if(objectProperty.getLabel() != null)
-				resource.addProperty(propertiesModel.createProperty(RDFS.label.getURI()), objectProperty.getLabel());
-			if(objectProperty.getDomainName() != null)
-				resource.addProperty(propertiesModel.createProperty(RDFS.domain.getURI()), objectProperty.getDomainName());
-			if(objectProperty.getRange() != null)
-				resource.addProperty(propertiesModel.createProperty(RDFS.range.getURI()), objectProperty.getRange());
-			propertiesModel.write(System.out, "TURTLE");
-		}
-
-
-
-		// gets every element in the canvas
-		List<ModelElementDetailDto> elements = getModelElementDetailDtos(modelId); //TODO: query all editor elements
-		for (ModelElementDetailDto element : elements) {
-			System.out.println(element);
-		}
-		*/
-
 
 		// Create a ShapesGraph from the model
-		//Shapes shapes = Shapes.parse(model);
-
 		RDFDataMgr.write(System.out, model, Lang.TURTLE);
 		RDFDataMgr.write(System.out, propertiesModel, Lang.TURTLE);
 
@@ -2689,12 +2657,6 @@ public class ModellingEnvironment {
 		// Print validation report
 		ShLib.printReport(report);
 		System.out.println("Valid: " + report.conforms());
-
-		// Check if the data is valid
-		/*if (report.conforms()) {
-			return Response.status(Status.OK).entity("Data is valid").build();
-		}*/
-
 
 		// Extract report Entries and return as JSON
 		List<ReportEntry> reportEntries = new ArrayList<>(report.getEntries());
@@ -2711,7 +2673,7 @@ public class ModellingEnvironment {
 			JSONObject jsonEntry = new JSONObject();
 			jsonEntry.put("FocusNode", focusNode.toString());
 			jsonEntry.put("Path", resultPath.toString().split("#")[1].split(">")[0]);
-			jsonEntry.put("Severity", severity.level().toString());
+			jsonEntry.put("Severity", severity.level().toString().split("#")[1].split(">")[0]);
 			jsonEntry.put("Message", message);
 
 			jsonArray.put(jsonEntry);
