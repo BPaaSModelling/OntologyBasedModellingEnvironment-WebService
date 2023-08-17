@@ -1878,7 +1878,7 @@ public class ModellingEnvironment {
 		System.out.println("test: " + pElement.getUuid());
 		querStr.append("INSERT DATA {");
 		System.out.println("    Element ID: " + pElement.getUuid());
-		querStr.append("po:" + pElement.getId() + " rdf:type po:" + pElement.getType() + " ;");
+		querStr.append("po:" + pElement.getUuid() + " rdf:type po:" + pElement.getType() + " ;");
 		/*System.out.println("    Element Type: " + pElement.getClassType());
 			querStr.append("lo:graphicalElementClassType \"" + "<"+pElement.getClassType()+">" +"\" ;");*/
 		System.out.println("    Element Label: " + pElement.getLabel());
@@ -1923,7 +1923,7 @@ public class ModellingEnvironment {
 		//The below property is not needed any more as object properties will be added separately
 		/*if(pElement.getRepresentedDomainClass()!=null) {
 			querStr.append("po:languageElementIsRelatedToDomainElement ");
-			if (pElement.getRepresentedDomainClass().size()!=0) {	
+			if (pElement.getRepresentedDomainClass().size()!=0) {
 				String repDomainClasses = pElement.getRepresentedDomainClass().stream()
 						.map(s -> "<" +s+ ">")
 						.collect(Collectors.joining(", "));
@@ -1931,7 +1931,7 @@ public class ModellingEnvironment {
 				System.out.println("Comma separated domain classes: " + repDomainClasses);
 				querStr.append(repDomainClasses + " ;");
 			}
-			else 
+			else
 				querStr.append(" <" + pElement.getRepresentedDomainClass().get(0) +"> ");
 		}*/
 		querStr.append(" ;");
@@ -1952,11 +1952,11 @@ public class ModellingEnvironment {
 		 * Map multiple domain concepts to the modeling language concept (new element)
 		 */
 		querStr1.append("INSERT DATA {");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getId() + " rdf:type rdfs:Class . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getId() + " rdfs:subClassOf <" + pElement.getParentLanguageClass() + "> . ");
-		querStr1.append(pElement.getLanguagePrefix() + pElement.getId() + " rdfs:label \"" + pElement.getLabel() + "\" . ");
+		querStr1.append(pElement.getRepresentedLanguageClass() + " rdf:type rdfs:Class . ");
+		querStr1.append(pElement.getRepresentedLanguageClass() + " rdfs:subClassOf <" + pElement.getParentLanguageClass() + "> . ");
+		querStr1.append(pElement.getRepresentedLanguageClass() + " rdfs:label \"" + pElement.getLabel() + "\" . ");
 		if (pElement.getComment() != null && !"".equals(pElement.getComment()))
-			querStr1.append(pElement.getLanguagePrefix() + pElement.getId() + " rdfs:comment \"" + pElement.getComment() + "\" . ");
+			querStr1.append(pElement.getRepresentedLanguageClass() + " rdfs:comment \"" + pElement.getComment() + "\" . ");
 		//The below property is not needed any more as object properties will be added separately
 		/*if(pElement.getRepresentedDomainClass()!=null && pElement.getRepresentedDomainClass().size()!=0) {
 			for(String repDomainClass: pElement.getRepresentedDomainClass()) {
@@ -1982,6 +1982,7 @@ public class ModellingEnvironment {
 
 
 		return Response.status(Status.OK).entity(ontology.insertMultipleQueries(queryList)).build();
+
 	}
 
 	@POST
@@ -2622,6 +2623,7 @@ public class ModellingEnvironment {
 				String maxCountStr = constraint.getMaxCount().split("\\^\\^")[0];
 				resource.addProperty(model.createProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(Integer.parseInt(maxCountStr)));
 			}
+
 			//Add each domain name only once
 			if (!domainNames.contains(constraint.getDomainName())){
 				domainNames.add(constraint.getDomainName());
@@ -2641,7 +2643,15 @@ public class ModellingEnvironment {
 			Resource resource = propertiesModel.createResource(objectProperty.getId());
 
 			Property property = propertiesModel.createProperty(objectProperty.getLabel());
-			RDFNode value = propertiesModel.createTypedLiteral(objectProperty.getRange());
+			RDFNode value;
+			if (objectProperty.getRange().contains("^^")){
+				String range = objectProperty.getRange().split("\\^\\^")[0];
+				String datatype = objectProperty.getRange().split("\\^\\^")[1];
+				String fullDatatypeUri = NAMESPACE.XSD.getURI();
+				value = propertiesModel.createTypedLiteral(range, datatype);
+			} else {
+				value = propertiesModel.createTypedLiteral(objectProperty.getRange());
+			}
 			resource.addProperty(property, value);
 		}
 		propertiesModel.write(System.out, "TURTLE");
