@@ -46,6 +46,7 @@ public enum NAMESPACE {
 	BRICK("BRICK", 							"https://brickschema.org/schema/Brick#"),
 	TAG("TAG", 								"https://brickschema.org/schema/BrickTag#"),
 	QUDT("qudt",							"http://qudt.org/schema/qudt/"),
+	USO("uso",							"http://fhnw.ch/userstoryontology#")
 		
 	;
 	
