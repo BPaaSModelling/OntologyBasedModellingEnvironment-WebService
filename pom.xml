@@ -146,17 +146,7 @@
 
 	  <!-- Thanks for using https://jar-download.com -->
 
-	  <!-- auth0 -->
-	  <dependency>
-		  <groupId>com.auth0</groupId>
-		  <artifactId>mvc-auth-commons</artifactId>
-		  <version>1.10.0</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>javax.servlet</groupId>
-		  <artifactId>javax.servlet-api</artifactId>
-		  <version>4.0.1</version>
-	  </dependency>
+
 
 
   </dependencies>
