@@ -15,6 +15,7 @@ public enum ONTOLOGY {
 	NCO				("nco",			"TTL",	 	"ARCHIMEO/NCO/NCO.ttl"),
 	TOP				("top",			"TTL",		"ARCHIMEO/TOP/TOP.ttl"),
 	ICF				("icf",			"TTL",		"icf.ttl"),
+	USO				("uso",					"TTL",			"userstoryontology.ttl"),
 	
 	
 	
