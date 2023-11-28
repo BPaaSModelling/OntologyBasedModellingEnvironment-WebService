@@ -25,17 +25,4 @@
 		<servlet-name>Modeller</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
-	<!--auth0-->
-	<context-param>
-		<param-name>com.auth0.domain</param-name>
-		<param-value>dev-aoame.eu.auth0.com</param-value>
-	</context-param>
-	<context-param>
-		<param-name>com.auth0.clientId</param-name>
-		<param-value>VfMw1uLLw81IBymq9c3GPVL2oV3IeLY4</param-value>
-	</context-param>
-	<context-param>
-		<param-name>com.auth0.clientSecret</param-name>
-		<param-value>jYzbI4ZeK-J3o1UtsPOg9FirTM7IXzIO0-CdKyTxaTVlMvth_eiCxSDz41w8M4Jh</param-value>
-	</context-param>
 </web-app>
