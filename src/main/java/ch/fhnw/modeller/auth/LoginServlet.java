@@ -1,11 +1,9 @@
 package ch.fhnw.modeller.auth;
 
 import com.auth0.AuthenticationController;
-import org.glassfish.jersey.process.internal.RequestScoped;
+import com.google.gson.Gson;
 
-import javax.inject.Inject;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -26,6 +24,8 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     public void init(ServletConfig config) throws ServletException {
+
+
         super.init(config);
         String domain = config.getServletContext().getInitParameter("com.auth0.domain");
         try {
@@ -37,6 +37,9 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException {
+        setAccessControlHeaders(res);
+
+
         String redirectUri = req.getScheme() + "://" + req.getServerName();
         if ((req.getScheme().equals("http") && req.getServerPort() != 80) || (req.getScheme().equals("https") && req.getServerPort() != 443)) {
             redirectUri += ":" + req.getServerPort();
@@ -46,7 +49,22 @@ public class LoginServlet extends HttpServlet {
         String authorizeUrl = authenticationController
                 .buildAuthorizeUrl(req, res, redirectUri)
                 .build();
-        res.sendRedirect(authorizeUrl);
+
+        Gson gson = new Gson();
+
+        String json = gson.toJson(authorizeUrl);
+        // Return the URL in the response
+        res.setContentType("application/json");
+        res.getWriter().write(json);
+        //res.sendRedirect(authorizeUrl);
+    }
+
+    private void setAccessControlHeaders(HttpServletResponse res) {
+        // Set CORS headers
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        res.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
 }
