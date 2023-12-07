@@ -21,12 +21,12 @@ import java.io.UnsupportedEncodingException;
 public class LoginServlet extends HttpServlet {
 
     private AuthenticationController authenticationController;
+    private String domain;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-
-
         super.init(config);
+        domain = config.getServletContext().getInitParameter("com.auth0.domain");
         String domain = config.getServletContext().getInitParameter("com.auth0.domain");
         try {
             authenticationController = AuthenticationControllerProvider.getInstance(config);
@@ -42,21 +42,14 @@ public class LoginServlet extends HttpServlet {
 
         String redirectUri = req.getScheme() + "://" + req.getServerName();
         if ((req.getScheme().equals("http") && req.getServerPort() != 80) || (req.getScheme().equals("https") && req.getServerPort() != 443)) {
-            redirectUri += ":" + req.getServerPort();
+            redirectUri += ":" + req.getServerPort();//"4200/home";
         }
         redirectUri += "/callback";
 
         String authorizeUrl = authenticationController
                 .buildAuthorizeUrl(req, res, redirectUri)
                 .build();
-
-        Gson gson = new Gson();
-
-        String json = gson.toJson(authorizeUrl);
-        // Return the URL in the response
-        res.setContentType("application/json");
-        res.getWriter().write(json);
-        //res.sendRedirect(authorizeUrl);
+        res.sendRedirect(authorizeUrl);
     }
 
     private void setAccessControlHeaders(HttpServletResponse res) {

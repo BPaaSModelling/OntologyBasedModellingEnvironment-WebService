@@ -4,6 +4,7 @@ import com.auth0.AuthenticationController;
 import com.auth0.IdentityVerificationException;
 import com.auth0.SessionUtils;
 import com.auth0.Tokens;
+import com.google.gson.Gson;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 /**
  * The Servlet endpoint used as the callback handler in the OAuth 2.0 authorization code grant flow.
@@ -87,7 +89,20 @@ public class CallbackServlet extends HttpServlet {
             Tokens tokens = authenticationController.handle(req, res);
             SessionUtils.set(req, "accessToken", tokens.getAccessToken());
             SessionUtils.set(req, "idToken", tokens.getIdToken());
-            res.sendRedirect(redirectOnSuccess);
+            //String authorizeUrl = authenticationController
+            //        .buildAuthorizeUrl(req, res, redirectOnSuccess)
+            //        .build();
+
+            //res.sendRedirect(redirectOnSuccess);
+
+            //Add tokens
+            Gson gson = new Gson();
+            String payload = gson.toJson(tokens);
+            res.getWriter().write(payload);
+
+            String redirectUrl = "http://localhost:4200/home";
+
+            res.sendRedirect(redirectUrl);
         } catch (IdentityVerificationException e) {
             e.printStackTrace();
             res.sendRedirect(redirectOnFail);

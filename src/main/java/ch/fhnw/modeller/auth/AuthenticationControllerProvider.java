@@ -7,7 +7,7 @@ import com.auth0.jwk.JwkProviderBuilder;
 import javax.servlet.ServletConfig;
 import java.io.UnsupportedEncodingException;
 
-public class AuthenticationControllerProvider {
+public abstract class AuthenticationControllerProvider {
 
     public static AuthenticationController getInstance(ServletConfig config) throws UnsupportedEncodingException {
         String domain = config.getServletContext().getInitParameter("com.auth0.domain");
