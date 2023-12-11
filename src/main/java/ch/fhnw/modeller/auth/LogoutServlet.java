@@ -8,6 +8,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * The LogoutServlet class is a servlet that handles user logout functionality.
+ * When a GET request is made to the /logout endpoint, it invalidates the user session,
+ * builds a logout URL, and redirects the user to that URL for authentication logout.
+ */
 @WebServlet(urlPatterns = {"/logout"})
 public class LogoutServlet extends HttpServlet {
     private String domain;

@@ -1,5 +1,7 @@
 package ch.fhnw.modeller.auth;
 
+import ch.fhnw.modeller.webservice.filter.CORSFilter;
+import com.auth0.AuthenticationController;
 import com.auth0.SessionUtils;
 
 import javax.servlet.*;
@@ -16,14 +18,39 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.interfaces.RSAPublicKey;
+
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwk.JwkProvider;
+import com.auth0.jwk.JwkProviderBuilder;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.auth0.jwt.interfaces.JWTVerifier;
+import com.auth0.jwt.interfaces.RSAKeyProvider;
 
 /**
  * Filter class to check if a valid session exists. This will be true if the User Id is present.
  */
-@WebFilter(urlPatterns = "/auth")
+@WebFilter(urlPatterns = "/*")
 public class Auth0Filter implements Filter{
+    private AuthenticationController authenticationController;
+    private JwkProvider jwkProvider;
+    private String domain;
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        ServletContext servletContext = filterConfig.getServletContext();
+        this.domain = servletContext.getInitParameter("com.auth0.domain");
+
+        if (domain == null) {
+            throw new ServletException("Domain parameter is missing in the configuration");
+        }
+
+        this.jwkProvider = new JwkProviderBuilder(domain).build();
+
     }
 
     /**
@@ -37,16 +64,44 @@ public class Auth0Filter implements Filter{
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain next) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
-        String accessToken = request.getParameter("accessToken");
-        String idToken = request.getParameter( "idToken");
 
-        if (accessToken == null && idToken == null) {
-            //Do some token validation
-            //res.sendRedirect("/login");
-            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+        res.setHeader("Access-Control-Max-Age", "1209600");
+
+        //String accessToken = request.getParameter("accessToken");
+
+        // This is an example how to read the token from the header
+        String accessToken = req.getParameter("accessToken");
+        String idToken = req.getParameter( "idToken");
+
+//        if (accessToken != null || idToken != null || isValidToken(accessToken)) {
+//            //Do some token validation
+//            //res.sendRedirect("/login");
+//            //res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            res.setStatus(HttpServletResponse.SC_OK);
+//                return;
+//        }
         next.doFilter(request, response);
+    }
+
+    public boolean isValidToken(String accessToken){
+//        try {
+//            DecodedJWT jwt = JWT.decode(accessToken); // Decode token to get the Key ID (kid)
+//            Jwk jwk = jwkProvider.get(jwt.getKeyId()); // Get the public key from Auth0 using JWK Provider
+//
+//            Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
+//            JWTVerifier verifier = JWT.require(algorithm)
+//                    .withIssuer("https://"+domain+"/")
+//                    .build(); //Reusable verifier instance
+//            verifier.verify(accessToken);
+//        } catch (JWTVerificationException | JwkException exception){
+//            //Invalid signature/claims
+//            return false;
+//        }
+        return true;
     }
 
     @Override

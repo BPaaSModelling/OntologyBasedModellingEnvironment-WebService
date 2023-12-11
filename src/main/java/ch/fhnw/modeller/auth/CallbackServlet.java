@@ -87,20 +87,20 @@ public class CallbackServlet extends HttpServlet {
     private void handle(HttpServletRequest req, HttpServletResponse res) throws IOException {
         try {
             Tokens tokens = authenticationController.handle(req, res);
-            SessionUtils.set(req, "accessToken", tokens.getAccessToken());
-            SessionUtils.set(req, "idToken", tokens.getIdToken());
-            //String authorizeUrl = authenticationController
-            //        .buildAuthorizeUrl(req, res, redirectOnSuccess)
-            //        .build();
-
+            //SessionUtils.set(req, "accessToken", tokens.getAccessToken());
+            //SessionUtils.set(req, "idToken", tokens.getIdToken());
             //res.sendRedirect(redirectOnSuccess);
 
             //Add tokens
             Gson gson = new Gson();
-            String payload = gson.toJson(tokens);
+            String payload = gson.toJson(tokens.getIdToken());
             res.getWriter().write(payload);
 
             String redirectUrl = "http://localhost:4200/home";
+            redirectUrl += "?accessToken=" + URLEncoder.encode(tokens.getAccessToken(), "UTF-8");
+            redirectUrl += "&idToken=" + URLEncoder.encode(tokens.getIdToken(), "UTF-8");
+
+            //res.setHeader("Authorization", tokens.getAccessToken());
 
             res.sendRedirect(redirectUrl);
         } catch (IdentityVerificationException e) {

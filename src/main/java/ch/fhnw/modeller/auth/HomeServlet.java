@@ -10,6 +10,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Path;
 import java.io.IOException;
 
+/**
+ * The HomeServlet class is responsible for handling GET requests to the "/portal/home" URL path.
+ * It extends the HttpServlet class and provides an implementation for the doGet() method.
+ */
 @WebServlet(urlPatterns = {"/portal/home"})
 public class HomeServlet extends HttpServlet {
 

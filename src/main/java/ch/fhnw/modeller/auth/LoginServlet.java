@@ -17,6 +17,10 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+/**
+ * The LoginServlet class represents a servlet that handles user login functionality.
+ * It is responsible for redirecting the user to the authentication endpoint.
+ */
 @WebServlet(urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
 
@@ -27,7 +31,6 @@ public class LoginServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         domain = config.getServletContext().getInitParameter("com.auth0.domain");
-        String domain = config.getServletContext().getInitParameter("com.auth0.domain");
         try {
             authenticationController = AuthenticationControllerProvider.getInstance(config);
         } catch (UnsupportedEncodingException e) {
@@ -48,6 +51,7 @@ public class LoginServlet extends HttpServlet {
 
         String authorizeUrl = authenticationController
                 .buildAuthorizeUrl(req, res, redirectUri)
+                .withScope("openid profile email")
                 .build();
         res.sendRedirect(authorizeUrl);
     }

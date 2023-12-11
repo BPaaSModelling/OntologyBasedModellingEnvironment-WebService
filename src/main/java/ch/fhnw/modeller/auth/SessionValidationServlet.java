@@ -1,30 +1,66 @@
 package ch.fhnw.modeller.auth;
 
+import com.auth0.AuthenticationController;
 import com.auth0.SessionUtils;
+import com.auth0.Tokens;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.security.PublicKey;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-@WebServlet("/testing")
+import com.auth0.jwk.*;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.gson.Gson;
+import org.json.JSONObject;
+
+@WebServlet("/auth")
 public class SessionValidationServlet extends HttpServlet {
+    private AuthenticationController authenticationController;
+    private String domain;
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            authenticationController = AuthenticationControllerProvider.getInstance(config);
+            domain = config.getServletContext().getInitParameter("com.auth0.domain");
+        } catch (UnsupportedEncodingException e) {
+            throw new ServletException("Couldn't create the AuthenticationController instance. Check the configuration.", e);
+        }
+    }
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 
-        final String accessToken = (String) SessionUtils.get(req, "accessToken");
-        final String idToken = (String) SessionUtils.get(req, "idToken");
+        final String accessToken = req.getParameter("accessToken");
+        final String idToken = req.getParameter( "idToken");
+
+
 
         if (isValidToken(accessToken) && idToken != null) {
-            req.setAttribute("userId", accessToken);
-            req.setAttribute("userId", idToken);
 
-            String userData = getUserData(accessToken);
+            //String userData = getUserData(accessToken);
+            //String userData = getUserData(idToken);
+
             res.setContentType("application/json");
-            res.getWriter().write(userData);
+
+            Gson gson = new Gson();
+            String payload = gson.toJson(getUserData(idToken));
+            res.getWriter().write(payload);
+
             res.setStatus(HttpServletResponse.SC_OK);
         } else {
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -39,13 +75,52 @@ public class SessionValidationServlet extends HttpServlet {
         if (token != null) // Additional validations can be added here (like expiry)
             return true;
         else return false;
-
     }
 
-    private String getUserData(String accessToken) {
+    private String getUserData(String idToken) {
+
+        
+        try {
+
+            JwkProvider provider = new UrlJwkProvider(new URL("https://"+domain+"/")); // Replace with your auth0 tenant URL
+            DecodedJWT jwt = JWT.decode(idToken);
+            return "user1: 1";
+        } catch (JWTVerificationException exception) {
+            //Invalid token
+            exception.printStackTrace();
+            return null;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
         // Implement logic to fetch user data based on access token
         // Return data as a JSON string
-        return "{\"username\": \"exampleUser\"}"; // Placeholder
+//        try {
+//            URL url = new URL("https://"+ domain +"/userinfo");
+//            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//
+//            // Set up the headers
+//            conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+//            conn.setRequestMethod("GET");
+//
+//            int responseCode = conn.getResponseCode();
+//            if (responseCode == HttpURLConnection.HTTP_OK) { // success
+//                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+//                String inputLine;
+//                StringBuffer response = new StringBuffer();
+//
+//                while ((inputLine = in.readLine()) != null) {
+//                    response.append(inputLine);
+//                }
+//                in.close();
+//                // Print result
+//                return response.toString();
+//            } else {
+//                return "GET request failed. HTTP error code : " + responseCode;
+//            }
+//        } catch(Exception e) {
+//            return "Error: " + e.getMessage();
+//        }
     }
 }
 
