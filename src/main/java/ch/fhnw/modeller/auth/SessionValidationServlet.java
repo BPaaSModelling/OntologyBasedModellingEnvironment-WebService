@@ -16,7 +16,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -25,7 +28,9 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.auth0.jwt.interfaces.RSAKeyProvider;
 import com.google.gson.Gson;
 import org.json.JSONObject;
 
@@ -57,8 +62,10 @@ public class SessionValidationServlet extends HttpServlet {
 
             res.setContentType("application/json");
 
+            Map<String, Object> userData = getUserData(idToken);
+
             Gson gson = new Gson();
-            String payload = gson.toJson(getUserData(idToken));
+            String payload = gson.toJson(userData);
             res.getWriter().write(payload);
 
             res.setStatus(HttpServletResponse.SC_OK);
@@ -77,14 +84,27 @@ public class SessionValidationServlet extends HttpServlet {
         else return false;
     }
 
-    private String getUserData(String idToken) {
-
-        
+    private Map<String, Object> getUserData(String idToken) {
+        Map<String, Object> claimsMap = new HashMap<>();
         try {
-
-            JwkProvider provider = new UrlJwkProvider(new URL("https://"+domain+"/")); // Replace with your auth0 tenant URL
+            JwkProvider provider = new UrlJwkProvider(new URL("https://" + domain + "/"));
             DecodedJWT jwt = JWT.decode(idToken);
-            return "user1: 1";
+
+            // Get all claims
+            Map<String, Claim> claims = jwt.getClaims();
+
+//            Algorithm algorithm = Algorithm.RSA256((RSAKeyProvider) provider);
+//            JWTVerifier verifier = JWT.require(algorithm)
+//                    .withIssuer("auth0")
+//                    .build();
+//            DecodedJWT verifiedJwt = verifier.verify(idToken);
+
+            // Convert each claim to a simple object
+            for (Map.Entry<String, Claim> entry : claims.entrySet()) {
+                Claim claim = entry.getValue();
+                claimsMap.put(entry.getKey(), claim.as(Object.class));
+            }
+            return claimsMap;
         } catch (JWTVerificationException exception) {
             //Invalid token
             exception.printStackTrace();
@@ -92,6 +112,7 @@ public class SessionValidationServlet extends HttpServlet {
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
+
 
         // Implement logic to fetch user data based on access token
         // Return data as a JSON string
