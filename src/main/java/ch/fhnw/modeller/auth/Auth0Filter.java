@@ -77,13 +77,6 @@ public class Auth0Filter implements Filter{
         String accessToken = req.getParameter("accessToken");
         String idToken = req.getParameter( "idToken");
 
-//        if (accessToken != null || idToken != null || isValidToken(accessToken)) {
-//            //Do some token validation
-//            //res.sendRedirect("/login");
-//            //res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//            res.setStatus(HttpServletResponse.SC_OK);
-//                return;
-//        }
         next.doFilter(request, response);
     }
 

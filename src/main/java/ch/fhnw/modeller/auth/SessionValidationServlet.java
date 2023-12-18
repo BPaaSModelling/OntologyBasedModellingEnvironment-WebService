@@ -1,5 +1,6 @@
 package ch.fhnw.modeller.auth;
 
+import ch.fhnw.modeller.model.auth.User;
 import com.auth0.AuthenticationController;
 import com.auth0.SessionUtils;
 import com.auth0.Tokens;
@@ -16,12 +17,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.InvalidParameterException;
 import java.security.interfaces.RSAPublicKey;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.auth0.jwk.*;
 import com.auth0.jwt.JWT;
@@ -36,7 +33,9 @@ import org.json.JSONObject;
 
 @WebServlet("/auth")
 public class SessionValidationServlet extends HttpServlet {
-    private AuthenticationController authenticationController;
+
+    private  UserService userService;
+    private static AuthenticationController authenticationController;
     private String domain;
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -53,95 +52,83 @@ public class SessionValidationServlet extends HttpServlet {
         final String accessToken = req.getParameter("accessToken");
         final String idToken = req.getParameter( "idToken");
 
-
-
-        if (isValidToken(accessToken) && idToken != null) {
-
-            //String userData = getUserData(accessToken);
-            //String userData = getUserData(idToken);
-
+        try {
             res.setContentType("application/json");
-
-            Map<String, Object> userData = getUserData(idToken);
+            // Get or create the current session
+            HttpSession session = req.getSession(true);
+            // Get and Set the User
+            User user  = getUserData(idToken);
+            // Initialize User Service and store it in the session
+            userService = new UserService(user);
+            session.setAttribute("userService", userService);
 
             Gson gson = new Gson();
-            String payload = gson.toJson(userData);
+            String payload = gson.toJson(user);
             res.getWriter().write(payload);
 
             res.setStatus(HttpServletResponse.SC_OK);
-        } else {
+        } catch (Exception e){
+            e.printStackTrace();
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             res.getWriter().write("Unauthorized access");
         }
     }
 
-    private boolean isValidToken(String token) {
-        // This can involve checking the signature, expiry, etc.
+    private User getUserData(String idToken) {
+        try {
+            final DecodedJWT jwt = validateToken(idToken);
 
-        // Assuming you have methods to get your Auth0 public key, issuer, and audience
-        if (token != null) // Additional validations can be added here (like expiry)
-            return true;
-        else return false;
+            // Create User object
+            User user = new User();
+
+            user.setSub(jwt.getSubject());
+            user.setAud(jwt.getAudience());
+            user.setEmail_verified(jwt.getClaim("email_verified").asBoolean());
+            user.setUpdated_at(jwt.getClaim("updated_at").asString());
+            user.setIss(jwt.getIssuedAt());
+            user.setNickname(jwt.getClaim("nickname").asString());
+            user.setName(jwt.getClaim("name").asString());
+            user.setExp(jwt.getExpiresAt());
+            user.setIat(jwt.getIssuedAt());
+            user.setEmail(jwt.getClaim("email").asString());
+            user.setSid(jwt.getId());
+            user.setSid(jwt.getClaim("sid").asString());
+
+            return user;
+        } catch (Exception e) {
+            throw new InvalidParameterException("JWT validation failed: " + e.getMessage());
+        }
     }
 
-    private Map<String, Object> getUserData(String idToken) {
-        Map<String, Object> claimsMap = new HashMap<>();
+    private DecodedJWT validateToken(String token) {
+        // This can involve checking the signature, expiry, etc.
         try {
-            JwkProvider provider = new UrlJwkProvider(new URL("https://" + domain + "/"));
-            DecodedJWT jwt = JWT.decode(idToken);
-
-            // Get all claims
-            Map<String, Claim> claims = jwt.getClaims();
-
-//            Algorithm algorithm = Algorithm.RSA256((RSAKeyProvider) provider);
-//            JWTVerifier verifier = JWT.require(algorithm)
-//                    .withIssuer("auth0")
-//                    .build();
-//            DecodedJWT verifiedJwt = verifier.verify(idToken);
-
-            // Convert each claim to a simple object
-            for (Map.Entry<String, Claim> entry : claims.entrySet()) {
-                Claim claim = entry.getValue();
-                claimsMap.put(entry.getKey(), claim.as(Object.class));
+            final DecodedJWT jwt = JWT.decode(token);
+            JwkProvider jwkProvider =  AuthenticationControllerProvider.getJwkProvider();
+            if (!jwt.getIssuer().contains(domain)) {
+                throw new InvalidParameterException(String.format("Unknown Issuer %s", jwt.getIssuer()));
             }
-            return claimsMap;
-        } catch (JWTVerificationException exception) {
+            RSAPublicKey publicKey = loadPublicKey(jwt);
+
+            Algorithm algorithm = Algorithm.RSA256(publicKey, null);
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .withIssuer(jwt.getIssuer())
+                    .build();
+
+            verifier.verify(token);
+            return jwt;
+
+        } catch (Exception e) {
             //Invalid token
-            exception.printStackTrace();
-            return null;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            throw new InvalidParameterException("JWT validation failed: "+e.getMessage());
         }
+    }
 
+    private RSAPublicKey loadPublicKey(DecodedJWT token) throws JwkException, MalformedURLException {
+        JwkProvider provider = AuthenticationControllerProvider.getJwkProvider(); //UrlJwkProvider(("https://" + domain + "/"));
 
-        // Implement logic to fetch user data based on access token
-        // Return data as a JSON string
-//        try {
-//            URL url = new URL("https://"+ domain +"/userinfo");
-//            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//
-//            // Set up the headers
-//            conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-//            conn.setRequestMethod("GET");
-//
-//            int responseCode = conn.getResponseCode();
-//            if (responseCode == HttpURLConnection.HTTP_OK) { // success
-//                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-//                String inputLine;
-//                StringBuffer response = new StringBuffer();
-//
-//                while ((inputLine = in.readLine()) != null) {
-//                    response.append(inputLine);
-//                }
-//                in.close();
-//                // Print result
-//                return response.toString();
-//            } else {
-//                return "GET request failed. HTTP error code : " + responseCode;
-//            }
-//        } catch(Exception e) {
-//            return "Error: " + e.getMessage();
-//        }
+        return (RSAPublicKey) provider.get(token.getKeyId()).getPublicKey();
     }
 }
 

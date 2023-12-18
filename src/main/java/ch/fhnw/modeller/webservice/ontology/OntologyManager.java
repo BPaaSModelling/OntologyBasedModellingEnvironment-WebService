@@ -8,11 +8,11 @@ import java.util.Date;
 import java.util.List;
 
 
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
+import ch.fhnw.modeller.auth.UserService;
+import ch.fhnw.modeller.model.auth.User;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
@@ -30,6 +30,11 @@ public final class OntologyManager {
 
 	private static OntologyManager INSTANCE;
 	private boolean localOntology = true;
+
+	@Getter
+	@Setter
+	private UserService userService;
+
 	//private Model rdfModel;
 	
 	/**
@@ -140,7 +145,9 @@ public final class OntologyManager {
 //	}
 
 	public QueryExecution query(ParameterizedSparqlString queryStr) {
+		setCurrentUserGraph(queryStr);
 		addNamespacesToQuery(queryStr);
+
 		System.out.println("***Performed query***\n" + queryStr.toString() + "***Performed query***\n");
 		Query query = QueryFactory.create(queryStr.toString());
 		QueryExecution qexec;
@@ -153,6 +160,7 @@ public final class OntologyManager {
 
 	public void insertQuery(ParameterizedSparqlString queryStr) {
 		try{
+		setCurrentUserGraph(queryStr);
 		addNamespacesToQuery(queryStr);
 		System.out.println("***Trying to insert***\n" + queryStr.toString() + "***End query***\n");
 		UpdateRequest update = UpdateFactory.create(queryStr.toString());
@@ -198,6 +206,41 @@ public final class OntologyManager {
 	
 	public boolean isLocalOntology() {
 		return localOntology;
+	}
+
+	private void setCurrentUserGraph(ParameterizedSparqlString queryStr) {
+		// Modify the SPARQL query to target the specific user graph
+		if (userService == null) return;
+		User user = userService.getUser();
+		String userGraphUri = userService.getUserGraphUri();
+		//String userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT() + "/graphs/" + user.getEmail();
+
+		// Extract the WHERE clause of the original query.
+		String queryString = queryStr.toString();
+		if (queryString.contains("GRAPH")) return;
+		int whereIndex = queryString.toUpperCase().indexOf("WHERE");
+		int insertDataIndex = queryString.toUpperCase().indexOf("{");
+		String beforeClause, afterClause, newClause;
+		if (whereIndex >= 0) {
+			beforeClause = queryString.substring(0, whereIndex);
+			afterClause = queryString.substring(whereIndex);
+			newClause = "WHERE { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + "}";
+		} else if (insertDataIndex >= 0) {
+
+			// Split the query into two parts at the index clause
+			beforeClause = queryString.substring(0, insertDataIndex);
+			afterClause = queryString.substring(insertDataIndex);
+			newClause = " { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + " }";
+		}
+		else return;
+		// Insert the Graph clause
+
+		queryStr.setCommandText(beforeClause + newClause);
+		// Replace the original WHERE clause in the query with the new one.
+
+		//queryStr.setCommandText(queryStr.getCommandText().substring(0,whereIndex)+ newClause);
+
+		queryStr.setIri("graph", userGraphUri);
 	}
 
 	public static String getREADENDPOINT() {
