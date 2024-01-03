@@ -226,19 +226,27 @@ public final class OntologyManager {
 
 		if (queryString.contains("GRAPH")) return;
 
-		if (queryString.trim().toUpperCase().startsWith("SELECT")) {
+		//if (queryString.trim().toUpperCase().startsWith("SELECT")) {
 			// For SELECT queries, add the FROM clause before WHERE
-			modifiedQuery = queryString.replaceAll("(?i)WHERE", "FROM <" + userGraphUri + "> WHERE");
-		} else if (queryString.trim().toUpperCase().startsWith("INSERT") || queryString.trim().toUpperCase().startsWith("DELETE")) {
-			// For INSERT/DELETE queries, wrap the entire data modification clause with USING/GRAPH
-			// This assumes a standard structure of INSERT/DELETE queries
-			modifiedQuery = "WITH <" + userGraphUri + "> " + queryString;
-		} else {
+		//	modifiedQuery = queryString.replaceAll("(?i)WHERE", "FROM <" + userGraphUri + "> WHERE");
+		//} else if (queryString.trim().toUpperCase().startsWith("INSERT") || queryString.trim().toUpperCase().startsWith("DELETE")) {
+			// For INSERT/DELETE queries, directly specify the graph in the INSERT/DELETE data block
+			modifiedQuery = queryString.replaceFirst("\\{", "{ GRAPH <" + userGraphUri + "> { ");
+			//int closeIndex = modifiedQuery.lastIndexOf("}");
+			if (modifiedQuery.toUpperCase().contains("ORDER BY")) {
+				// Find the position of "ORDER BY"
+				int orderByIndex = modifiedQuery.toUpperCase().indexOf("ORDER BY");
+				// Insert the closing curly brace before "ORDER BY"
+				modifiedQuery = modifiedQuery.substring(0, orderByIndex) + "} " + modifiedQuery.substring(orderByIndex);
+			} else {
+				modifiedQuery += " } "; // Close the GRAPH block
+			}
+//		} else {
 			// Handle other types of queries or fallback
 			// Log this as unexpected or handle accordingly
-			System.out.println("Unexpected query type or unable to determine type for graph context setting.");
-			return;
-		}
+//			System.out.println("Unexpected query type or unable to determine type for graph context setting.");
+//			return;
+		//}
 /*      RegEx Approach
         if(!queryStr.getCommandText().toUpperCase().contains("GRAPH")) {
             Pattern pattern = Pattern.compile("\\{([^\\{\\}]*)\\}");
