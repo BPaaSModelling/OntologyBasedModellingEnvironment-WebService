@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -91,14 +92,25 @@ public class CallbackServlet extends HttpServlet {
             //SessionUtils.set(req, "idToken", tokens.getIdToken());
             //res.sendRedirect(redirectOnSuccess);
 
+            //Add cookies to the HTTP response after token generation
+            Cookie accessTokenCookie = new Cookie("accessToken", tokens.getAccessToken());
+            accessTokenCookie.setHttpOnly(true);
+            accessTokenCookie.setSecure(true);
+            res.addCookie(accessTokenCookie);
+
+            Cookie idTokenCookie = new Cookie("idToken", tokens.getIdToken());
+            accessTokenCookie.setHttpOnly(true);
+            idTokenCookie.setSecure(true);
+            res.addCookie(idTokenCookie);
+
             //Add tokens
             Gson gson = new Gson();
             String payload = gson.toJson(tokens.getIdToken());
             res.getWriter().write(payload);
 
             String redirectUrl = "http://localhost:4200/home";
-            redirectUrl += "?accessToken=" + URLEncoder.encode(tokens.getAccessToken(), "UTF-8");
-            redirectUrl += "&idToken=" + URLEncoder.encode(tokens.getIdToken(), "UTF-8");
+            //redirectUrl += "?accessToken=" + URLEncoder.encode(tokens.getAccessToken(), "UTF-8");
+            //redirectUrl += "&idToken=" + URLEncoder.encode(tokens.getIdToken(), "UTF-8");
 
             //res.setHeader("Authorization", tokens.getAccessToken());
 

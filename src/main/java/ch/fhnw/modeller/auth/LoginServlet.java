@@ -40,8 +40,7 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException {
-        setAccessControlHeaders(res);
-
+        //setAccessControlHeaders(res);
 
         String redirectUri = req.getScheme() + "://" + req.getServerName();
         if ((req.getScheme().equals("http") && req.getServerPort() != 80) || (req.getScheme().equals("https") && req.getServerPort() != 443)) {

@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Cookie;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -49,22 +50,37 @@ public class SessionValidationServlet extends HttpServlet {
     }
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 
-        final String accessToken = req.getParameter("accessToken");
-        final String idToken = req.getParameter( "idToken");
+        String accessToken = null; //= req.getParameter("accessToken");
+        String idToken = null; //= req.getParameter( "idToken");
+
+        User user = null;
 
         try {
+            Cookie[] cookies = req.getCookies();
             res.setContentType("application/json");
-            // Get or create the current session
-            HttpSession session = req.getSession(true);
-            // Get and Set the User
-            User user  = getUserData(idToken);
-            // Initialize User Service and store it in the session
-            userService = new UserService(user);
-            session.setAttribute("userService", userService);
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals("accessToken")) {
+                        accessToken = cookie.getValue();
+                        // Validate the accessToken here
+                        //validateToken(accessToken);
+                    } else if (cookie.getName().equals("idToken")) {
+                        idToken = cookie.getValue();
+                        // Validate the idToken and Get and Set the User
+                        user = getUserData(idToken);
+                        // Initialize User Service and store it in the session
+                        userService = new UserService(user);
+                        // Get or create the current session
+                        HttpSession session = req.getSession(true);
+                        session.setAttribute("userService", userService);
+                    }
+                }
+            }
 
             Gson gson = new Gson();
             String payload = gson.toJson(user);
             res.getWriter().write(payload);
+            addTokenCookies(accessToken, idToken, res);
 
             res.setStatus(HttpServletResponse.SC_OK);
         } catch (Exception e){
@@ -72,6 +88,19 @@ public class SessionValidationServlet extends HttpServlet {
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             res.getWriter().write("Unauthorized access");
         }
+    }
+
+    private void addTokenCookies(String accessToken, String idToken, HttpServletResponse res) {
+        //Add cookies to the HTTP response after token generation
+        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setSecure(true);
+        res.addCookie(accessTokenCookie);
+
+        Cookie idTokenCookie = new Cookie("idToken", idToken);
+        accessTokenCookie.setHttpOnly(true);
+        idTokenCookie.setSecure(true);
+        res.addCookie(idTokenCookie);
     }
 
     private User getUserData(String idToken) {
@@ -129,6 +158,14 @@ public class SessionValidationServlet extends HttpServlet {
         JwkProvider provider = AuthenticationControllerProvider.getJwkProvider(); //UrlJwkProvider(("https://" + domain + "/"));
 
         return (RSAPublicKey) provider.get(token.getKeyId()).getPublicKey();
+    }
+
+    private void setAccessControlHeaders(HttpServletResponse res) {
+        // Set CORS headers
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        res.setHeader("Access-Control-Allow-Credentials", "true");
     }
 }
 
