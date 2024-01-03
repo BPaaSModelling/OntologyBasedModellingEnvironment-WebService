@@ -217,25 +217,44 @@ public final class OntologyManager {
 
 		// Extract the WHERE clause of the original query.
 		String queryString = queryStr.toString();
-		if (queryString.contains("GRAPH")) return;
-		int whereIndex = queryString.toUpperCase().indexOf("WHERE");
-		int insertDataIndex = queryString.toUpperCase().indexOf("{");
-		String beforeClause, afterClause, newClause;
-		if (whereIndex >= 0) {
-			beforeClause = queryString.substring(0, whereIndex);
-			afterClause = queryString.substring(whereIndex);
-			newClause = "WHERE { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + "}";
-		} else if (insertDataIndex >= 0) {
+		String modifiedQuery = "";
 
-			// Split the query into two parts at the index clause
-			beforeClause = queryString.substring(0, insertDataIndex);
-			afterClause = queryString.substring(insertDataIndex);
-			newClause = " { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + " }";
+		if (queryString.contains("GRAPH")) return;
+
+		if (queryString.trim().toUpperCase().startsWith("SELECT")) {
+			// For SELECT queries, add the FROM clause before WHERE
+			modifiedQuery = queryString.replaceAll("(?i)WHERE", "FROM <" + userGraphUri + "> WHERE");
+		} else if (queryString.trim().toUpperCase().startsWith("INSERT") || queryString.trim().toUpperCase().startsWith("DELETE")) {
+			// For INSERT/DELETE queries, wrap the entire data modification clause with USING/GRAPH
+			// This assumes a standard structure of INSERT/DELETE queries
+			modifiedQuery = "WITH <" + userGraphUri + "> " + queryString;
+		} else {
+			// Handle other types of queries or fallback
+			// Log this as unexpected or handle accordingly
+			System.out.println("Unexpected query type or unable to determine type for graph context setting.");
+			return;
 		}
-		else return;
+
+//		int whereIndex = queryString.toUpperCase().indexOf("WHERE");
+//		int insertDataIndex = queryString.toUpperCase().indexOf("{");
+//		String beforeClause, afterClause, newClause;
+//		if (whereIndex >= 0) {
+//			beforeClause = queryString.substring(0, whereIndex);
+//			afterClause = queryString.substring(whereIndex);
+//			newClause = "FROM <"+ userGraphUri +"> WHERE { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + "}";
+//		} else if (insertDataIndex >= 0) {
+//
+//			// Split the query into two parts at the index clause
+//			beforeClause = queryString.substring(0, insertDataIndex);
+//			afterClause = queryString.substring(insertDataIndex);
+//			newClause = " { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + " }";
+//		}
+//		else return;
 		// Insert the Graph clause
 
-		queryStr.setCommandText(beforeClause + newClause);
+		//queryStr.setCommandText(beforeClause + newClause);
+
+		queryStr.setCommandText(modifiedQuery);
 		// Replace the original WHERE clause in the query with the new one.
 
 		//queryStr.setCommandText(queryStr.getCommandText().substring(0,whereIndex)+ newClause);
