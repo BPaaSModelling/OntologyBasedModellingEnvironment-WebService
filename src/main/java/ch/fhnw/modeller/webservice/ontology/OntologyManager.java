@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 import ch.fhnw.modeller.auth.UserService;
@@ -160,18 +162,19 @@ public final class OntologyManager {
 
 	public void insertQuery(ParameterizedSparqlString queryStr) {
 		try{
-		setCurrentUserGraph(queryStr);
-		addNamespacesToQuery(queryStr);
-		System.out.println("***Trying to insert***\n" + queryStr.toString() + "***End query***\n");
-		UpdateRequest update = UpdateFactory.create(queryStr.toString());
-		UpdateProcessor up;
-		up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
-		up.execute();
+			setCurrentUserGraph(queryStr);
+			addNamespacesToQuery(queryStr);
+			System.out.println("***Trying to insert***\n" + queryStr.toString() + "***End query***\n");
+			UpdateRequest update = UpdateFactory.create(queryStr.toString());
+			UpdateProcessor up;
+			up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
+			up.execute();
 		}catch(Exception e){
+			System.out.println(e.getMessage());
 		}finally{
 	
-		Date date = new Date();
-		System.out.println(new Timestamp(date.getTime()));
+			Date date = new Date();
+			System.out.println(new Timestamp(date.getTime()));
 		
 		}
 	}
@@ -210,7 +213,9 @@ public final class OntologyManager {
 
 	private void setCurrentUserGraph(ParameterizedSparqlString queryStr) {
 		// Modify the SPARQL query to target the specific user graph
-		if (userService == null) return;
+		if (userService == null) {
+			throw new IllegalArgumentException("UserService is not set to any user");
+		}
 		User user = userService.getUser();
 		String userGraphUri = userService.getUserGraphUri();
 		//String userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT() + "/graphs/" + user.getEmail();
@@ -234,26 +239,21 @@ public final class OntologyManager {
 			System.out.println("Unexpected query type or unable to determine type for graph context setting.");
 			return;
 		}
+/*      RegEx Approach
+        if(!queryStr.getCommandText().toUpperCase().contains("GRAPH")) {
+            Pattern pattern = Pattern.compile("\\{([^\\{\\}]*)\\}");
+            Matcher matcher = pattern.matcher(queryStr.getCommandText());
 
-//		int whereIndex = queryString.toUpperCase().indexOf("WHERE");
-//		int insertDataIndex = queryString.toUpperCase().indexOf("{");
-//		String beforeClause, afterClause, newClause;
-//		if (whereIndex >= 0) {
-//			beforeClause = queryString.substring(0, whereIndex);
-//			afterClause = queryString.substring(whereIndex);
-//			newClause = "FROM <"+ userGraphUri +"> WHERE { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + "}";
-//		} else if (insertDataIndex >= 0) {
-//
-//			// Split the query into two parts at the index clause
-//			beforeClause = queryString.substring(0, insertDataIndex);
-//			afterClause = queryString.substring(insertDataIndex);
-//			newClause = " { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + " }";
-//		}
-//		else return;
-		// Insert the Graph clause
+            StringBuffer sb = new StringBuffer(queryStr.getCommandText().length());
 
-		//queryStr.setCommandText(beforeClause + newClause);
-
+            //while (matcher.find()) {
+            // Here we append "GRAPH <..uri..> {content} " to each matching group
+            matcher.appendReplacement(sb, "FROM GRAPH <" + userGraphUri + "> {" + matcher.group(1) + "} }");
+            //}
+            matcher.appendTail(sb);
+            queryStr.clearParams();
+            queryStr.setCommandText(sb.toString());
+*/
 		queryStr.setCommandText(modifiedQuery);
 		// Replace the original WHERE clause in the query with the new one.
 

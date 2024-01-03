@@ -53,7 +53,7 @@ public class UserService {
             URL url = new URL(OntologyManager.getTRIPLESTOREENDPOINT());
 
             if (!checkIfGraphExists(userGraphUri)) {
-                createGraphForUser(userGraphUri);
+                duplicateDefaultGraphForUser(userGraphUri);
             }
         } catch (MalformedURLException | NoResultsException e) {
             e.printStackTrace();
@@ -61,20 +61,17 @@ public class UserService {
         }
     }
 
-    private boolean checkIfGraphExists(String graphUri) throws NoResultsException {
-        String queryString = String.format("ASK WHERE { GRAPH <" + graphUri + "> { ?s ?p ?o } }");
+    private boolean checkIfGraphExists(String userGraphUri) throws NoResultsException {
+        String queryString = String.format("ASK WHERE { GRAPH <" + userGraphUri + "> { ?s ?p ?o } }");
         ParameterizedSparqlString query = new ParameterizedSparqlString(queryString);
         try (QueryExecution qexec = ontologyManager.query(query)) {
             return qexec.execAsk();
         }
     }
 
-    private void createGraphForUser(String graphUri) {
-        String updateString = "INSERT DATA { GRAPH <" + graphUri + "> { <example:subject> <example:predicate> <example:object> } }";
+    private void duplicateDefaultGraphForUser(String graphUri) {
+        String updateString = "ADD DEFAULT TO GRAPH <"+ graphUri +"> ";
         ParameterizedSparqlString updateQuery = new ParameterizedSparqlString(updateString);
         ontologyManager.insertQuery(updateQuery);
-
     }
-
-
 }
