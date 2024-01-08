@@ -42,12 +42,11 @@ public enum NAMESPACE {
 	MODEL("mod", 							"http://fhnw.ch/modelingEnvironment/ModelOntology#"),
 	BPMN4PP("bpmn4pp", 							"http://ikm-group.ch/archiMEO/BPMN4PP#"),
 	GPML("gpml", 							"http://ikm-group.ch/archiMEO/gpml#"),
-	FW("fw", 							"http://fhnw.ch/FloWare#"),
+	FW("fw", 							    "http://fhnw.ch/FloWare#"),
 	BRICK("BRICK", 							"https://brickschema.org/schema/Brick#"),
 	TAG("TAG", 								"https://brickschema.org/schema/BrickTag#"),
 	QUDT("qudt",							"http://qudt.org/schema/qudt/"),
-	USO("uso",							"http://fhnw.ch/userstoryontology#")
-		
+	USO("uso",							    "http://fhnw.ch/userstoryontology#")
 	;
 	
 	private String prefix;
