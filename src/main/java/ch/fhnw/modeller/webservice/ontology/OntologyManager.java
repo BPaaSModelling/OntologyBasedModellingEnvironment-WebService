@@ -182,8 +182,8 @@ public final class OntologyManager {
 			// Modify the query based on its type
 			String modifiedQuery = modifyQueryForGraph(queryStr.toString(), userGraphUri);
 
-			System.out.println("***Trying to insert***\n" + modifiedQuery.toString() + "***End query***\n");
-			UpdateRequest update = UpdateFactory.create(modifiedQuery.toString());
+			//System.out.println("***Trying to insert***\n" + modifiedQuery.toString() + "***End query***\n");
+			UpdateRequest update = UpdateFactory.create(modifiedQuery);
 			UpdateProcessor up;
 			up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
 			up.execute();
@@ -199,17 +199,20 @@ public final class OntologyManager {
 
 	// Utility method to modify query to use a specific Graph
 	private String modifyQueryForGraph(String query, String graphUri) {
+		String graphClause = "{ GRAPH <" + graphUri + "> {";
 		// Handle INSERT DATA
 		if (query.trim().toUpperCase().contains("INSERT DATA")) {
-			return query.replaceFirst("\\{", "{ GRAPH <" + graphUri + "> {") + " }";
+			return query.replaceFirst("\\{", graphClause) + " }";
 		}
 		// Handle INSERT {...} WHERE {...}
 		else if (query.trim().toUpperCase().contains("INSERT")) {
-			return query.replaceAll("(?i)INSERT\\s*\\{", "INSERT { GRAPH <" + graphUri + "> {") + " }";
+			return query.replaceAll("(?i)INSERT\\s*\\{", "INSERT " + graphClause)
+					.replaceAll("(?i)WHERE", "}\nUSING <"+graphUri+">\n WHERE");
 		}
-		// Handle DELETE
+		// Handle DELETE {...} WHERE {...}
 		else if (query.trim().toUpperCase().contains("DELETE")) {
-			return query.replaceAll("(?i)DELETE\\s*\\{", "DELETE { GRAPH <" + graphUri + "> {") + " }";
+			return query.replaceAll("(?i)DELETE\\s*\\{", "DELETE " + graphClause)
+					.replaceAll("(?i)WHERE", "}\nUSING <"+graphUri+">\n WHERE");
 		}
 		// Return the modified query
 		return query;
@@ -254,71 +257,8 @@ public final class OntologyManager {
 		}
 		User user = userService.getUser();
 		String userGraphUri = userService.getUserGraphUri();
-		/*
-		Model model = ModelFactory.createDefaultModel();
-		Query query = QueryFactory.create("CONSTRUCT WHERE { GRAPH <" + userGraphUri + "> {?s ?p ?o} }");
-		try (QueryExecution qexec = QueryExecutionFactory.sparqlService(OntologyManager.getREADENDPOINT(), query)) {
-			model = qexec.execConstruct();
-		}
-		*/
 
 		return userGraphUri;
-//		//String userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT() + "/graphs/" + user.getEmail();
-//
-//		// Extract the WHERE clause of the original query.
-//		String queryString = queryStr.toString();
-//		if (queryString.contains("GRAPH")) return;
-//
-//
-//		int orderByIndex = queryString.toUpperCase().indexOf("ODER BY");
-//
-//		String beforeClause, afterClause, newClause;
-//
-//		if (queryString.toUpperCase().contains("WHERE")) {
-//			int whereIndex = queryString.toUpperCase().indexOf("WHERE");
-//			beforeClause = queryString.substring(0, whereIndex);
-//			afterClause = queryString.substring(whereIndex);
-//			if (queryString.toUpperCase().contains("ORDER BY")) {
-//				afterClause = queryString.substring(whereIndex, orderByIndex);
-//			}
-//
-//			newClause = "WHERE { GRAPH ?graph " + afterClause.substring(afterClause.indexOf("{")) + "}";
-//		} else if (queryString.toUpperCase().contains("INSERT DATA")) {
-//			int insertDataIndex = queryString.toUpperCase().indexOf("{");
-//			// Split the query into two parts at the index clause
-//			beforeClause = queryString.substring(0, insertDataIndex);
-//			afterClause = queryString.substring(insertDataIndex);
-//			if (queryString.toUpperCase().contains("ORDER BY")) {
-//				afterClause = queryString.substring(insertDataIndex, orderByIndex);
-//			}
-//			newClause = " { GRAPH ?graph " + afterClause.substring(afterClause.indexOf(" { ")) + " } ";
-//		} else {
-//			return;
-//		}
-//		// Insert the Graph clause
-//		queryStr.setCommandText(beforeClause + newClause);
-//		// Replace the original WHERE clause in the query with the new one.
-//		//queryStr.setCommandText(queryStr.getCommandText().substring(0,whereIndex)+ newClause);
-//
-//		queryStr.setIri("graph", userGraphUri);
-/*
-		if(!queryStr.getCommandText().toUpperCase().contains("GRAPH")) {
-			Pattern pattern = Pattern.compile("\\{([^\\{\\}]*)\\}");
-			Matcher matcher = pattern.matcher(queryStr.getCommandText());
-
-			StringBuffer sb = new StringBuffer(queryStr.getCommandText().length());
-
-			//while (matcher.find()) {
-				// Here we append "GRAPH <..uri..> {content} " to each matching group
-				matcher.appendReplacement(sb, "FROM GRAPH <" + userGraphUri + "> {" + matcher.group(1) + "} }");
-				Graph graph = RDFDataMgr.loadGraph(userGraphUri);
-
-				queryStr.setParam(graph);
-			//}
-			matcher.appendTail(sb);
-			queryStr.clearParams();
-			queryStr.setCommandText(sb.toString());
-		}*/
 	}
 
 	public static String getREADENDPOINT() {
