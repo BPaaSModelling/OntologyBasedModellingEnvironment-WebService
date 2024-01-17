@@ -38,6 +38,8 @@ public class SessionValidationServlet extends HttpServlet {
     private  UserService userService;
     private static AuthenticationController authenticationController;
     private String domain;
+
+    private Gson gson = new Gson();
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -70,6 +72,8 @@ public class SessionValidationServlet extends HttpServlet {
                         user = getUserData(idToken);
                         // Initialize User Service and store it in the session
                         userService = new UserService(user);
+                        //Initialize Graph upon login (create if doesn't exist and duplicate data from default graph)
+                        userService.initializeUserGraph(userService.getUserGraphUri());
                         // Get or create the current session
                         HttpSession session = req.getSession(true);
                         session.setAttribute("userService", userService);
@@ -80,7 +84,7 @@ public class SessionValidationServlet extends HttpServlet {
             Gson gson = new Gson();
             String payload = gson.toJson(user);
             res.getWriter().write(payload);
-            addTokenCookies(accessToken, idToken, res);
+            addTokenCookies(accessToken, idToken, user, res);
 
             res.setStatus(HttpServletResponse.SC_OK);
         } catch (Exception e){
@@ -90,7 +94,7 @@ public class SessionValidationServlet extends HttpServlet {
         }
     }
 
-    private void addTokenCookies(String accessToken, String idToken, HttpServletResponse res) {
+    private void addTokenCookies(String accessToken, String idToken, User user, HttpServletResponse res) throws UnsupportedEncodingException {
         //Add cookies to the HTTP response after token generation
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
         accessTokenCookie.setHttpOnly(true);
@@ -98,9 +102,15 @@ public class SessionValidationServlet extends HttpServlet {
         res.addCookie(accessTokenCookie);
 
         Cookie idTokenCookie = new Cookie("idToken", idToken);
-        accessTokenCookie.setHttpOnly(true);
+        idTokenCookie.setHttpOnly(true);
         idTokenCookie.setSecure(true);
         res.addCookie(idTokenCookie);
+
+        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
+        Cookie userDataCookie = new Cookie("userData", encodedUser);
+        userDataCookie.setHttpOnly(true);
+        userDataCookie.setSecure(true);
+        res.addCookie(userDataCookie);
     }
 
     private User getUserData(String idToken) {

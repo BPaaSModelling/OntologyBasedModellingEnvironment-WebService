@@ -85,7 +85,7 @@ public class CallbackServlet extends HttpServlet {
         handle(req, res);
     }
 
-    private void handle(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    private void handle(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         try {
             Tokens tokens = authenticationController.handle(req, res);
             //SessionUtils.set(req, "accessToken", tokens.getAccessToken());
@@ -99,7 +99,7 @@ public class CallbackServlet extends HttpServlet {
             res.addCookie(accessTokenCookie);
 
             Cookie idTokenCookie = new Cookie("idToken", tokens.getIdToken());
-            accessTokenCookie.setHttpOnly(true);
+            idTokenCookie.setHttpOnly(true);
             idTokenCookie.setSecure(true);
             res.addCookie(idTokenCookie);
 
@@ -113,6 +113,9 @@ public class CallbackServlet extends HttpServlet {
             //redirectUrl += "&idToken=" + URLEncoder.encode(tokens.getIdToken(), "UTF-8");
 
             //res.setHeader("Authorization", tokens.getAccessToken());
+//            SessionValidationServlet sessionValidationServlet = new SessionValidationServlet();
+//            sessionValidationServlet.init(getServletConfig());
+//            sessionValidationServlet.doGet(req, res);
 
             res.sendRedirect(redirectUrl);
         } catch (IdentityVerificationException e) {

@@ -30,7 +30,7 @@ import static ch.fhnw.modeller.webservice.ontology.OntologyManager.getTRIPLESTOR
 
 public class UserService {
     private final OntologyManager ontologyManager;
-    private static UserService INSTANCE;
+    public static UserService INSTANCE;
     @Getter
     private final User user;
     @Getter
@@ -42,7 +42,7 @@ public class UserService {
         this.ontologyManager.setUserService(this);
 
         this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT()+"/graphs/"+user.getEmail();
-        initializeUserGraph(userGraphUri);
+
     }
 
     public void initializeUserGraph(String userGraphUri) {
