@@ -21,6 +21,9 @@ import org.apache.jena.update.UpdateFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.container.ContainerRequestContext;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -30,7 +33,7 @@ import static ch.fhnw.modeller.webservice.ontology.OntologyManager.getTRIPLESTOR
 
 public class UserService {
     private final OntologyManager ontologyManager;
-    public static UserService INSTANCE;
+    //public static UserService INSTANCE;
     @Getter
     private final User user;
     @Getter
@@ -39,25 +42,27 @@ public class UserService {
         // Set User, current OntologyManager and respective UserService upon initialization
         this.user = user;
         this.ontologyManager = OntologyManager.getInstance();
-        this.ontologyManager.setUserService(this);
+        //this.ontologyManager.setUserService(this);
 
         this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT()+"/graphs/"+user.getEmail();
-
     }
 
-    public void initializeUserGraph(String userGraphUri) {
+    public static UserService getUserService(HttpServletRequest request){
+        HttpSession session = request.getSession();
+        if(session.getAttribute("userService") == null){
+            throw new IllegalArgumentException("No user service found in session");
+        }
+        return (UserService) session.getAttribute("userService");
+    }
+
+    public void initializeUserGraph(String userGraphUri) throws NoResultsException {
         if(userGraphUri == null || userGraphUri.isEmpty()){
             throw new IllegalArgumentException("UserGraph cannot be null or empty");
         }
-        try {
-            URL url = new URL(OntologyManager.getTRIPLESTOREENDPOINT());
+        //URL url = new URL(OntologyManager.getTRIPLESTOREENDPOINT());
 
-            if (!checkIfGraphExists(userGraphUri)) {
-                duplicateDefaultGraphForUser(userGraphUri);
-            }
-        } catch (MalformedURLException | NoResultsException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Check if Jena Fuseki is running on localhost:3030");
+        if (!checkIfGraphExists(userGraphUri)) {
+            duplicateDefaultGraphForUser(userGraphUri);
         }
     }
 

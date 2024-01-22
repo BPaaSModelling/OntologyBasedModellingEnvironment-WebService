@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Cookie;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Context;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -34,10 +36,12 @@ import org.json.JSONObject;
 
 @WebServlet("/auth")
 public class SessionValidationServlet extends HttpServlet {
+    @Context
+    private ContainerRequestContext crc;
 
     private  UserService userService;
     private static AuthenticationController authenticationController;
-    private String domain;
+    private static String domain;
 
     private Gson gson = new Gson();
     @Override
@@ -75,16 +79,20 @@ public class SessionValidationServlet extends HttpServlet {
                         //Initialize Graph upon login (create if doesn't exist and duplicate data from default graph)
                         userService.initializeUserGraph(userService.getUserGraphUri());
                         // Get or create the current session
-                        HttpSession session = req.getSession(true);
-                        session.setAttribute("userService", userService);
+                        //HttpSession session = req.getSession(true); // Create session if it does not exist
+                        //session.setAttribute("userService", userService);
+                        //requestContext.setProperty("userService", userService);
                     }
                 }
             }
 
             Gson gson = new Gson();
             String payload = gson.toJson(user);
+            //addTokenCookies(accessToken, idToken, user, res);
+            res.setHeader("Authorization", accessToken);
             res.getWriter().write(payload);
-            addTokenCookies(accessToken, idToken, user, res);
+
+
 
             res.setStatus(HttpServletResponse.SC_OK);
         } catch (Exception e){
@@ -98,22 +106,24 @@ public class SessionValidationServlet extends HttpServlet {
         //Add cookies to the HTTP response after token generation
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
         accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(true);
+        accessTokenCookie.setSecure(false);
+        accessTokenCookie.setPath("/");
         res.addCookie(accessTokenCookie);
 
         Cookie idTokenCookie = new Cookie("idToken", idToken);
         idTokenCookie.setHttpOnly(true);
-        idTokenCookie.setSecure(true);
+        idTokenCookie.setSecure(false);
+        idTokenCookie.setPath("/");
         res.addCookie(idTokenCookie);
 
-        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
-        Cookie userDataCookie = new Cookie("userData", encodedUser);
-        userDataCookie.setHttpOnly(true);
-        userDataCookie.setSecure(true);
-        res.addCookie(userDataCookie);
+//        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
+//        Cookie userDataCookie = new Cookie("userData", encodedUser);
+//        userDataCookie.setHttpOnly(true);
+//        userDataCookie.setSecure(true);
+//        res.addCookie(userDataCookie);
     }
 
-    private User getUserData(String idToken) {
+    public static User getUserData(String idToken) {
         try {
             final DecodedJWT jwt = validateToken(idToken);
 
@@ -139,7 +149,7 @@ public class SessionValidationServlet extends HttpServlet {
         }
     }
 
-    private DecodedJWT validateToken(String token) {
+    private static DecodedJWT validateToken(String token) {
         // This can involve checking the signature, expiry, etc.
         try {
             final DecodedJWT jwt = JWT.decode(token);
@@ -164,7 +174,7 @@ public class SessionValidationServlet extends HttpServlet {
         }
     }
 
-    private RSAPublicKey loadPublicKey(DecodedJWT token) throws JwkException, MalformedURLException {
+    private static RSAPublicKey loadPublicKey(DecodedJWT token) throws JwkException, MalformedURLException {
         JwkProvider provider = AuthenticationControllerProvider.getJwkProvider(); //UrlJwkProvider(("https://" + domain + "/"));
 
         return (RSAPublicKey) provider.get(token.getKeyId()).getPublicKey();

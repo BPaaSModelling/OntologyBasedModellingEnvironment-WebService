@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 
 import ch.fhnw.modeller.auth.UserService;
 import ch.fhnw.modeller.model.auth.User;
+import ch.fhnw.modeller.webservice.exception.NoResultsException;
+import ch.fhnw.modeller.webservice.filter.CookieRequestFilter;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.jena.graph.Factory;
@@ -35,14 +37,18 @@ import org.apache.jena.update.UpdateRequest;
 import ch.fhnw.modeller.webservice.config.ConfigReader;
 import org.apache.jena.util.FileManager;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.container.ContainerRequestContext;
+
 
 public final class OntologyManager {
 
 	private static OntologyManager INSTANCE;
 	private boolean localOntology = true;
 
-	@Getter
-	@Setter
+//	@Getter
+//	@Setter
 	private UserService userService;
 
 	//private Model rdfModel;
@@ -155,11 +161,11 @@ public final class OntologyManager {
 //	}
 
 	public QueryExecution query(ParameterizedSparqlString queryStr) {
+		String userGraphUri = getCurrentUserGraph();
 		addNamespacesToQuery(queryStr);
 
 		System.out.println("***Performed query***\n" + queryStr.toString() + "***Performed query***\n");
 		Query query = QueryFactory.create(queryStr.toString());
-		String userGraphUri = setCurrentUserGraph();
 		if (userGraphUri != null && !query.toString().contains("GRAPH")) {
 			query.addGraphURI(userGraphUri);
 			System.out.println("Graph QUERY \n" + query.toString());
@@ -174,9 +180,7 @@ public final class OntologyManager {
 
 	public void insertQuery(ParameterizedSparqlString queryStr) {
 		try{
-			User user = userService.getUser();
-			String userGraphUri = userService.getUserGraphUri(); // gets your specific graph URI
-
+		 	String userGraphUri = getCurrentUserGraph();// gets your specific graph URI
 			addNamespacesToQuery(queryStr);
 
 			// Modify the query based on its type
@@ -199,6 +203,10 @@ public final class OntologyManager {
 
 	// Utility method to modify query to use a specific Graph
 	private String modifyQueryForGraph(String query, String graphUri) {
+		if (graphUri == null || graphUri.isEmpty()) {
+			System.out.println("No graph URI specified, using default graph");
+			return query;
+		}
 		String graphClause = "{ GRAPH <" + graphUri + "> {";
 		// Handle INSERT DATA
 		if (query.trim().toUpperCase().contains("INSERT DATA")) {
@@ -231,7 +239,7 @@ public final class OntologyManager {
 				UpdateAction.parseExecute(queryStrList.get(i).toString(), tempModel);
 			}
 			//If no errors occur, I execute the queries on the online ontology
-			
+
 			for (int i = 0; i < queryStrList.size(); i++){
 				insertQuery(queryStrList.get(i));
 			}
@@ -250,15 +258,43 @@ public final class OntologyManager {
 		return localOntology;
 	}
 
-	private String setCurrentUserGraph() {
+	private String getCurrentUserGraph() {
+		//userService = (UserService) crc.getProperty("userService");
+		//userService = UserService.getUserService(crc);
+		//UserService userService = UserService.getUserService();
 		// Modify the SPARQL query to target the specific user graph
 		if (userService == null) {
-			throw new IllegalArgumentException("UserService is not set to any user");
+			return null;
+			//throw new IllegalArgumentException("UserService is not set to any user");
 		}
-		User user = userService.getUser();
+		//User user = userService.getUser();
 		String userGraphUri = userService.getUserGraphUri();
 
 		return userGraphUri;
+	}
+
+//	TODO: Proper ErrorHandling where cookies are not passed. Therefore, in certain cases an error should not be thrown.
+//	TODO: Check if SessionValidationServlet.java can be done via JAX RS instead of Servlets, it would be easier and more consistent.
+//	TODO: Currently, because of a bug, setUserService is overloaded. Check if possible to remove the overloaded version.
+//	TODO: Check if CookieResponseFilter.java is needed. if not, remove.
+	public void setUserService(ContainerRequestContext crc) {
+		//this.userService = userService;
+		userService = (UserService) crc.getProperty("userService");
+		// Modify the SPARQL query to target the specific user graph
+		if (this.userService == null) {
+			//throw new IllegalArgumentException("UserService is not set to any user");
+			System.out.println("UserService is not set to any user");
+		}
+	}
+//overloaded method, delete when not needed
+	public void setUserService(UserService userService) {
+		//this.userService = userService;
+		this.userService = userService;
+		// Modify the SPARQL query to target the specific user graph
+		if (this.userService == null) {
+			//throw new IllegalArgumentException("UserService is not set to any user");
+			System.out.println("UserService is not set to any user");
+		}
 	}
 
 	public static String getREADENDPOINT() {

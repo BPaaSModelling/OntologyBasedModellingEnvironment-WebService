@@ -1,21 +1,28 @@
 package ch.fhnw.modeller.auth;
 
+import ch.fhnw.modeller.model.auth.User;
 import com.auth0.AuthenticationController;
 import com.auth0.IdentityVerificationException;
 import com.auth0.SessionUtils;
 import com.auth0.Tokens;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwk.JwkProvider;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URLEncoder;
+import java.security.InvalidParameterException;
+import java.security.interfaces.RSAPublicKey;
 
 /**
  * The Servlet endpoint used as the callback handler in the OAuth 2.0 authorization code grant flow.
@@ -27,6 +34,9 @@ public class CallbackServlet extends HttpServlet {
     private String redirectOnSuccess;
     private String redirectOnFail;
     private AuthenticationController authenticationController;
+    private  UserService userService;
+    private String domain;
+    private Gson gson = new Gson();
 
 
     /**
@@ -52,6 +62,7 @@ public class CallbackServlet extends HttpServlet {
 
         try {
             authenticationController = AuthenticationControllerProvider.getInstance(config);
+            domain = config.getServletContext().getInitParameter("com.auth0.domain");
         } catch (UnsupportedEncodingException e) {
             throw new ServletException("Couldn't create the AuthenticationController instance. Check the configuration.", e);
         }
@@ -93,34 +104,62 @@ public class CallbackServlet extends HttpServlet {
             //res.sendRedirect(redirectOnSuccess);
 
             //Add cookies to the HTTP response after token generation
-            Cookie accessTokenCookie = new Cookie("accessToken", tokens.getAccessToken());
-            accessTokenCookie.setHttpOnly(true);
-            accessTokenCookie.setSecure(true);
-            res.addCookie(accessTokenCookie);
+//            Cookie accessTokenCookie = new Cookie("accessToken", tokens.getAccessToken());
+//            accessTokenCookie.setHttpOnly(true);
+//            accessTokenCookie.setSecure(true);
+//            res.addCookie(accessTokenCookie);
+//
+//            Cookie idTokenCookie = new Cookie("idToken", tokens.getIdToken());
+//            idTokenCookie.setHttpOnly(true);
+//            idTokenCookie.setSecure(true);
+//            res.addCookie(idTokenCookie);
 
-            Cookie idTokenCookie = new Cookie("idToken", tokens.getIdToken());
-            idTokenCookie.setHttpOnly(true);
-            idTokenCookie.setSecure(true);
-            res.addCookie(idTokenCookie);
+
 
             //Add tokens
             Gson gson = new Gson();
             String payload = gson.toJson(tokens.getIdToken());
+            res.setHeader("Authorization", tokens.getAccessToken());
             res.getWriter().write(payload);
 
             String redirectUrl = "http://localhost:4200/home";
             //redirectUrl += "?accessToken=" + URLEncoder.encode(tokens.getAccessToken(), "UTF-8");
             //redirectUrl += "&idToken=" + URLEncoder.encode(tokens.getIdToken(), "UTF-8");
 
-            //res.setHeader("Authorization", tokens.getAccessToken());
 //            SessionValidationServlet sessionValidationServlet = new SessionValidationServlet();
 //            sessionValidationServlet.init(getServletConfig());
 //            sessionValidationServlet.doGet(req, res);
+            //User user = decodeUserData(tokens.getIdToken());
+            //UserService userService = initializeUserService(user);
+            addTokenCookies(tokens.getAccessToken(), tokens.getIdToken(), res);
 
             res.sendRedirect(redirectUrl);
         } catch (IdentityVerificationException e) {
             e.printStackTrace();
             res.sendRedirect(redirectOnFail);
         }
+
+
     }
+    private void addTokenCookies(String accessToken, String idToken, HttpServletResponse res) throws UnsupportedEncodingException {
+        //Add cookies to the HTTP response after token generation
+        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setSecure(false);
+        accessTokenCookie.setPath("/");
+        res.addCookie(accessTokenCookie);
+
+        Cookie idTokenCookie = new Cookie("idToken", idToken);
+        idTokenCookie.setHttpOnly(true);
+        idTokenCookie.setSecure(false);
+        idTokenCookie.setPath("/");
+        res.addCookie(idTokenCookie);
+
+//        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
+//        Cookie userDataCookie = new Cookie("userData", encodedUser);
+//        userDataCookie.setHttpOnly(true);
+//        userDataCookie.setSecure(true);
+//        res.addCookie(userDataCookie);
+    }
+
 }
