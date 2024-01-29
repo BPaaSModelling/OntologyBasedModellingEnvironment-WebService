@@ -283,19 +283,19 @@ public final class OntologyManager {
 		// Modify the SPARQL query to target the specific user graph
 		if (this.userService == null) {
 			//throw new IllegalArgumentException("UserService is not set to any user");
-			System.out.println("UserService is not set to any user");
+			System.out.println("Welcome! UserService is not set to any user, this happens upon your first login.");
 		}
 	}
 //overloaded method, delete when not needed
-	public void setUserService(UserService userService) {
-		//this.userService = userService;
-		this.userService = userService;
-		// Modify the SPARQL query to target the specific user graph
-		if (this.userService == null) {
-			//throw new IllegalArgumentException("UserService is not set to any user");
-			System.out.println("UserService is not set to any user");
-		}
-	}
+//	public void setUserService(UserService userService) {
+//		//this.userService = userService;
+//		this.userService = userService;
+//		// Modify the SPARQL query to target the specific user graph
+//		if (this.userService == null) {
+//			//throw new IllegalArgumentException("UserService is not set to any user");
+//			System.out.println("UserService is not set to any user");
+//		}
+//	}
 
 	public static String getREADENDPOINT() {
 		return READENDPOINT;

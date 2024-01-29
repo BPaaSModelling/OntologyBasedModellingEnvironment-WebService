@@ -16,23 +16,7 @@ public class CookieResponseFilter implements ContainerResponseFilter {
     @Override
     public void filter(ContainerRequestContext requestContext,
                        ContainerResponseContext responseContext) throws IOException {
-//        String idToken = requestContext
-//                .getCookies()
-//                .get("idToken")
-//                .getValue();
-//
-//        String accessToken = requestContext
-//                .getCookies()
-//                .get("accessToken")
-//                .getValue();
-
-//        NewCookie idTokenCookie = new NewCookie("idToken", idToken); // replace with your cookie name and value
-//        NewCookie accessTokenCookie = new NewCookie("accessToken", accessToken); // replace with your cookie name and value
-        //responseContext.getCookies().put("cookieName", newCookie);
-
-        //responseContext.getHeaders().add(HttpHeaders.SET_COOKIE, idTokenCookie);
-        //responseContext.getHeaders().add(HttpHeaders.SET_COOKIE, accessTokenCookie);
-        //responseContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+        // This filter is executed after the request is processed
 
     }
 }

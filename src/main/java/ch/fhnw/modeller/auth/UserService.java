@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Logger;
 
 import static ch.fhnw.modeller.webservice.ontology.OntologyManager.getTRIPLESTOREENDPOINT;
 
@@ -63,6 +64,7 @@ public class UserService {
 
         if (!checkIfGraphExists(userGraphUri)) {
             duplicateDefaultGraphForUser(userGraphUri);
+            Logger.getLogger("UserService").info("Graph for user " + userGraphUri + " created");
         }
     }
 

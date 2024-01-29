@@ -22,12 +22,17 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.InvalidParameterException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.auth0.exception.IdTokenValidationException;
+import com.auth0.json.mgmt.Token;
 import com.auth0.jwk.*;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.RSAKeyProvider;
@@ -41,7 +46,7 @@ public class SessionValidationServlet extends HttpServlet {
 
     private  UserService userService;
     private static AuthenticationController authenticationController;
-    private static String domain;
+    public static String domain;
 
     private Gson gson = new Gson();
     @Override
@@ -58,7 +63,6 @@ public class SessionValidationServlet extends HttpServlet {
 
         String accessToken = null; //= req.getParameter("accessToken");
         String idToken = null; //= req.getParameter( "idToken");
-
         User user = null;
 
         try {
@@ -68,8 +72,6 @@ public class SessionValidationServlet extends HttpServlet {
                 for (Cookie cookie : cookies) {
                     if (cookie.getName().equals("accessToken")) {
                         accessToken = cookie.getValue();
-                        // Validate the accessToken here
-                        //validateToken(accessToken);
                     } else if (cookie.getName().equals("idToken")) {
                         idToken = cookie.getValue();
                         // Validate the idToken and Get and Set the User
@@ -78,12 +80,12 @@ public class SessionValidationServlet extends HttpServlet {
                         userService = new UserService(user);
                         //Initialize Graph upon login (create if doesn't exist and duplicate data from default graph)
                         userService.initializeUserGraph(userService.getUserGraphUri());
-                        // Get or create the current session
-                        //HttpSession session = req.getSession(true); // Create session if it does not exist
-                        //session.setAttribute("userService", userService);
-                        //requestContext.setProperty("userService", userService);
                     }
                 }
+            }
+
+            if (accessToken == null || idToken == null) {
+                throw new InvalidParameterException("Tokens cannot be null or empty. User will be redirected to login page to receive new tokens.");
             }
 
             Gson gson = new Gson();
@@ -92,13 +94,11 @@ public class SessionValidationServlet extends HttpServlet {
             res.setHeader("Authorization", accessToken);
             res.getWriter().write(payload);
 
-
-
             res.setStatus(HttpServletResponse.SC_OK);
         } catch (Exception e){
             e.printStackTrace();
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            res.getWriter().write("Unauthorized access");
+            res.getWriter().write("Unauthorized: Token is not set or is expired or invalid.");
         }
     }
 
@@ -115,16 +115,10 @@ public class SessionValidationServlet extends HttpServlet {
         idTokenCookie.setSecure(false);
         idTokenCookie.setPath("/");
         res.addCookie(idTokenCookie);
-
-//        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
-//        Cookie userDataCookie = new Cookie("userData", encodedUser);
-//        userDataCookie.setHttpOnly(true);
-//        userDataCookie.setSecure(true);
-//        res.addCookie(userDataCookie);
     }
 
     public static User getUserData(String idToken) {
-        try {
+//        try {
             final DecodedJWT jwt = validateToken(idToken);
 
             // Create User object
@@ -144,18 +138,22 @@ public class SessionValidationServlet extends HttpServlet {
             user.setSid(jwt.getClaim("sid").asString());
 
             return user;
-        } catch (Exception e) {
-            throw new InvalidParameterException("JWT validation failed: " + e.getMessage());
-        }
+//        } catch (Exception e) {
+//            Logger.getLogger(SessionValidationServlet.class.getName()).log(Level.WARNING, "JWT validation failed: " + e.getMessage(), e);
+//            throw new IdTokenValidationException("JWT validation failed: " + e.getMessage());
+//        }
     }
 
     private static DecodedJWT validateToken(String token) {
         // This can involve checking the signature, expiry, etc.
         try {
+            if (token == null || token.isEmpty()) {
+                throw new IdTokenValidationException("Token cannot be null or empty. User will be redirected to login page");
+            }
             final DecodedJWT jwt = JWT.decode(token);
             JwkProvider jwkProvider =  AuthenticationControllerProvider.getJwkProvider();
             if (!jwt.getIssuer().contains(domain)) {
-                throw new InvalidParameterException(String.format("Unknown Issuer %s", jwt.getIssuer()));
+                throw new IdTokenValidationException(String.format("Unknown Issuer %s", jwt.getIssuer()));
             }
             RSAPublicKey publicKey = loadPublicKey(jwt);
 
@@ -167,10 +165,13 @@ public class SessionValidationServlet extends HttpServlet {
             verifier.verify(token);
             return jwt;
 
+        } catch (TokenExpiredException e) {
+            Logger.getLogger(SessionValidationServlet.class.getName()).log(Level.INFO, "JWT Token expired, a new Token will be created upon next login. ");
+            throw new TokenExpiredException("JWT Token expired, a new Token will be created upon next login. ");
         } catch (Exception e) {
             //Invalid token
-            e.printStackTrace();
-            throw new InvalidParameterException("JWT validation failed: "+e.getMessage());
+            Logger.getLogger(SessionValidationServlet.class.getName()).log(Level.WARNING, "JWT validation failed: ", e);
+            throw new IdTokenValidationException("JWT validation failed: "+e.getMessage());
         }
     }
 
@@ -178,14 +179,6 @@ public class SessionValidationServlet extends HttpServlet {
         JwkProvider provider = AuthenticationControllerProvider.getJwkProvider(); //UrlJwkProvider(("https://" + domain + "/"));
 
         return (RSAPublicKey) provider.get(token.getKeyId()).getPublicKey();
-    }
-
-    private void setAccessControlHeaders(HttpServletResponse res) {
-        // Set CORS headers
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        res.setHeader("Access-Control-Allow-Credentials", "true");
     }
 }
 

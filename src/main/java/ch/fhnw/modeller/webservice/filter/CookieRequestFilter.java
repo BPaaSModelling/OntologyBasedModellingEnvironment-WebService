@@ -1,9 +1,11 @@
 package ch.fhnw.modeller.webservice.filter;
 
+import ch.fhnw.modeller.auth.AuthenticationControllerProvider;
 import ch.fhnw.modeller.auth.SessionValidationServlet;
 import ch.fhnw.modeller.auth.UserService;
 import ch.fhnw.modeller.model.auth.User;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
+import com.auth0.AuthenticationController;
 import com.google.gson.Gson;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,30 +36,21 @@ public class CookieRequestFilter implements ContainerRequestFilter {
 
         HttpSession session = request.getSession();
 
-        if (idTokenCookie != null && accessTokenCookie != null) {
-
-
+        if (idTokenCookie != null && accessTokenCookie != null && SessionValidationServlet.domain!=null) {
+            //Check domain and tokens
             String idToken = idTokenCookie.getValue();
             String accessToken = accessTokenCookie.getValue();
 
-            if (requestContext.getProperty("userService") == null) { // Only create userService for a new session
+            if (requestContext.getProperty("userService") == null ) {
+                // Only create userService for a new session
                 User user = SessionValidationServlet.getUserData(idToken);
                 UserService userService = new UserService(user);
                 OntologyManager ontology = OntologyManager.getInstance();
-                //session.setAttribute("userService", userService);
                 requestContext.setProperty("userService", userService);
                 ontology.setUserService(requestContext);
             } else { // If the userService already exists in session, Retrieve it.
                 OntologyManager ontology =  OntologyManager.getInstance();
-                //ontology.setUserService(requestContext); //= (UserService) session.getAttribute("userService");
             }
-            //String userData = URLDecoder.decode(userDataCookie.getValue(), "UTF-8");
-
-            //requestContext.getHeaders().add(HttpHeaders.SET_COOKIE, idTokenCookie);
-            //requestContext.getHeaders().add(HttpHeaders.SET_COOKIE, accessTokenCookie);
-
-            //User user = gson.fromJson(userData, User.class);
-            //UserService userService = new UserService(user);
         }
     }
 }
