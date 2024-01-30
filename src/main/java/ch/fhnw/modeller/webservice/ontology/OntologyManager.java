@@ -3,20 +3,31 @@ package ch.fhnw.modeller.webservice.ontology;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
+import ch.fhnw.modeller.auth.UserService;
+import ch.fhnw.modeller.model.auth.User;
+import ch.fhnw.modeller.webservice.exception.NoResultsException;
+import ch.fhnw.modeller.webservice.filter.CookieRequestFilter;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.jena.graph.Factory;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.GraphUtil;
+import org.apache.jena.graph.impl.GraphBase;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdfs.RDFSFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.WriterDatasetRIOTFactory;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateFactory;
@@ -24,12 +35,22 @@ import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 
 import ch.fhnw.modeller.webservice.config.ConfigReader;
+import org.apache.jena.util.FileManager;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.container.ContainerRequestContext;
 
 
 public final class OntologyManager {
 
 	private static OntologyManager INSTANCE;
 	private boolean localOntology = true;
+
+//	@Getter
+//	@Setter
+	private UserService userService;
+
 	//private Model rdfModel;
 	
 	/**
@@ -140,34 +161,71 @@ public final class OntologyManager {
 //	}
 
 	public QueryExecution query(ParameterizedSparqlString queryStr) {
+		String userGraphUri = getCurrentUserGraph();
 		addNamespacesToQuery(queryStr);
+
 		System.out.println("***Performed query***\n" + queryStr.toString() + "***Performed query***\n");
 		Query query = QueryFactory.create(queryStr.toString());
+		if (userGraphUri != null && !query.toString().contains("GRAPH")) {
+			query.addGraphURI(userGraphUri);
+			System.out.println("Graph QUERY \n" + query.toString());
+		}
 		QueryExecution qexec;
-		
+
 		qexec = QueryExecutionFactory.sparqlService(QUERYENDPOINT, query);
-	
+
 		return qexec;
 	}
 	
 
 	public void insertQuery(ParameterizedSparqlString queryStr) {
 		try{
-		addNamespacesToQuery(queryStr);
-		System.out.println("***Trying to insert***\n" + queryStr.toString() + "***End query***\n");
-		UpdateRequest update = UpdateFactory.create(queryStr.toString());
-		UpdateProcessor up;
-		up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
-		up.execute();
+		 	String userGraphUri = getCurrentUserGraph();// gets your specific graph URI
+			addNamespacesToQuery(queryStr);
+
+			// Modify the query based on its type
+			String modifiedQuery = modifyQueryForGraph(queryStr.toString(), userGraphUri);
+
+			//System.out.println("***Trying to insert***\n" + modifiedQuery.toString() + "***End query***\n");
+			UpdateRequest update = UpdateFactory.create(modifiedQuery);
+			UpdateProcessor up;
+			up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
+			up.execute();
 		}catch(Exception e){
+			System.out.println(e.getMessage());
 		}finally{
 	
-		Date date = new Date();
-		System.out.println(new Timestamp(date.getTime()));
+			Date date = new Date();
+			System.out.println(new Timestamp(date.getTime()));
 		
 		}
 	}
-	
+
+	// Utility method to modify query to use a specific Graph
+	private String modifyQueryForGraph(String query, String graphUri) {
+		if (graphUri == null || graphUri.isEmpty()) {
+			System.out.println("No graph URI specified, using default graph");
+			return query;
+		}
+		String graphClause = "{ GRAPH <" + graphUri + "> {";
+		// Handle INSERT DATA
+		if (query.trim().toUpperCase().contains("INSERT DATA")) {
+			return query.replaceFirst("\\{", graphClause) + " }";
+		}
+		// Handle INSERT {...} WHERE {...}
+		else if (query.trim().toUpperCase().contains("INSERT")) {
+			return query.replaceAll("(?i)INSERT\\s*\\{", "INSERT " + graphClause)
+					.replaceAll("(?i)WHERE", "}\nUSING <"+graphUri+">\n WHERE");
+		}
+		// Handle DELETE {...} WHERE {...}
+		else if (query.trim().toUpperCase().contains("DELETE")) {
+			return query.replaceAll("(?i)DELETE\\s*\\{", "DELETE " + graphClause)
+					.replaceAll("(?i)WHERE", "}\nUSING <"+graphUri+">\n WHERE");
+		}
+		// Return the modified query
+		return query;
+	}
+
 	
 	public boolean insertMultipleQueries(List<ParameterizedSparqlString> queryStrList) {
 		Model tempModel = ModelFactory.createOntologyModel();
@@ -181,7 +239,7 @@ public final class OntologyManager {
 				UpdateAction.parseExecute(queryStrList.get(i).toString(), tempModel);
 			}
 			//If no errors occur, I execute the queries on the online ontology
-			
+
 			for (int i = 0; i < queryStrList.size(); i++){
 				insertQuery(queryStrList.get(i));
 			}
@@ -199,6 +257,45 @@ public final class OntologyManager {
 	public boolean isLocalOntology() {
 		return localOntology;
 	}
+
+	private String getCurrentUserGraph() {
+		//userService = (UserService) crc.getProperty("userService");
+		//userService = UserService.getUserService(crc);
+		//UserService userService = UserService.getUserService();
+		// Modify the SPARQL query to target the specific user graph
+		if (userService == null) {
+			return null;
+			//throw new IllegalArgumentException("UserService is not set to any user");
+		}
+		//User user = userService.getUser();
+		String userGraphUri = userService.getUserGraphUri();
+
+		return userGraphUri;
+	}
+
+//	TODO: Proper ErrorHandling where cookies are not passed. Therefore, in certain cases an error should not be thrown.
+//	TODO: Check if SessionValidationServlet.java can be done via JAX RS instead of Servlets, it would be easier and more consistent.
+//	TODO: Currently, because of a bug, setUserService is overloaded. Check if possible to remove the overloaded version.
+//	TODO: Check if CookieResponseFilter.java is needed. if not, remove.
+	public void setUserService(ContainerRequestContext crc) {
+		//this.userService = userService;
+		userService = (UserService) crc.getProperty("userService");
+		// Modify the SPARQL query to target the specific user graph
+		if (this.userService == null) {
+			//throw new IllegalArgumentException("UserService is not set to any user");
+			System.out.println("Welcome! UserService is not set to any user, this happens upon your first login.");
+		}
+	}
+//overloaded method, delete when not needed
+//	public void setUserService(UserService userService) {
+//		//this.userService = userService;
+//		this.userService = userService;
+//		// Modify the SPARQL query to target the specific user graph
+//		if (this.userService == null) {
+//			//throw new IllegalArgumentException("UserService is not set to any user");
+//			System.out.println("UserService is not set to any user");
+//		}
+//	}
 
 	public static String getREADENDPOINT() {
 		return READENDPOINT;
