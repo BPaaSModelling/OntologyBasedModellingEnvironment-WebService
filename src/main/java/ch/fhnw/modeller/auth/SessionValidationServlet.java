@@ -39,6 +39,10 @@ import com.auth0.jwt.interfaces.RSAKeyProvider;
 import com.google.gson.Gson;
 import org.json.JSONObject;
 
+/**
+ * The SessionValidationServlet class is a servlet responsible for validating user sessions and providing user data.
+ * It handles accessToken and idToken cookies, decodes and validates them.
+ */
 @WebServlet("/auth")
 public class SessionValidationServlet extends HttpServlet {
     @Context
@@ -102,25 +106,8 @@ public class SessionValidationServlet extends HttpServlet {
         }
     }
 
-    private void addTokenCookies(String accessToken, String idToken, User user, HttpServletResponse res) throws UnsupportedEncodingException {
-        //Add cookies to the HTTP response after token generation
-        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(false);
-        accessTokenCookie.setPath("/");
-        res.addCookie(accessTokenCookie);
-
-        Cookie idTokenCookie = new Cookie("idToken", idToken);
-        idTokenCookie.setHttpOnly(true);
-        idTokenCookie.setSecure(false);
-        idTokenCookie.setPath("/");
-        res.addCookie(idTokenCookie);
-    }
-
     public static User getUserData(String idToken) {
-//        try {
             final DecodedJWT jwt = validateToken(idToken);
-
             // Create User object
             User user = new User();
 
@@ -138,20 +125,16 @@ public class SessionValidationServlet extends HttpServlet {
             user.setSid(jwt.getClaim("sid").asString());
 
             return user;
-//        } catch (Exception e) {
-//            Logger.getLogger(SessionValidationServlet.class.getName()).log(Level.WARNING, "JWT validation failed: " + e.getMessage(), e);
-//            throw new IdTokenValidationException("JWT validation failed: " + e.getMessage());
-//        }
     }
 
-    private static DecodedJWT validateToken(String token) {
+    public static DecodedJWT validateToken(String token) {
         // This can involve checking the signature, expiry, etc.
         try {
-            if (token == null || token.isEmpty()) {
+            if (token == null || token.isEmpty())
                 throw new IdTokenValidationException("Token cannot be null or empty. User will be redirected to login page");
-            }
+
             final DecodedJWT jwt = JWT.decode(token);
-            JwkProvider jwkProvider =  AuthenticationControllerProvider.getJwkProvider();
+            //JwkProvider jwkProvider =  AuthenticationControllerProvider.getJwkProvider();
             if (!jwt.getIssuer().contains(domain)) {
                 throw new IdTokenValidationException(String.format("Unknown Issuer %s", jwt.getIssuer()));
             }
@@ -164,7 +147,6 @@ public class SessionValidationServlet extends HttpServlet {
 
             verifier.verify(token);
             return jwt;
-
         } catch (TokenExpiredException e) {
             Logger.getLogger(SessionValidationServlet.class.getName()).log(Level.INFO, "JWT Token expired, a new Token will be created upon next login. ");
             throw new TokenExpiredException("JWT Token expired, a new Token will be created upon next login. ");
@@ -175,7 +157,7 @@ public class SessionValidationServlet extends HttpServlet {
         }
     }
 
-    private static RSAPublicKey loadPublicKey(DecodedJWT token) throws JwkException, MalformedURLException {
+    private static RSAPublicKey loadPublicKey(DecodedJWT token) throws JwkException {
         JwkProvider provider = AuthenticationControllerProvider.getJwkProvider(); //UrlJwkProvider(("https://" + domain + "/"));
 
         return (RSAPublicKey) provider.get(token.getKeyId()).getPublicKey();

@@ -1,37 +1,23 @@
 package ch.fhnw.modeller.auth;
 
 import ch.fhnw.modeller.model.auth.User;
-import ch.fhnw.modeller.model.graphEnvironment.Answer;
-import ch.fhnw.modeller.model.palette.PaletteCategory;
-import ch.fhnw.modeller.model.palette.PaletteElement;
 import ch.fhnw.modeller.webservice.exception.NoResultsException;
-import ch.fhnw.modeller.webservice.ontology.FormatConverter;
-import ch.fhnw.modeller.webservice.ontology.NAMESPACE;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
-import ch.fhnw.modeller.persistence.GlobalVariables;
 
 import lombok.Getter;
-import org.apache.http.HttpException;
-import org.apache.jena.Jena;
-import org.apache.jena.ontology.OntologyException;
 import org.apache.jena.query.*;
-import org.apache.jena.tdb.TDBFactory;
-import org.apache.jena.update.UpdateExecutionFactory;
-import org.apache.jena.update.UpdateFactory;
-import org.apache.jena.update.UpdateProcessor;
-import org.apache.jena.update.UpdateRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.container.ContainerRequestContext;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.logging.Logger;
 
-import static ch.fhnw.modeller.webservice.ontology.OntologyManager.getTRIPLESTOREENDPOINT;
-
+/**
+ * UserService class is responsible for managing user-related operations.
+ * It provides methods to initialize user graph, check if the graph already exists
+ * and duplicate the default graph for each new user.
+ * UserService is updated for each JAX-RS request by the CookieResponseFilter.
+ * It is used by OntologyManager to access user data and set the user graph.
+ */
 public class UserService {
     private final OntologyManager ontologyManager;
     //public static UserService INSTANCE;
@@ -45,7 +31,7 @@ public class UserService {
         this.ontologyManager = OntologyManager.getInstance();
         //this.ontologyManager.setUserService(this);
 
-        this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT()+"/graphs/"+user.getEmail();
+        this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT()+'/'+user.getEmail();
     }
 
     public static UserService getUserService(HttpServletRequest request){

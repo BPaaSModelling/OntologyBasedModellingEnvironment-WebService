@@ -3,6 +3,7 @@ package ch.fhnw.modeller.auth;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,6 +30,19 @@ public class LogoutServlet extends HttpServlet {
         if (request.getSession() != null) {
             request.getSession().invalidate();
         }
+
+        Cookie[] cookies = request.getCookies();
+        response.setContentType("application/json");
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                cookie.setMaxAge(0);
+                if (cookie.getName().equals("accessToken") || cookie.getName().equals("idToken")) {
+                    cookie.setValue(null);
+                    response.addCookie(cookie);
+                }
+            }
+        }
+
         String returnUrl = String.format("%s://%s", request.getScheme(), request.getServerName());
         if ((request.getScheme().equals("http") && request.getServerPort() != 80) || (request.getScheme().equals("https") && request.getServerPort() != 443)) {
             returnUrl += ":" + request.getServerPort();
