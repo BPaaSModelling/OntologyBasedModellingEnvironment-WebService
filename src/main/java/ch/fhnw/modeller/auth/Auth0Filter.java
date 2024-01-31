@@ -20,6 +20,8 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
+import java.util.List;
 
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
@@ -54,18 +56,27 @@ public class Auth0Filter implements Filter{
     }
 
     /**
-     * Perform filter check on this request - verify the User Id is present.
+     * Filters incoming requests and adds necessary headers for CORS support.
+     * Also reads the access token and id token from the request.
+     * Calls the next filter in the chain.
      *
-     * @param request  the received request
-     * @param response the response to send
-     * @param next     the next filter chain
-     **/
+     * @param request  the servlet request
+     * @param response the servlet response
+     * @param next     the next filter in the chain
+     * @throws IOException      if an I/O error occurs
+     * @throws ServletException if a servlet error occurs
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain next) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
 
-        res.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+        String origin = req.getHeader("Origin");
+        List<String> allowedOrigins = Arrays.asList("http://localhost:4200", "https://aoame.herokuapp.com/");
+
+        if (allowedOrigins.contains(origin)) {
+            res.setHeader("Access-Control-Allow-Origin", origin);
+        }
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -77,23 +88,6 @@ public class Auth0Filter implements Filter{
         String idToken = req.getParameter( "idToken");
 
         next.doFilter(request, response);
-    }
-
-    public boolean isValidToken(String accessToken){
-//        try {
-//            DecodedJWT jwt = JWT.decode(accessToken); // Decode token to get the Key ID (kid)
-//            Jwk jwk = jwkProvider.get(jwt.getKeyId()); // Get the public key from Auth0 using JWK Provider
-//
-//            Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
-//            JWTVerifier verifier = JWT.require(algorithm)
-//                    .withIssuer("https://"+domain+"/")
-//                    .build(); //Reusable verifier instance
-//            verifier.verify(accessToken);
-//        } catch (JWTVerificationException | JwkException exception){
-//            //Invalid signature/claims
-//            return false;
-//        }
-        return true;
     }
 
     @Override
