@@ -16,6 +16,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * The LoginServlet class represents a servlet that handles user login functionality.
@@ -48,6 +50,8 @@ public class LoginServlet extends HttpServlet {
         }
         redirectUri += "/callback";
 
+        setAccessControlHeaders(req, res);
+
         String authorizeUrl = authenticationController
                 .buildAuthorizeUrl(req, res, redirectUri)
                 .withScope("openid profile email")
@@ -55,9 +59,14 @@ public class LoginServlet extends HttpServlet {
         res.sendRedirect(authorizeUrl);
     }
 
-    private void setAccessControlHeaders(HttpServletResponse res) {
+    private void setAccessControlHeaders(HttpServletRequest req, HttpServletResponse res) {
         // Set CORS headers
-        res.setHeader("Access-Control-Allow-Origin", "*");
+        String origin = req.getHeader("Origin");
+        List<String> allowedOrigins = Arrays.asList("http://localhost:4200", "https://aoame.herokuapp.com/");
+
+        if (allowedOrigins.contains(origin)) {
+            res.setHeader("Access-Control-Allow-Origin", origin);
+        }
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         res.setHeader("Access-Control-Allow-Credentials", "true");

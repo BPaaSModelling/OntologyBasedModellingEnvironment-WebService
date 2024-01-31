@@ -103,26 +103,23 @@ public class CallbackServlet extends HttpServlet {
             //SessionUtils.set(req, "idToken", tokens.getIdToken());
             //res.sendRedirect(redirectOnSuccess);
 
-            //Add cookies to the HTTP response after token generation
-//            Cookie accessTokenCookie = new Cookie("accessToken", tokens.getAccessToken());
-//            accessTokenCookie.setHttpOnly(true);
-//            accessTokenCookie.setSecure(true);
-//            res.addCookie(accessTokenCookie);
-//
-//            Cookie idTokenCookie = new Cookie("idToken", tokens.getIdToken());
-//            idTokenCookie.setHttpOnly(true);
-//            idTokenCookie.setSecure(true);
-//            res.addCookie(idTokenCookie);
-
-
-
-            //Add tokens
             Gson gson = new Gson();
             String payload = gson.toJson(tokens.getIdToken());
             res.setHeader("Authorization", tokens.getAccessToken());
             res.getWriter().write(payload);
 
-            String redirectUrl = "http://localhost:4200/home";
+            String originHeader = req.getHeader("Origin");
+
+            String redirectUrl = "";
+
+            if( "https://aoame.herokuapp.com".equals(originHeader) ) {
+                redirectUrl = "https://aoame.herokuapp.com/home";
+            } else if( "http://localhost:4200".equals(originHeader) ) {
+                redirectUrl = "http://localhost:4200/home";
+            } else {
+                // fallback or error
+                redirectUrl = "http://localhost:4200/home";
+            }
             //redirectUrl += "?accessToken=" + URLEncoder.encode(tokens.getAccessToken(), "UTF-8");
             //redirectUrl += "&idToken=" + URLEncoder.encode(tokens.getIdToken(), "UTF-8");
 
