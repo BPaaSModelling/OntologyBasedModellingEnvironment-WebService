@@ -164,7 +164,7 @@ public final class OntologyManager {
 		String userGraphUri = getCurrentUserGraph();
 		addNamespacesToQuery(queryStr);
 
-		System.out.println("***Performed query***\n" + queryStr.toString() + "***Performed query***\n");
+		//System.out.println("***Performed query***\n" + queryStr.toString() + "***Performed query***\n");
 		Query query = QueryFactory.create(queryStr.toString());
 		if (userGraphUri != null && !query.toString().contains("GRAPH")) {
 			query.addGraphURI(userGraphUri);
