@@ -108,13 +108,11 @@ public class CallbackServlet extends HttpServlet {
             res.setHeader("Authorization", tokens.getAccessToken());
             res.getWriter().write(payload);
 
-            String originHeader = req.getHeader("Origin");
-
             String redirectUrl = "";
-
-            if( "https://aoame.herokuapp.com".equals(originHeader) ) {
+            String origin = req.getServerName();
+            if(origin.equals("aoame-webservice.herokuapp.com")) {
                 redirectUrl = "https://aoame.herokuapp.com/home";
-            } else if( "http://localhost:4200".equals(originHeader) ) {
+            } else if(origin.equals("localhost:8080")) {
                 redirectUrl = "http://localhost:4200/home";
             } else {
                 // fallback or error
