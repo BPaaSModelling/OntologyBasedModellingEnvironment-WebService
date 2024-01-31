@@ -22,6 +22,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.InvalidParameterException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +38,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.RSAKeyProvider;
 import com.google.gson.Gson;
+import org.apache.jena.base.Sys;
 import org.json.JSONObject;
 
 /**
@@ -70,6 +72,7 @@ public class SessionValidationServlet extends HttpServlet {
         User user = null;
 
         try {
+            System.out.println("Cookies are being sent: "+ Arrays.toString(req.getCookies()));
             Cookie[] cookies = req.getCookies();
             res.setContentType("application/json");
             if (cookies != null) {
