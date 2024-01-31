@@ -72,7 +72,7 @@ public class Auth0Filter implements Filter{
         HttpServletResponse res = (HttpServletResponse) response;
 
         String origin = req.getHeader("Origin");
-        List<String> allowedOrigins = Arrays.asList("http://localhost:4200", "https://aoame.herokuapp.com/");
+        List<String> allowedOrigins = Arrays.asList("http://localhost:4200", "https://aoame.herokuapp.com");
 
         if (allowedOrigins.contains(origin)) {
             res.setHeader("Access-Control-Allow-Origin", origin);
