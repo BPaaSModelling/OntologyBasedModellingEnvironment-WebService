@@ -128,7 +128,7 @@ public class CallbackServlet extends HttpServlet {
             //UserService userService = initializeUserService(user);
             System.out.println("CallbackServlet Tokens are: ID TOKEN: " + tokens.getIdToken());
             System.out.println("ACCESS TOKEN: "+ tokens.getAccessToken());
-            addTokenCookies(tokens.getAccessToken(), tokens.getIdToken(), res);
+            addTokenCookies(tokens.getAccessToken(), tokens.getIdToken(), res, req);
 
             System.out.println("Response headers: " + res.getHeaders("Set-Cookie"));
 
@@ -140,19 +140,38 @@ public class CallbackServlet extends HttpServlet {
 
 
     }
-    private void addTokenCookies(String accessToken, String idToken, HttpServletResponse res) throws UnsupportedEncodingException {
-        //Add cookies to the HTTP response after token generation
-        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(false);
-        accessTokenCookie.setPath("/");
-        res.addCookie(accessTokenCookie);
+    private void addTokenCookies(String accessToken, String idToken, HttpServletResponse res, HttpServletRequest req) throws UnsupportedEncodingException {
+        // The flag indicating whether the request is secure (HTTPS)
+        boolean isSecure = req.isSecure();
 
-        Cookie idTokenCookie = new Cookie("idToken", idToken);
-        idTokenCookie.setHttpOnly(true);
-        idTokenCookie.setSecure(false);
-        idTokenCookie.setPath("/");
-        res.addCookie(idTokenCookie);
+        // Cookie attributes
+        String sameSiteAttribute = isSecure ? "None" : "Lax";
+
+        // Add cookies to the HTTP response after token generation
+        String accessTokenCookie = String.format("%s=%s; HttpOnly; SameSite=%s; Path=/;", "accessToken", accessToken, sameSiteAttribute);
+        if (isSecure) {
+            accessTokenCookie += " Secure";
+        }
+        res.addHeader("Set-Cookie", accessTokenCookie);
+
+        String idTokenCookie = String.format("%s=%s; HttpOnly; SameSite=%s; Path=/;", "idToken", idToken, sameSiteAttribute);
+        if (isSecure) {
+            idTokenCookie += " Secure";
+        }
+        res.addHeader("Set-Cookie", idTokenCookie);
+
+        //Add cookies to the HTTP response after token generation
+//        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
+//        accessTokenCookie.setHttpOnly(true);
+//        accessTokenCookie.setSecure(false);
+//        accessTokenCookie.setPath("/");
+//        res.addCookie(accessTokenCookie);
+//
+//        Cookie idTokenCookie = new Cookie("idToken", idToken);
+//        idTokenCookie.setHttpOnly(true);
+//        idTokenCookie.setSecure(false);
+//        idTokenCookie.setPath("/");
+//        res.addCookie(idTokenCookie);
 
 //        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
 //        Cookie userDataCookie = new Cookie("userData", encodedUser);
