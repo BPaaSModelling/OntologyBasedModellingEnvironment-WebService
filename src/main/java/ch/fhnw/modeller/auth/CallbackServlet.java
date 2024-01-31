@@ -126,7 +126,8 @@ public class CallbackServlet extends HttpServlet {
 //            sessionValidationServlet.doGet(req, res);
             //User user = decodeUserData(tokens.getIdToken());
             //UserService userService = initializeUserService(user);
-            System.out.println("CallbackServlet Tokens are: " + tokens.getIdToken() + " and " + tokens.getAccessToken());
+            System.out.println("CallbackServlet Tokens are: ID TOKEN: " + tokens.getIdToken());
+            System.out.println("ACCESS TOKEN: "+ tokens.getAccessToken());
             addTokenCookies(tokens.getAccessToken(), tokens.getIdToken(), res);
 
             System.out.println("Response headers: " + res.getHeaders("Set-Cookie"));
