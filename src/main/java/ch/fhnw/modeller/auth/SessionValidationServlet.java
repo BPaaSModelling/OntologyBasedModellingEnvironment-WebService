@@ -1,6 +1,7 @@
 package ch.fhnw.modeller.auth;
 
 import ch.fhnw.modeller.model.auth.User;
+import ch.fhnw.modeller.webservice.exception.NoResultsException;
 import com.auth0.AuthenticationController;
 import com.auth0.SessionUtils;
 import com.auth0.Tokens;
@@ -102,10 +103,14 @@ public class SessionValidationServlet extends HttpServlet {
             res.getWriter().write(payload);
 
             res.setStatus(HttpServletResponse.SC_OK);
+        } catch (NoResultsException e) {
+            e.printStackTrace();
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            res.getWriter().write("Jena Fuseki Server: " + e.getMessage());
         } catch (Exception e){
             e.printStackTrace();
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            res.getWriter().write("Unauthorized: Token is not set or is expired or invalid.");
+            res.getWriter().write("Unauthorized: " + e.getMessage());
         }
     }
 

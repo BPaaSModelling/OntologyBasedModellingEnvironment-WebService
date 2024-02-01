@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.swing.*;
 import javax.ws.rs.*;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
@@ -3714,15 +3715,15 @@ public class ModellingEnvironment {
 	//MODEL UPLOAD VIA API
 	@POST
 	@Path("postLanguagesSelectedtoFuseki")
-	public Response postLanguagesSelectedtoFuseki(List<String> sLanguageSelection) throws IOException {
-
+	public Response postLanguagesSelectedtoFuseki(String json) throws IOException {
+		List<String> sLanguageSelection = gson.fromJson(json, List.class);
 
 		try {
-
-
-			FileWriter myWriter = new FileWriter("AOAME.ttl");
-			String sPathTtl = readFilesFromGithub(sLanguageSelection);
-			uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
+			if(datasetIsEmpty(OntologyManager.getTRIPLESTOREENDPOINT())) {
+				FileWriter myWriter = new FileWriter("AOAME.ttl");
+				String sPathTtl = readFilesFromGithub(sLanguageSelection);
+				uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
+			}
 		} catch (Exception e) {
 
 			e.printStackTrace();
@@ -3750,13 +3751,25 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).build();
 	}
 
+	public static boolean datasetIsEmpty(String serviceURI) {
+		// Query to check if the dataset is empty
+		String queryString = "ASK { ?s ?p ?o }";
+		// Set up the query execution
+		try (QueryExecution qExec = QueryExecutionFactory.sparqlService(serviceURI + "/query", queryString)) {
+			return !qExec.execAsk(); // execAsk returns true if the dataset contains any triples
+		} catch (Exception e) {
+			e.printStackTrace();
+			// Handle error (e.g., log, throw a custom exception, or return a default value)
+			return false; // or true, depending on how you want to handle errors
+		}
+	}
+
 
 	public String readFilesFromGithub(List<String> sLanguageSelection)
 			throws IOException {
 
 		StringBuffer content = new StringBuffer();
-		for (String element : sLanguageSelection
-		) {
+		for (String element : sLanguageSelection) {
 			String sPrefixForRegex = element;
 			URL url = new URL(this.sRawContentTtlFromGithub + sPrefixForRegex);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -3799,7 +3812,7 @@ public class ModellingEnvironment {
 
 	@POST
 	@Path("postTtlFromDesktop")
-	public Response postLanguagesSelectedtoFuseki(String sUrlFileIo) throws IOException {
+	public Response postLanguagesSelectedtoFuseki2(String sUrlFileIo) throws IOException {
 
 		try {
 			String sTtl = fileioToString(sUrlFileIo);

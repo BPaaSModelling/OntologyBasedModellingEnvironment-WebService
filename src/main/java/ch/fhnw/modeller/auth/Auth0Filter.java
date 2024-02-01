@@ -81,8 +81,6 @@ public class Auth0Filter implements Filter{
             res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
             res.setHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
             res.setHeader("Access-Control-Allow-Credentials", "true");
-            System.out.println("CORSFilter from Auth0Filter: " + res.getHeaderNames().toString());
-
         }
 
         //String accessToken = request.getParameter("accessToken");

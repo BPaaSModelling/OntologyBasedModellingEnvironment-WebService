@@ -47,11 +47,14 @@ public class UserService {
             throw new IllegalArgumentException("UserGraph cannot be null or empty");
         }
         //URL url = new URL(OntologyManager.getTRIPLESTOREENDPOINT());
+        if (!datasetIsEmpty()) {
+            if (!checkIfGraphExists(userGraphUri)) {
 
-        if (!checkIfGraphExists(userGraphUri)) {
-            duplicateDefaultGraphForUser(userGraphUri);
-            Logger.getLogger("UserService").info("Graph for user " + userGraphUri + " created");
-        }
+                duplicateDefaultGraphForUser(userGraphUri);
+                Logger.getLogger("UserService").info("Graph for user " + userGraphUri + " created");
+            }
+        } else
+            throw new NoResultsException("Dataset is empty. Add triples to the default graph first on Jena Fuseki.");
     }
 
     private boolean checkIfGraphExists(String userGraphUri) throws NoResultsException {
@@ -66,5 +69,18 @@ public class UserService {
         String updateString = "ADD DEFAULT TO GRAPH <"+ graphUri +"> ";
         ParameterizedSparqlString updateQuery = new ParameterizedSparqlString(updateString);
         ontologyManager.insertQuery(updateQuery);
+    }
+
+    public boolean datasetIsEmpty() {
+        // Query to check if the dataset is empty
+        String queryString = "ASK { ?s ?p ?o }";
+        // Set up the query execution
+        try (QueryExecution qExec = QueryExecutionFactory.sparqlService(OntologyManager.getTRIPLESTOREENDPOINT() + "/query", queryString)) {
+            return !qExec.execAsk(); // execAsk returns true if the dataset contains any triples
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Handle error (e.g., log, throw a custom exception, or return a default value)
+            return false; // or true, depending on how you want to handle errors
+        }
     }
 }
