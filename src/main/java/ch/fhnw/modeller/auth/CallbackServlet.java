@@ -172,6 +172,9 @@ public class CallbackServlet extends HttpServlet {
         idTokenCookie.setPath("/");
         res.addCookie(idTokenCookie);
 
+        res.addHeader("Set-Cookie", "accessToken="+accessToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
+        res.addHeader("Set-Cookie", "idToken="+idToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
+
 //        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
 //        Cookie userDataCookie = new Cookie("userData", encodedUser);
 //        userDataCookie.setHttpOnly(true);
