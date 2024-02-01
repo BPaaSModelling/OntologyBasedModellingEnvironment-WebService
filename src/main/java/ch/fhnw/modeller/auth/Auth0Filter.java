@@ -72,21 +72,20 @@ public class Auth0Filter implements Filter{
         HttpServletResponse res = (HttpServletResponse) response;
 
         String origin = req.getHeader("Origin");
-        List<String> allowedOrigins = Arrays.asList("http://localhost:4200", "https://aoame.herokuapp.com");
+        final List<String> allowedOrigins = Arrays.asList("http://localhost:4200", "https://aoame.herokuapp.com");
 
-        if (allowedOrigins.contains(origin)) {
+        if (allowedOrigins.contains(origin) ) {
             res.setHeader("Access-Control-Allow-Origin", origin);
+
+            //res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+            res.setHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+            res.setHeader("Access-Control-Allow-Credentials", "true");
+            System.out.println("CORSFilter from Auth0Filter: " + res.getHeaderNames().toString());
+
         }
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        res.setHeader("Access-Control-Allow-Credentials", "true");
-        System.out.println("CORSFilter from Auth0Filter: " + res.getHeaderNames().toString());
 
         //String accessToken = request.getParameter("accessToken");
-
-        // This is an example how to read the token from the header
-        String accessToken = req.getParameter("accessToken");
-        String idToken = req.getParameter( "idToken");
 
         next.doFilter(request, response);
     }
