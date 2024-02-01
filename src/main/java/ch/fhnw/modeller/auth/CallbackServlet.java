@@ -1,6 +1,7 @@
 package ch.fhnw.modeller.auth;
 
 import ch.fhnw.modeller.model.auth.User;
+import ch.fhnw.modeller.webservice.config.ConfigReader;
 import com.auth0.AuthenticationController;
 import com.auth0.IdentityVerificationException;
 import com.auth0.SessionUtils;
@@ -107,17 +108,13 @@ public class CallbackServlet extends HttpServlet {
 
 
             String redirectUrl = "";
-            String origin = req.getServerName();
-            if("herokuapp".contains(origin)) {
+            String origin = res.getHeader("Origin"); req.getServerName();
+            // if the Config Var is detected then we are on Heroku
+            if(System.getenv("TRIPLESTORE_ENDPOINT")!=null) {
                 redirectUrl = "https://aoame.herokuapp.com/home";
-            } else if("localhost".contains(origin)) {
-                redirectUrl = "http://localhost:4200/home";
             } else {
-                // fallback or error
                 redirectUrl = "http://localhost:4200/home";
             }
-            //redirectUrl += "?accessToken=" + URLEncoder.encode(tokens.getAccessToken(), "UTF-8");
-            //redirectUrl += "&idToken=" + URLEncoder.encode(tokens.getIdToken(), "UTF-8");
 
 //            SessionValidationServlet sessionValidationServlet = new SessionValidationServlet();
 //            sessionValidationServlet.init(getServletConfig());
