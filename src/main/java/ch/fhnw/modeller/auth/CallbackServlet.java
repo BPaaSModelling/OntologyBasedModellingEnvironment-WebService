@@ -164,40 +164,39 @@ public class CallbackServlet extends HttpServlet {
         // Check if the request is secure. You might also need to check the X-Forwarded-Proto header
         // for applications behind a reverse proxy or load balancer.
 
-        String scheme = req.getHeader("X-Forwarded-Proto");
-        boolean isSecure = "https".equals(scheme);
+//        String scheme = req.getHeader("X-Forwarded-Proto");
+//        boolean isSecure = "https".equals(scheme);
+//
+//        //Add cookies to the HTTP response after token generation
+//        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
+//        accessTokenCookie.setHttpOnly(true);
+//        accessTokenCookie.setSecure(isSecure);
+//        accessTokenCookie.setPath("/");
+//
+//        Cookie idTokenCookie = new Cookie("idToken", idToken);
+//        idTokenCookie.setHttpOnly(true);
+//        idTokenCookie.setSecure(isSecure);
+//        idTokenCookie.setPath("/");
+//        // Set the domain for the cookies if the app is deployed on Heroku, otherwise the cookies won't be set
+//        if(System.getenv("TRIPLESTORE_ENDPOINT")!=null) {
+//            accessTokenCookie.setDomain("aoame.herokuapp.com");
+//            idTokenCookie.setDomain("aoame.herokuapp.com");
+//        }
+        boolean isSecure = req.isSecure() || "https".equals(req.getHeader("X-Forwarded-Proto"));
 
-        //Add cookies to the HTTP response after token generation
-        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(isSecure);
-        accessTokenCookie.setPath("/");
+// Construct cookie strings with SameSite attribute
+        String accessTokenCookie = String.format("accessToken=%s; HttpOnly; Path=/; SameSite=None", accessToken);
+        String idTokenCookie = String.format("idToken=%s; HttpOnly; Path=/; SameSite=None", idToken);
 
-
-        Cookie idTokenCookie = new Cookie("idToken", idToken);
-        idTokenCookie.setHttpOnly(true);
-        idTokenCookie.setSecure(isSecure);
-        idTokenCookie.setPath("/");
-        // Set the domain for the cookies if the app is deployed on Heroku, otherwise the cookies won't be set
-        if(System.getenv("TRIPLESTORE_ENDPOINT")!=null) {
-            accessTokenCookie.setDomain("aoame.herokuapp.com");
-            idTokenCookie.setDomain("aoame.herokuapp.com");
+// Optionally add Secure attribute if the request is over HTTPS
+        if (isSecure) {
+            accessTokenCookie += "; Secure";
+            idTokenCookie += "; Secure";
         }
-        res.addCookie(accessTokenCookie);
-        res.addCookie(idTokenCookie);
-//        String accessTokenCookie = String.format(
-//                "accessToken=%s; HttpOnly; Path=/; SameSite=None; %s",
-//                accessToken,
-//                isSecure ? "Secure" : ""
-//        );
-//        String idTokenCookie = String.format(
-//                "idToken=%s; HttpOnly; Path=/; SameSite=None; %s",
-//                idToken,
-//                isSecure ? "Secure" : ""
-//        );
 
-//        res.addHeader("Set-Cookie", accessTokenCookie);
-//        res.addHeader("Set-Cookie", idTokenCookie);
+// Add the cookies to the response
+        res.addHeader("Set-Cookie", accessTokenCookie);
+        res.addHeader("Set-Cookie", idTokenCookie);
         //res.addHeader("Set-Cookie", "accessToken="+accessToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
         //res.addHeader("Set-Cookie", "idToken="+idToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
 
