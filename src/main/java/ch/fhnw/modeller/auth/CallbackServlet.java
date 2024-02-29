@@ -180,8 +180,8 @@ public class CallbackServlet extends HttpServlet {
         idTokenCookie.setPath("/");
         // Set the domain for the cookies if the app is deployed on Heroku, otherwise the cookies won't be set
         if(System.getenv("TRIPLESTORE_ENDPOINT")!=null) {
-            accessTokenCookie.setDomain("*.herokuapp.com");
-            idTokenCookie.setDomain("*.herokuapp.com");
+            accessTokenCookie.setDomain("aoame.herokuapp.com");
+            idTokenCookie.setDomain("aoame.herokuapp.com");
         }
         res.addCookie(accessTokenCookie);
         res.addCookie(idTokenCookie);
