@@ -110,9 +110,8 @@ public class CallbackServlet extends HttpServlet {
             String redirectUrl = "";
             String origin = res.getHeader("Origin"); req.getServerName();
             // if the Config Var is detected then we are on Heroku
-            if(req.getServerName().contains(".herokuapp.com")) {
-                redirectUrl = "https://aoame.herokuapp.com/home";
-            } else if (req.getServerName().contains("aoame.ch")) {
+            if(System.getenv("TRIPLESTORE_ENDPOINT")!=null) {
+                //redirectUrl = "https://aoame.herokuapp.com/home";
                 redirectUrl = "https://aoame.ch/home";
             } else {
                 redirectUrl = "http://localhost:4200/home";
