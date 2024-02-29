@@ -159,21 +159,47 @@ public class CallbackServlet extends HttpServlet {
 //        }
 //        res.addHeader("Set-Cookie", idTokenCookie);
 
+
+
+        // Check if the request is secure. You might also need to check the X-Forwarded-Proto header
+        // for applications behind a reverse proxy or load balancer.
+
+        String scheme = req.getHeader("X-Forwarded-Proto");
+        boolean isSecure = "https".equals(scheme);
+
         //Add cookies to the HTTP response after token generation
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
         accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(false);
+        accessTokenCookie.setSecure(isSecure);
         accessTokenCookie.setPath("/");
-        res.addCookie(accessTokenCookie);
+
 
         Cookie idTokenCookie = new Cookie("idToken", idToken);
         idTokenCookie.setHttpOnly(true);
-        idTokenCookie.setSecure(false);
+        idTokenCookie.setSecure(isSecure);
         idTokenCookie.setPath("/");
+        // Set the domain for the cookies if the app is deployed on Heroku, otherwise the cookies won't be set
+        if(System.getenv("TRIPLESTORE_ENDPOINT")!=null) {
+            accessTokenCookie.setDomain("*.herokuapp.com");
+            idTokenCookie.setDomain("*.herokuapp.com");
+        }
+        res.addCookie(accessTokenCookie);
         res.addCookie(idTokenCookie);
+//        String accessTokenCookie = String.format(
+//                "accessToken=%s; HttpOnly; Path=/; SameSite=None; %s",
+//                accessToken,
+//                isSecure ? "Secure" : ""
+//        );
+//        String idTokenCookie = String.format(
+//                "idToken=%s; HttpOnly; Path=/; SameSite=None; %s",
+//                idToken,
+//                isSecure ? "Secure" : ""
+//        );
 
-        res.addHeader("Set-Cookie", "accessToken="+accessToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
-        res.addHeader("Set-Cookie", "idToken="+idToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
+//        res.addHeader("Set-Cookie", accessTokenCookie);
+//        res.addHeader("Set-Cookie", idTokenCookie);
+        //res.addHeader("Set-Cookie", "accessToken="+accessToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
+        //res.addHeader("Set-Cookie", "idToken="+idToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
 
 //        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
 //        Cookie userDataCookie = new Cookie("userData", encodedUser);
