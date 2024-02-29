@@ -110,8 +110,10 @@ public class CallbackServlet extends HttpServlet {
             String redirectUrl = "";
             String origin = res.getHeader("Origin"); req.getServerName();
             // if the Config Var is detected then we are on Heroku
-            if(System.getenv("TRIPLESTORE_ENDPOINT")!=null) {
+            if(req.getServerName().contains(".herokuapp.com")) {
                 redirectUrl = "https://aoame.herokuapp.com/home";
+            } else if (req.getServerName().contains("aoame.ch")) {
+                redirectUrl = "https://aoame.ch/home";
             } else {
                 redirectUrl = "http://localhost:4200/home";
             }
@@ -164,47 +166,42 @@ public class CallbackServlet extends HttpServlet {
         // Check if the request is secure. You might also need to check the X-Forwarded-Proto header
         // for applications behind a reverse proxy or load balancer.
 
-//        String scheme = req.getHeader("X-Forwarded-Proto");
-//        boolean isSecure = "https".equals(scheme);
+        String scheme = req.getHeader("X-Forwarded-Proto");
+        boolean isSecure = "https".equals(scheme);
 //
 //        //Add cookies to the HTTP response after token generation
-//        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
-//        accessTokenCookie.setHttpOnly(true);
-//        accessTokenCookie.setSecure(isSecure);
-//        accessTokenCookie.setPath("/");
-//
-//        Cookie idTokenCookie = new Cookie("idToken", idToken);
-//        idTokenCookie.setHttpOnly(true);
-//        idTokenCookie.setSecure(isSecure);
-//        idTokenCookie.setPath("/");
+        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setSecure(isSecure);
+        accessTokenCookie.setPath("/");
+
+        Cookie idTokenCookie = new Cookie("idToken", idToken);
+        idTokenCookie.setHttpOnly(true);
+        idTokenCookie.setSecure(isSecure);
+        idTokenCookie.setPath("/");
+        res.addCookie(accessTokenCookie);
+        res.addCookie(idTokenCookie);
 //        // Set the domain for the cookies if the app is deployed on Heroku, otherwise the cookies won't be set
 //        if(System.getenv("TRIPLESTORE_ENDPOINT")!=null) {
 //            accessTokenCookie.setDomain("aoame.herokuapp.com");
 //            idTokenCookie.setDomain("aoame.herokuapp.com");
 //        }
-        boolean isSecure = req.isSecure() || "https".equals(req.getHeader("X-Forwarded-Proto"));
-
-// Construct cookie strings with SameSite attribute
-        String accessTokenCookie = String.format("accessToken=%s; HttpOnly; Path=/; SameSite=None", accessToken);
-        String idTokenCookie = String.format("idToken=%s; HttpOnly; Path=/; SameSite=None", idToken);
-
-// Optionally add Secure attribute if the request is over HTTPS
-        if (isSecure) {
-            accessTokenCookie += "; Secure";
-            idTokenCookie += "; Secure";
-        }
-
-// Add the cookies to the response
-        res.addHeader("Set-Cookie", accessTokenCookie);
-        res.addHeader("Set-Cookie", idTokenCookie);
+//        boolean isSecure = req.isSecure() || "https".equals(req.getHeader("X-Forwarded-Proto"));
+//
+//// Construct cookie strings with SameSite attribute
+//        String accessTokenCookie = String.format("accessToken=%s; HttpOnly; Path=/; SameSite=None", accessToken);
+//        String idTokenCookie = String.format("idToken=%s; HttpOnly; Path=/; SameSite=None", idToken);
+//// Optionally add Secure attribute if the request is over HTTPS
+//        if (isSecure) {
+//            accessTokenCookie += "; Secure";
+//            idTokenCookie += "; Secure";
+//        }
+//// Add the cookies to the response
+//        res.addHeader("Set-Cookie", accessTokenCookie);
+//        res.addHeader("Set-Cookie", idTokenCookie);
         //res.addHeader("Set-Cookie", "accessToken="+accessToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
         //res.addHeader("Set-Cookie", "idToken="+idToken+"; HttpOnly; SameSite=None; Secure; Path=/;");
 
-//        String encodedUser = URLEncoder.encode(gson.toJson(user), "UTF-8");
-//        Cookie userDataCookie = new Cookie("userData", encodedUser);
-//        userDataCookie.setHttpOnly(true);
-//        userDataCookie.setSecure(true);
-//        res.addCookie(userDataCookie);
     }
 
 }
