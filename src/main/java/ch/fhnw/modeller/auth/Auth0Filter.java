@@ -78,7 +78,6 @@ public class Auth0Filter implements Filter{
             for (String allowedOrigin : allowedOrigins) {
                 if (origin.contains(allowedOrigin)) {
                     res.setHeader("Access-Control-Allow-Origin", origin);
-
                     break;
                 }
             }
