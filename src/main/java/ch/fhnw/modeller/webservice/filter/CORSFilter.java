@@ -17,7 +17,7 @@ public class CORSFilter implements ContainerResponseFilter {
                       final ContainerResponseContext cres) throws IOException {
 
       String origin = requestContext.getHeaderString("Origin");
-      List<String> allowedOrigins = Arrays.asList("http://localhost:4200", "https://aoame.herokuapp.com");
+      List<String> allowedOrigins = Arrays.asList("localhost", "herokuapp", "aoame");
 
       if (allowedOrigins.contains(origin))
          cres.getHeaders().add("Access-Control-Allow-Origin", origin);

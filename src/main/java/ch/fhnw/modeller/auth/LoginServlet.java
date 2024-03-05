@@ -42,7 +42,6 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse res) throws ServletException, IOException {
-        //setAccessControlHeaders(res);
 
         String redirectUri = req.getScheme() + "://" + req.getServerName();
         if ((req.getScheme().equals("http") && req.getServerPort() != 80) || (req.getScheme().equals("https") && req.getServerPort() != 443)) {
@@ -57,19 +56,6 @@ public class LoginServlet extends HttpServlet {
                 .withScope("openid profile email")
                 .build();
         res.sendRedirect(authorizeUrl);
-    }
-
-    private void setAccessControlHeaders(HttpServletRequest req, HttpServletResponse res) {
-        // Set CORS headers
-        String origin = req.getHeader("Origin");
-        List<String> allowedOrigins = Arrays.asList("http://localhost:4200", "https://aoame.herokuapp.com/");
-
-        if (allowedOrigins.contains(origin)) {
-            res.setHeader("Access-Control-Allow-Origin", origin);
-        }
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        res.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
 }
