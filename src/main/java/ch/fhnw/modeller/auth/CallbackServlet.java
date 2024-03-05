@@ -111,7 +111,7 @@ public class CallbackServlet extends HttpServlet {
             String origin = res.getHeader("Origin");
             // if the Config Var is detected then we are on Heroku
             if(System.getenv("WEBAPP")!=null) {
-                redirectUrl = System.getenv("WEBAPP" + "/home");
+                redirectUrl = System.getenv("WEBAPP").toString() + "/home";
                 //redirectUrl = "https://aoame.ch/home";
             } else {
                 // Fallback to local URL
