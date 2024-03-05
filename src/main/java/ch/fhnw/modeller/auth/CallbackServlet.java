@@ -117,6 +117,7 @@ public class CallbackServlet extends HttpServlet {
                 // Fallback to local URL
                 redirectUrl = "http://localhost:4200/home";
             }
+            System.out.println("Redirect URL: "+redirectUrl);
 
 //            SessionValidationServlet sessionValidationServlet = new SessionValidationServlet();
 //            sessionValidationServlet.init(getServletConfig());
