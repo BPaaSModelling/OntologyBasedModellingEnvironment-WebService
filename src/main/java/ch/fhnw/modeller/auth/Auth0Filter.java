@@ -74,16 +74,19 @@ public class Auth0Filter implements Filter{
         String origin = req.getHeader("Origin");
         final List<String> allowedOrigins = Arrays.asList("localhost", "herokuapp", "aoame");
 
-        for (String allowedOrigin : allowedOrigins) {
-            if (origin.contains(allowedOrigin)) {
-                res.setHeader("Access-Control-Allow-Origin", origin);
+        if (origin != null) {
+            for (String allowedOrigin : allowedOrigins) {
+                if (origin.contains(allowedOrigin)) {
+                    res.setHeader("Access-Control-Allow-Origin", origin);
 
-                //res.setHeader("Access-Control-Allow-Origin", "*");
-                res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
-                res.setHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
-                res.setHeader("Access-Control-Allow-Credentials", "true");
-                break;
+                    break;
+                }
             }
+
+            //res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+            res.setHeader("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+            res.setHeader("Access-Control-Allow-Credentials", "true");
         }
 
         //String accessToken = request.getParameter("accessToken");
