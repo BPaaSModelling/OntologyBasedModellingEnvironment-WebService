@@ -73,9 +73,12 @@ public class SessionValidationServlet extends HttpServlet {
         User user = null;
 
         try {
-            // Development environment allows to skip authentication
-            if (System.getenv("APP_ENV").equals("development")) {
+            // Development environment auto authentication
+            if (System.getenv("DEV_ENV").equals("true")) {
                 DevEnv.setTestUser(req, res);
+                accessToken = DevEnv.getAccessToken();
+                idToken = DevEnv.getIdToken();
+                System.out.println("Test User is set for " + System.getenv("USER_EMAIL"));
             }
 
             System.out.println("Cookies are being sent: "+ Arrays.toString(req.getCookies()));
@@ -87,17 +90,18 @@ public class SessionValidationServlet extends HttpServlet {
                         accessToken = cookie.getValue();
                     } else if (cookie.getName().equals("idToken")) {
                         idToken = cookie.getValue();
-                        // Validate the idToken and Get and Set the User
-                        user = getUserData(idToken);
-                        // Initialize User Service and store it in the session
-                        userService = new UserService(user);
-                        //Initialize Graph upon login (create if doesn't exist and duplicate data from default graph)
-                        userService.initializeUserGraph(userService.getUserGraphUri());
                     }
                 }
             }
 
-            if (accessToken == null || idToken == null) {
+            if (accessToken != null && idToken != null) {
+                // Validate the idToken and Get and Set the User
+                user = getUserData(idToken);
+                // Initialize User Service and store it in the session
+                userService = new UserService(user);
+                //Initialize Graph upon login (create if doesn't exist and duplicate data from default graph)
+                userService.initializeUserGraph(userService.getUserGraphUri());
+            } else {
                 throw new InvalidParameterException("Tokens cannot be null or empty. User will be redirected to login page to receive new tokens.");
             }
 

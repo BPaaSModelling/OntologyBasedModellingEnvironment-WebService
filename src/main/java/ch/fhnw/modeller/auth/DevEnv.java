@@ -2,7 +2,7 @@ package ch.fhnw.modeller.auth;
 
 import ch.fhnw.modeller.webservice.config.ConfigReader;
 import com.google.gson.Gson;
-import jdk.vm.ci.code.site.Call;
+import lombok.Getter;
 import org.json.JSONObject;
 
 import javax.servlet.ServletConfig;
@@ -19,15 +19,14 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 
 public class DevEnv extends HttpServlet {
     @Context
     private ContainerRequestContext crc;
-
-    //public static String domain;
-
-    //private Gson gson = new Gson();
+    @Getter
+    private static String idToken;
+    @Getter
+    private static String accessToken;
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -48,42 +47,37 @@ public class DevEnv extends HttpServlet {
      */
     public static void setTestUser(HttpServletRequest req, HttpServletResponse res) throws IOException, InterruptedException {
         //Check current environment, if development then bypass authentication process
-        final String env = ConfigReader.getInstance().getEntry("APP_ENV", "production");
-        if (env.equals("development")) {
-            String userEmail = System.getenv("USER_EMAIL");
-            String userPassword = System.getenv("USER_PASSWORD");
-            String tokenEndpoint = "https://"+ AuthenticationControllerProvider.domain + "/oauth/token"; // Replace with your Auth0 domain
-            String clientId = AuthenticationControllerProvider.clientId; // Replace with your Client ID
-            String clientSecret = AuthenticationControllerProvider.clientSecret; // Optional, for confidential clients
+        String userEmail = System.getenv("USER_EMAIL");
+        String userPassword = System.getenv("USER_PASSWORD");
+        String tokenEndpoint = "https://"+ AuthenticationControllerProvider.domain + "/oauth/token"; // Replace with your Auth0 domain
+        String clientId = AuthenticationControllerProvider.clientId; // Replace with your Client ID
+        String clientSecret = AuthenticationControllerProvider.clientSecret; // Optional, for confidential clients
 
-            String requestBody = "grant_type=password&username=" + userEmail +
-                    "&password=" + userPassword +
-                    "&client_id=" + clientId +
-                    "&client_secret=" + clientSecret + // Include if applicable
-                    //"&audience="+ YOUR_API_AUDIENCE + // Used for APIs requiring authentication in Auth0
-                    "&scope=openid profile"; // Adjust scope as needed
+        String requestBody = "grant_type=password&username=" + userEmail +
+                "&password=" + userPassword +
+                "&client_id=" + clientId +
+                "&client_secret=" + clientSecret + // Include if applicable
+                //"&audience="+ YOUR_API_AUDIENCE + // Used for APIs requiring authentication in Auth0
+                "&scope=openid profile email"; // Adjust scope as needed
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(tokenEndpoint))
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                    .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(tokenEndpoint))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
 
-            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
-            // Example of parsing the response body to extract the access token
-            String responseBody = response.body();
-            JSONObject jsonObj = new JSONObject(responseBody);
-            String idToken = jsonObj.getString("id_token");
-            String accessToken = jsonObj.getString("access_token"); // Use this token for authenticated requests
+        // Example of parsing the response body to extract the access token
+        String responseBody = response.body();
+        JSONObject jsonObj = new JSONObject(responseBody);
+        idToken = jsonObj.getString("id_token");
+        accessToken = jsonObj.getString("access_token"); // Use this token for authenticated requests
 
-            //Add cookies with tokens to skip authentication
-            CallbackServlet callbackServlet = new CallbackServlet();
-            callbackServlet.addTokenCookies(accessToken, idToken, res, req);
-
-        }
+        //Add cookies with tokens to skip authentication
+        CallbackServlet callbackServlet = new CallbackServlet();
+        callbackServlet.addTokenCookies(accessToken, idToken, res, req);
     }
-
 }
 
 
