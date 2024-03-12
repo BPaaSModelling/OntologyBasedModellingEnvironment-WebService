@@ -73,6 +73,11 @@ public class SessionValidationServlet extends HttpServlet {
         User user = null;
 
         try {
+            // Development environment allows to skip authentication
+            if (System.getenv("APP_ENV").equals("development")) {
+                DevEnv.setTestUser(req, res);
+            }
+
             System.out.println("Cookies are being sent: "+ Arrays.toString(req.getCookies()));
             Cookie[] cookies = req.getCookies();
             res.setContentType("application/json");
