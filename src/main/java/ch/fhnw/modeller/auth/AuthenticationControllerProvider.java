@@ -14,10 +14,14 @@ import java.io.UnsupportedEncodingException;
 public abstract class AuthenticationControllerProvider {
     @Getter
     private static JwkProvider jwkProvider;
+
+    public static String domain;
+    public static String clientId;
+    public static String clientSecret;
     public static AuthenticationController getInstance(ServletConfig config) throws UnsupportedEncodingException {
-        String domain = config.getServletContext().getInitParameter("com.auth0.domain");
-        String clientId = config.getServletContext().getInitParameter("com.auth0.clientId");
-        String clientSecret = config.getServletContext().getInitParameter("com.auth0.clientSecret");
+        domain = config.getServletContext().getInitParameter("com.auth0.domain");
+        clientId = config.getServletContext().getInitParameter("com.auth0.clientId");
+         clientSecret = config.getServletContext().getInitParameter("com.auth0.clientSecret");
 
         if (domain == null || clientId == null || clientSecret == null) {
             throw new IllegalArgumentException("Missing domain, clientId, or clientSecret. Did you update src/main/webapp/WEB-INF/web.xml?");
