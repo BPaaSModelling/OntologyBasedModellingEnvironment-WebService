@@ -12,13 +12,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 public class DevEnv extends HttpServlet {
     @Context
@@ -60,23 +58,51 @@ public class DevEnv extends HttpServlet {
                 //"&audience="+ YOUR_API_AUDIENCE + // Used for APIs requiring authentication in Auth0
                 "&scope=openid profile email"; // Adjust scope as needed
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(tokenEndpoint))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build();
+        try {
+            URL url = new URL(tokenEndpoint);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            // Set the appropriate header fields in the request header.
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            conn.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            wr.writeBytes(requestBody);
+            wr.flush();
+            wr.close();
 
-        // Example of parsing the response body to extract the access token
-        String responseBody = response.body();
-        JSONObject jsonObj = new JSONObject(responseBody);
-        idToken = jsonObj.getString("id_token");
-        accessToken = jsonObj.getString("access_token"); // Use this token for authenticated requests
+            int responseCode = conn.getResponseCode();
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
 
-        //Add cookies with tokens to skip authentication
-        CallbackServlet callbackServlet = new CallbackServlet();
-        callbackServlet.addTokenCookies(accessToken, idToken, res, req);
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            // Example of parsing the response body to extract the access token
+            String responseBody = response.toString();
+            JSONObject jsonObj = new JSONObject(responseBody);
+            idToken = jsonObj.getString("id_token");
+            accessToken = jsonObj.getString("access_token"); // Use this token for authenticated requests
+
+            //Add cookies with tokens to skip authentication
+            CallbackServlet callbackServlet = new CallbackServlet();
+            callbackServlet.addTokenCookies(accessToken, idToken, res, req);
+
+//            HttpRequest request = HttpRequest.newBuilder()
+//                    .uri(URI.create(tokenEndpoint))
+//                    .header("Content-Type", "application/x-www-form-urlencoded")
+//                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+//                    .build();
+//
+//            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 }
 
