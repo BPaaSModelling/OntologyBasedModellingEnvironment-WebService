@@ -73,14 +73,6 @@ public class SessionValidationServlet extends HttpServlet {
         User user = null;
 
         try {
-            // Development environment auto authentication
-            if (System.getenv("DEV_ENV").equals("true")) {
-                DevEnv.setTestUser(req, res);
-                accessToken = DevEnv.getAccessToken();
-                idToken = DevEnv.getIdToken();
-                System.out.println("Test User is set for " + System.getenv("USER_EMAIL"));
-            }
-
             System.out.println("Cookies are being sent: "+ Arrays.toString(req.getCookies()));
             Cookie[] cookies = req.getCookies();
             res.setContentType("application/json");
@@ -92,6 +84,14 @@ public class SessionValidationServlet extends HttpServlet {
                         idToken = cookie.getValue();
                     }
                 }
+            }
+
+            // Development environment auto authentication if user haven't logged in
+            if (System.getenv("DEV_ENV").equals("true") && (accessToken == null || idToken == null)) {
+                DevEnv.setTestUser(req, res);
+                accessToken = DevEnv.getAccessToken();
+                idToken = DevEnv.getIdToken();
+                System.out.println("Test User is set for " + System.getenv("USER_EMAIL"));
             }
 
             if (accessToken != null && idToken != null) {
