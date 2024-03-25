@@ -87,7 +87,7 @@ public class SessionValidationServlet extends HttpServlet {
             }
 
             // Development environment auto authentication if user haven't logged in
-            if (System.getenv("DEV_ENV").equals("true") && (accessToken == null || idToken == null)) {
+            if ("true".equals(System.getenv("DEV_ENV")) && (accessToken == null || idToken == null)) {
                 DevEnv.setTestUser(req, res);
                 accessToken = DevEnv.getAccessToken();
                 idToken = DevEnv.getIdToken();
