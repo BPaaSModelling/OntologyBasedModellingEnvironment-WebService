@@ -83,6 +83,7 @@ public class SessionValidationServlet extends HttpServlet {
                     } else if (cookie.getName().equals("idToken")) {
                         idToken = cookie.getValue();
                     }
+                    System.out.print(cookie.getName() +": "+ cookie.getValue() + " ");
                 }
             }
 
