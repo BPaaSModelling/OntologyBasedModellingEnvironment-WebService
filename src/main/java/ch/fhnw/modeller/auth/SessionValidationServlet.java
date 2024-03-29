@@ -73,7 +73,6 @@ public class SessionValidationServlet extends HttpServlet {
         User user = null;
 
         try {
-            System.out.println("Cookies are being sent: "+ Arrays.toString(req.getCookies()));
             Cookie[] cookies = req.getCookies();
             res.setContentType("application/json");
             if (cookies != null) {
@@ -83,7 +82,7 @@ public class SessionValidationServlet extends HttpServlet {
                     } else if (cookie.getName().equals("idToken")) {
                         idToken = cookie.getValue();
                     }
-                    System.out.print(cookie.getName() +": "+ cookie.getValue() + " ");
+                    System.out.println("Cookie " + cookie.getName() +": "+ cookie.getValue());
                 }
             }
 
