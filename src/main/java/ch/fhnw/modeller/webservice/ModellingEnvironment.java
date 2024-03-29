@@ -6,6 +6,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -14,7 +16,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.swing.*;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -249,14 +253,20 @@ public class ModellingEnvironment {
 
 	@GET
 	@Path("/model/{id}/element")
-	public Response getModelElementList(@PathParam("id") String id) {
+	public void getModelElementList(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id) {
+		ExecutorService executor = Executors.newFixedThreadPool(3); // 3 is just an example, adjust as needed
+		executor.submit(()-> {
 
-		List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
+			List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
 
-		String payload = gson.toJson(elements);
+			String payload = gson.toJson(elements);
 
-		return Response.status(Status.OK).entity(payload).build();
-	}
+			asyncResponse.resume(Response.status(Status.OK).entity(payload).build());
+		});
+
+		// Return a 202 Accepted response immediately
+		//return Response.status(Status.ACCEPTED).entity("Request is being processed").build();
+    }
 
 	private List<ModelElementDetailDto> getModelElementDetailDtos(String id) {
 		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);
