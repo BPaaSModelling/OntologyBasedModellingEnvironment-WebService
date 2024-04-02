@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -23,6 +24,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import ch.fhnw.modeller.auth.UserService;
 import ch.fhnw.modeller.model.metamodel.*;
@@ -137,9 +139,9 @@ public class ModellingEnvironment {
 	@Path("/model/{modelId}")
 	public Response deleteModel(@PathParam("modelId") String modelId) {
 
-		for (ModelElementDetailDto modelElementDetailDto : this.getModelElementDetailDtos(modelId)) {
+		this.getModelElementDetailDtos(modelId).forEach(modelElementDetailDto -> {
 			this.deleteElementOfModel(modelId, modelElementDetailDto.getId());
-		}
+		});
 
 		ParameterizedSparqlString deleteQuery = getDeleteModelQuery(modelId);
 		//ontology.setUserService(crc);
@@ -253,22 +255,27 @@ public class ModellingEnvironment {
 
 	@GET
 	@Path("/model/{id}/element")
-	public void getModelElementList(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id) {
-		ExecutorService executor = Executors.newFixedThreadPool(3); // 3 is just an example, adjust as needed
-		executor.submit(()-> {
+	public Response getModelElementList(@PathParam("id") String id) {
+		StreamingOutput stream = new StreamingOutput() {
+			@Override
+			public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+				Writer writer = new BufferedWriter(new OutputStreamWriter(outputStream));
+				List<ModelElementDetailDto> elements = getModelElementDetailDtos(id).collect(Collectors.toList());
+				String payload = gson.toJson(elements);
+				writer.write(payload);
+				writer.flush();
+				writer.close();
+			}
+		};
 
-			List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
+		//List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
 
-			String payload = gson.toJson(elements);
+		//String payload = gson.toJson(elements);
 
-			asyncResponse.resume(Response.status(Status.OK).entity(payload).build());
-		});
-
-		// Return a 202 Accepted response immediately
-		//return Response.status(Status.ACCEPTED).entity("Request is being processed").build();
+		return Response.ok(stream).build();
     }
 
-	private List<ModelElementDetailDto> getModelElementDetailDtos(String id) {
+	private Stream<ModelElementDetailDto> getModelElementDetailDtos(String id) {
 		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);
 
 		String command = String.format(
@@ -293,23 +300,25 @@ public class ModellingEnvironment {
 
 		List<ModelElementDetailDto> modelElements = new ArrayList<>(shapeIds.size());
 
-		shapeIds.forEach(shapeId -> {
+		return shapeIds.stream().map(shapeId -> {
 			Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
 			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);
 
 			String modelElementId = shapeAttributes.get("shapeVisualisesConceptualElement").split("#")[1];
 			AbstractElementAttributes abstractElementAttributes = getModelElementAttributesAndOptions(modelElementId);
 
-			abstractElementAttributes.getModelElementType()
-					.ifPresent(elementType -> modelElements.add(
-							ModelElementDetailDto.from(
-									shapeId,
-									shapeAttributes,
-									abstractElementAttributes,
-									elementType,
-									visualInformationDto)));
-		});
-		return modelElements;
+			if (abstractElementAttributes.getModelElementType().isPresent()) {
+				return ModelElementDetailDto.from(
+						shapeId,
+						shapeAttributes,
+						abstractElementAttributes,
+						abstractElementAttributes.getModelElementType().get(),
+						visualInformationDto);
+			} else {
+				return null;
+			}
+		}).filter(Objects::nonNull);
+		//return modelElements;
 	}
 
 	private PaletteVisualInformationDto getPaletteVisualInformation(String shapeId) {
