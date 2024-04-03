@@ -6,25 +6,19 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.swing.*;
 import javax.ws.rs.*;
-import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
 
 import ch.fhnw.modeller.auth.UserService;
 import ch.fhnw.modeller.model.metamodel.*;
@@ -139,9 +133,9 @@ public class ModellingEnvironment {
 	@Path("/model/{modelId}")
 	public Response deleteModel(@PathParam("modelId") String modelId) {
 
-		this.getModelElementDetailDtos(modelId).forEach(modelElementDetailDto -> {
+		for (ModelElementDetailDto modelElementDetailDto : this.getModelElementDetailDtos(modelId)) {
 			this.deleteElementOfModel(modelId, modelElementDetailDto.getId());
-		});
+		}
 
 		ParameterizedSparqlString deleteQuery = getDeleteModelQuery(modelId);
 		//ontology.setUserService(crc);
@@ -256,26 +250,15 @@ public class ModellingEnvironment {
 	@GET
 	@Path("/model/{id}/element")
 	public Response getModelElementList(@PathParam("id") String id) {
-		StreamingOutput stream = new StreamingOutput() {
-			@Override
-			public void write(OutputStream outputStream) throws IOException, WebApplicationException {
-				Writer writer = new BufferedWriter(new OutputStreamWriter(outputStream));
-				List<ModelElementDetailDto> elements = getModelElementDetailDtos(id).collect(Collectors.toList());
-				String payload = gson.toJson(elements);
-				writer.write(payload);
-				writer.flush();
-				writer.close();
-			}
-		};
 
-		//List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
+		List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
 
-		//String payload = gson.toJson(elements);
+		String payload = gson.toJson(elements);
 
-		return Response.ok(stream).build();
-    }
+		return Response.status(Status.OK).entity(payload).build();
+	}
 
-	private Stream<ModelElementDetailDto> getModelElementDetailDtos(String id) {
+	private List<ModelElementDetailDto> getModelElementDetailDtos(String id) {
 		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);
 
 		String command = String.format(
@@ -300,25 +283,23 @@ public class ModellingEnvironment {
 
 		List<ModelElementDetailDto> modelElements = new ArrayList<>(shapeIds.size());
 
-		return shapeIds.stream().map(shapeId -> {
+		shapeIds.forEach(shapeId -> {
 			Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
 			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);
 
 			String modelElementId = shapeAttributes.get("shapeVisualisesConceptualElement").split("#")[1];
 			AbstractElementAttributes abstractElementAttributes = getModelElementAttributesAndOptions(modelElementId);
 
-			if (abstractElementAttributes.getModelElementType().isPresent()) {
-				return ModelElementDetailDto.from(
-						shapeId,
-						shapeAttributes,
-						abstractElementAttributes,
-						abstractElementAttributes.getModelElementType().get(),
-						visualInformationDto);
-			} else {
-				return null;
-			}
-		}).filter(Objects::nonNull);
-		//return modelElements;
+			abstractElementAttributes.getModelElementType()
+					.ifPresent(elementType -> modelElements.add(
+							ModelElementDetailDto.from(
+									shapeId,
+									shapeAttributes,
+									abstractElementAttributes,
+									elementType,
+									visualInformationDto)));
+		});
+		return modelElements;
 	}
 
 	private PaletteVisualInformationDto getPaletteVisualInformation(String shapeId) {
@@ -666,7 +647,6 @@ public class ModellingEnvironment {
 			createShapeForNewModelElement(modelId, modelElementCreationDto);
 		} else {
 			ParameterizedSparqlString query = getShapeCreationQuery(modelElementCreationDto, modelId, modelElementCreationDto.getModelingLanguageConstructInstance());
-			//ontology.setUserService(crc);
 			ontology.insertQuery(query);
 		}
 
