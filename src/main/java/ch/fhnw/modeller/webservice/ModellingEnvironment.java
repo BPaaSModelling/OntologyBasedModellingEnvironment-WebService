@@ -6,6 +6,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -27,9 +31,7 @@ import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
 import ch.fhnw.modeller.webservice.dto.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.MethodNotSupportedException;
-import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.*;
 
 import com.google.gson.Gson;
@@ -112,7 +114,7 @@ public class ModellingEnvironment {
 				MODEL.getPrefix());
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
+		
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		ArrayList<Model> models = new ArrayList<>();
@@ -138,7 +140,7 @@ public class ModellingEnvironment {
 		}
 
 		ParameterizedSparqlString deleteQuery = getDeleteModelQuery(modelId);
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(deleteQuery);
 
 		return Response.status(Status.OK).build();
@@ -172,7 +174,7 @@ public class ModellingEnvironment {
 		ParameterizedSparqlString deleteQuery = new ParameterizedSparqlString(deleteModelLabel);
 		ParameterizedSparqlString insertQuery = new ParameterizedSparqlString(insertModelLabel);
 
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(deleteQuery);
 		ontology.insertQuery(insertQuery);
 
@@ -219,7 +221,7 @@ public class ModellingEnvironment {
 				modelCreationDto.getLabel());
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(query);
 
 		String selectCommand = String.format(
@@ -246,16 +248,44 @@ public class ModellingEnvironment {
 
 		return Response.status(Status.CREATED).entity(payload).build();
 	}
-
+	private static final Map<String, CompletableFuture<List<ModelElementDetailDto>>> taskMap = new ConcurrentHashMap<>();
 	@GET
 	@Path("/model/{id}/element")
 	public Response getModelElementList(@PathParam("id") String id) {
+		// Start the task asynchronously
+		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
+		if (futureTask == null || futureTask.isDone()) {
+			futureTask = CompletableFuture.supplyAsync(() -> getModelElementDetailDtos(id));
+			taskMap.put(id, futureTask);
+		}
+		System.out.println("getModelElementList started for model " + id);
+		// Immediately return a response indicating the task is in progress
+		return Response.status(Status.ACCEPTED).entity(gson.toJson(id)).build();
+	}
 
-		List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
+	@GET
+	@Path("/model/{id}/element/status")
+	public Response getModelElementStatus(@PathParam("id") String id) {
+		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
+		if (futureTask == null) {
+			Logger logger =  Logger.getLogger(ModellingEnvironment.class.getName());
+			logger.warning("getModelElementStatus: Task not found for model " + id);
+			return Response.status(Status.NOT_FOUND).build();
+		} else if (!futureTask.isDone()) {
+			return Response.status(Status.ACCEPTED).entity(gson.toJson("Processing elements in progress")).build();
+		} else {
+			try {
+				List<ModelElementDetailDto> elements = futureTask.get();
 
-		String payload = gson.toJson(elements);
-
-		return Response.status(Status.OK).entity(payload).build();
+				System.out.println("getModelElementList completed for model " + id);
+				return Response.status(Status.OK).entity(gson.toJson(elements)).build();
+			} catch (InterruptedException | ExecutionException e) {
+				System.out.println("getModelElementList Exception for model " + id + ": " + e.getMessage());
+				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(gson.toJson("Error processing task")).build();
+			} finally {
+				//taskMap.remove(id);
+ 			}
+		}
 	}
 
 	private List<ModelElementDetailDto> getModelElementDetailDtos(String id) {
@@ -271,7 +301,6 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		List<String> shapeIds = new ArrayList<>();
@@ -319,7 +348,6 @@ public class ModellingEnvironment {
 				shapeId);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		QuerySolution querySolution = resultSet.next();
@@ -382,7 +410,6 @@ public class ModellingEnvironment {
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
 		System.out.println("Executing query: " + query.toString());
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		List<String> types = new ArrayList<>();
@@ -448,7 +475,6 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		while (resultSet.hasNext()) {
@@ -476,7 +502,6 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		while (resultSet.hasNext()) {
@@ -549,7 +574,6 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		Set<RelationDto> options = new HashSet<>();
@@ -625,7 +649,6 @@ public class ModellingEnvironment {
 		List<String> referencingShapes = new ArrayList<>();
 
 		ParameterizedSparqlString incomingReferencesQuery = new ParameterizedSparqlString(incomingReferencesCommand);
-		//ontology.setUserService(crc);
 		ResultSet incomingReferencesResultSet = ontology.query(incomingReferencesQuery).execSelect();
 		while (incomingReferencesResultSet.hasNext()) {
 			QuerySolution next = incomingReferencesResultSet.next();
@@ -705,7 +728,6 @@ public class ModellingEnvironment {
 		String elementId = String.format("%s_%s", mappedModelingLanguageConstruct.get(), UUID.randomUUID().toString());
 
 		ParameterizedSparqlString query = getShapeAndAbstractElementCreationQuery(modelElementCreationDto, modelId, elementId);
-		//ontology.setUserService(crc);
 		ontology.insertQuery(query);
 	}
 
@@ -732,7 +754,6 @@ public class ModellingEnvironment {
 		String command = getConnectionCreationCommand(connectionCreationDto, modelId, shapeId, elementId);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ontology.insertQuery(query);
 
 		ModelElementDetailDto modelElement = getModelElementDetail(modelId, shapeId);
@@ -754,7 +775,6 @@ public class ModellingEnvironment {
 		String conceptualElementId = modelElementDetailDto.getModelingLanguageConstructInstance();
 
 		ParameterizedSparqlString deleteQuery = getDeleteShapeQuery(shapeId);
-		//ontology.setUserService(crc);
 		ontology.insertQuery(deleteQuery);
 
 		if (StringUtils.isNotBlank(conceptualElementId)
@@ -775,7 +795,6 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		return resultSet.hasNext();
@@ -835,7 +854,6 @@ public class ModellingEnvironment {
 				queries.add(insertQueryElement);
 			}
 		}
-		//ontology.setUserService(crc);
 		ontology.insertMultipleQueries(queries);
 
 		ModelElementDetailDto modelElementDetail = getModelElementDetail(modelId, shapeId);
@@ -1185,7 +1203,6 @@ public class ModellingEnvironment {
 				paletteConstruct);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		if (!resultSet.hasNext()) {
@@ -1235,7 +1252,6 @@ public class ModellingEnvironment {
 				MODEL.getPrefix()
 		);
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		List<ModellingLanguageConstructInstance> instances = new ArrayList<>();
@@ -1297,7 +1313,6 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		Map<String, Map<String, String>> attributes = new HashMap<>();
@@ -1337,7 +1352,6 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString deleteElement = new ParameterizedSparqlString(deleteElementCommand);
-		//ontology.setUserService(crc);
 		ontology.insertQuery(deleteElement);
 
 		return Response.status(Status.OK).build();
@@ -1365,7 +1379,6 @@ public class ModellingEnvironment {
 				"}\n";
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		List<String> arrowHeads = new ArrayList<>();
@@ -1385,7 +1398,6 @@ public class ModellingEnvironment {
 				"}\n";
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		List<String> strokes = new ArrayList<>();
@@ -1411,7 +1423,6 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString typeQuery = new ParameterizedSparqlString(typeCommand);
-		//ontology.setUserService(crc);
 		ResultSet typeResultSet = ontology.query(typeQuery).execSelect();
 
 		if (typeResultSet.hasNext()) {
@@ -1430,7 +1441,6 @@ public class ModellingEnvironment {
 				name);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		Set<String> classes = new HashSet<>();
@@ -1497,7 +1507,7 @@ public class ModellingEnvironment {
 
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -1566,7 +1576,7 @@ public class ModellingEnvironment {
 
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -1660,7 +1670,7 @@ public class ModellingEnvironment {
 
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -1792,7 +1802,7 @@ public class ModellingEnvironment {
 
 		queryStr.append("}");
 		queryStr.append("ORDER BY ?orderNumber");
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -1890,7 +1900,7 @@ public class ModellingEnvironment {
 		ArrayList<ParameterizedSparqlString> queryList = new ArrayList<ParameterizedSparqlString>();
 		queryList.add(querStr);
 		queryList.add(querStr1);
-		//ontology.setUserService(crc);
+		
 		return Response.status(Status.OK).entity(ontology.insertMultipleQueries(queryList)).build();
 	}
 
@@ -2010,7 +2020,7 @@ public class ModellingEnvironment {
 		queryList.add(querStr);
 		queryList.add(querStr1);
 
-		//ontology.setUserService(crc);
+		
 		return Response.status(Status.OK).entity(ontology.insertMultipleQueries(queryList)).build();
 
 	}
@@ -2042,7 +2052,7 @@ public class ModellingEnvironment {
 		}
 		querStr.append("}");
 		//querStr.append(" WHERE { }");
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 
 		return Response.status(Status.OK).entity("{}").build();
@@ -2068,7 +2078,7 @@ public class ModellingEnvironment {
 				MODEL.getPrefix());
 
 		ParameterizedSparqlString instantiatedQuery = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
+		
 		return ontology.query(instantiatedQuery).execSelect().hasNext();
 	}
 
@@ -2100,7 +2110,7 @@ public class ModellingEnvironment {
 
 		System.out.println(querStr.toString());
 		//Model modelTpl = ModelFactory.createDefaultModel();
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 
 		querStr1.append("DELETE ");
@@ -2138,7 +2148,7 @@ public class ModellingEnvironment {
 
 		querStr.append("}");
 		//Model modelTpl = ModelFactory.createDefaultModel();
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 
 		return Response.status(Status.OK).entity("{}").build();
@@ -2195,7 +2205,7 @@ public class ModellingEnvironment {
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 		ontology.insertQuery(querStr1);
 
@@ -2213,7 +2223,7 @@ public class ModellingEnvironment {
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 		ontology.insertQuery(querStr1);
 
@@ -2249,7 +2259,7 @@ public class ModellingEnvironment {
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 		ontology.insertQuery(querStr1);
 
@@ -2283,7 +2293,7 @@ public class ModellingEnvironment {
 		querStr1.append(" }");
 
 		//Model modelTpl = ModelFactory.createDefaultModel();
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 		ontology.insertQuery(querStr1);
 
@@ -2317,7 +2327,7 @@ public class ModellingEnvironment {
 		querStr.append("?subject <" + property.getId() + "> ?data . ");
 		querStr.append("}");
 
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 		return Response.status(Status.OK).entity("{}").build();
 	}
@@ -2341,7 +2351,7 @@ public class ModellingEnvironment {
 
 		querStr.append("DELETE ");
 		querStr.append("WHERE { <" + property.getId() + "> ?predicate ?object . } ");
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr);
 		return Response.status(Status.OK).entity("{}").build();
 	}
@@ -2370,7 +2380,7 @@ public class ModellingEnvironment {
 
 		System.out.println("Create subclass in Domain Ontology");
 		System.out.println(querStr1.toString());
-		//ontology.setUserService(crc);
+		
 		ontology.insertQuery(querStr1);
 
 
@@ -2415,7 +2425,7 @@ public class ModellingEnvironment {
 
 			System.out.println("Create Datatype property");
 			System.out.println(querStr1.toString());
-			//ontology.setUserService(crc);
+			
 			ontology.insertQuery(querStr1);
 		}
 
@@ -2460,7 +2470,7 @@ public class ModellingEnvironment {
 
 			System.out.println("Create Object property");
 			System.out.println(querStr1.toString());
-			//ontology.setUserService(crc);
+			
 			ontology.insertQuery(querStr1);
 		}
 
@@ -2505,7 +2515,7 @@ public class ModellingEnvironment {
 
 			System.out.println("Create Object property");
 			System.out.println(querStr1.toString());
-			//ontology.setUserService(crc);
+			
 			ontology.insertQuery(querStr1);
 		}
 
@@ -2558,7 +2568,7 @@ public class ModellingEnvironment {
 
 			System.out.println("Create Shacl Constraint");
 			System.out.println(queryStr);
-			//ontology.setUserService(crc);
+			
 			ontology.insertQuery(queryStr);
 		}
 
@@ -2751,7 +2761,7 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		//ontology.setUserService(crc);
+		
 		ResultSet resultSet = ontology.query(query).execSelect();
 
 		List<String> shapeIds = new ArrayList<>();
@@ -2776,7 +2786,7 @@ public class ModellingEnvironment {
 			System.out.println(command2);
 
 			ParameterizedSparqlString query2 = new ParameterizedSparqlString(command2);
-			//ontology.setUserService(crc);
+			
 			ResultSet resultSet2 = ontology.query(query2).execSelect();
 
 			List<String> elementsIds = new ArrayList<>();
@@ -2794,7 +2804,7 @@ public class ModellingEnvironment {
 						"WHERE { " +
 						elementId + " ?property ?value . " +
 						"} ");
-				//ontology.setUserService(crc);
+				
 				QueryExecution qexec = ontology.query(query3);
 				ResultSet results = qexec.execSelect();
 				if (results.hasNext()) {
@@ -2827,7 +2837,7 @@ public class ModellingEnvironment {
 						"?id ?label  . \n" +
 						"FILTER (str(?object) = \"bpmn\") }");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -2891,7 +2901,7 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 		queryStr.append("ORDER BY ?label");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -2953,7 +2963,7 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 		queryStr.append("ORDER BY ?id");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -3024,7 +3034,7 @@ public class ModellingEnvironment {
 		queryStr.append("} ");
 		queryStr.append("ORDER BY ?label");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -3094,7 +3104,7 @@ public class ModellingEnvironment {
 		queryStr.append("} ");
 		queryStr.append("ORDER BY ?label");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -3162,7 +3172,7 @@ public class ModellingEnvironment {
 		queryStr.append("} ");
 		queryStr.append("ORDER BY ?label");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -3240,7 +3250,7 @@ public class ModellingEnvironment {
 				"} " +
 				"ORDER BY ?label");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -3312,7 +3322,7 @@ public class ModellingEnvironment {
 		queryStr.append("OPTIONAL { ?id sh:maxCount ?maxCount . }");
 		queryStr.append("}");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
@@ -3363,7 +3373,7 @@ public class ModellingEnvironment {
 		queryStr.append("OPTIONAL { ?id sh:maxCount ?maxCount . }");
 		queryStr.append("}");
 
-		//ontology.setUserService(crc);
+		
 		QueryExecution qexec = ontology.query(queryStr);
 		ResultSet results = qexec.execSelect();
 
