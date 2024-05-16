@@ -5,7 +5,7 @@
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH" />
     <envs>
-      <env name="DEV_ENV" value="true" />
+      <env name="DEV_ENV" value="false" />
       <env name="USER_EMAIL" value="test@test.com" />
       <env name="USER_PASSWORD" value="Test1234" />
     </envs>
