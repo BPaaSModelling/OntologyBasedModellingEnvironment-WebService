@@ -29,6 +29,7 @@ import ch.fhnw.modeller.model.metamodel.*;
 import ch.fhnw.modeller.model.model.Model;
 import ch.fhnw.modeller.model.model.ModellingLanguageConstructInstance;
 import ch.fhnw.modeller.webservice.dto.*;
+import com.auth0.json.mgmt.users.User;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.jena.graph.Node;
@@ -99,6 +100,17 @@ public class ModellingEnvironment {
 
 	private String extractValueFrom(QuerySolution querySolution, String label) {
 		return querySolution.get(label) != null ? querySolution.get(label).toString() : null;
+	}
+
+	@POST
+	@Path("/auth")
+	public Response setUserData(User user) {
+		String payload = gson.toJson("User data set");
+		//TODO: IMPLEMENT
+//		UserService userService = UserService.getUserService();
+//		userService.initializeUserGraph(user.getEmail());
+
+		return Response.status(Status.OK).entity(payload).build();
 	}
 
 

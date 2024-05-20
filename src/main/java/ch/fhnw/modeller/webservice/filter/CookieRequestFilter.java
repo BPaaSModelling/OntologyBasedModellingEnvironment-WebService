@@ -32,6 +32,8 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import static ch.fhnw.modeller.auth.SessionValidationServlet.getUserData;
+
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class CookieRequestFilter implements ContainerRequestFilter {
@@ -46,21 +48,48 @@ public class CookieRequestFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-        LOGGER.info("Authorization Header: " + authorizationHeader);
+        String idToken = requestContext.getHeaderString("X-ID-Token");
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ") || idToken == null) {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             return;
         }
 
-        String token = authorizationHeader.substring("Bearer".length()).trim();
+        String accessToken = authorizationHeader.substring("Bearer".length()).trim();
+
         try {
-            DecodedJWT jwt = validateToken(token);
+            DecodedJWT jwt = validateToken(accessToken);
             SecurityContext securityContext = requestContext.getSecurityContext();
             requestContext.setSecurityContext(new JWTSecurityContext(jwt, securityContext.isSecure()));
+
+            User user = getUserData(idToken);
+            UserService userService = new UserService(user);
+            //userService.initializeUserGraph(user.getEmail());
         } catch (Exception e) {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+            LOGGER.severe("Error validating token: " + e.getMessage());
         }
+    }
+
+    private User getUserData(String idToken) throws IOException, JwkException {
+        final DecodedJWT jwt = validateToken(idToken);
+        // Create User object
+        User user = new User();
+
+        user.setSub(jwt.getSubject());
+        user.setAud(jwt.getAudience());
+        user.setEmail_verified(jwt.getClaim("email_verified").asBoolean());
+        user.setUpdated_at(jwt.getClaim("updated_at").asString());
+        user.setIss(jwt.getIssuedAt());
+        user.setNickname(jwt.getClaim("nickname").asString());
+        user.setName(jwt.getClaim("name").asString());
+        user.setExp(jwt.getExpiresAt());
+        user.setIat(jwt.getIssuedAt());
+        user.setEmail(jwt.getClaim("email").asString());
+        user.setSid(jwt.getId());
+        user.setSid(jwt.getClaim("sid").asString());
+
+        return user;
     }
 
     private DecodedJWT validateToken(String token) throws JwkException, IOException {
