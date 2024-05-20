@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 import ch.fhnw.modeller.auth.UserService;
 import ch.fhnw.modeller.model.auth.User;
 import ch.fhnw.modeller.webservice.exception.NoResultsException;
-import ch.fhnw.modeller.webservice.filter.CookieRequestFilter;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.jena.graph.Factory;
@@ -286,16 +285,6 @@ public final class OntologyManager {
 			System.out.println("Welcome! UserService is not set to any user, this happens upon your first login.");
 		}
 	}
-//overloaded method, delete when not needed
-//	public void setUserService(UserService userService) {
-//		//this.userService = userService;
-//		this.userService = userService;
-//		// Modify the SPARQL query to target the specific user graph
-//		if (this.userService == null) {
-//			//throw new IllegalArgumentException("UserService is not set to any user");
-//			System.out.println("UserService is not set to any user");
-//		}
-//	}
 
 	public static String getREADENDPOINT() {
 		return READENDPOINT;

@@ -166,7 +166,7 @@ public class SessionValidationServlet extends HttpServlet {
             return jwt;
         } catch (TokenExpiredException e) {
             Logger.getLogger(SessionValidationServlet.class.getName()).log(Level.INFO, "JWT Token expired, a new Token will be created upon next login. ");
-            throw new TokenExpiredException("JWT Token expired, a new Token will be created upon next login. ");
+            throw new JWTVerificationException("JWT Token expired, a new Token will be created upon next login. ");
         } catch (Exception e) {
             //Invalid token
             Logger.getLogger(SessionValidationServlet.class.getName()).log(Level.WARNING, "JWT validation failed: ", e);

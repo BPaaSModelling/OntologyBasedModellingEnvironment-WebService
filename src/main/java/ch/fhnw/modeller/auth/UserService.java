@@ -9,6 +9,8 @@ import org.apache.jena.query.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 /**
@@ -20,7 +22,9 @@ import java.util.logging.Logger;
  */
 public class UserService {
     private final OntologyManager ontologyManager;
-    //public static UserService INSTANCE;
+    private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(10); // Adjust the pool size as needed
+
     @Getter
     private final User user;
     @Getter
@@ -30,7 +34,6 @@ public class UserService {
         this.user = user;
         this.ontologyManager = OntologyManager.getInstance();
         //this.ontologyManager.setUserService(this);
-
         this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT()+'/'+user.getEmail();
     }
 
@@ -46,12 +49,11 @@ public class UserService {
         if(userGraphUri == null || userGraphUri.isEmpty()){
             throw new IllegalArgumentException("UserGraph cannot be null or empty");
         }
-        //URL url = new URL(OntologyManager.getTRIPLESTOREENDPOINT());
+
         if (!datasetIsEmpty()) {
             if (!checkIfGraphExists(userGraphUri)) {
-
                 duplicateDefaultGraphForUser(userGraphUri);
-                Logger.getLogger("UserService").info("Graph for user " + userGraphUri + " created");
+                LOGGER.info("Graph for user " + userGraphUri + " created");
             }
         } else
             throw new NoResultsException("Dataset is empty. Add triples to the default graph first on Jena Fuseki.");
@@ -62,13 +64,23 @@ public class UserService {
         ParameterizedSparqlString query = new ParameterizedSparqlString(queryString);
         try (QueryExecution qexec = ontologyManager.query(query)) {
             return qexec.execAsk();
+        } catch (Exception e) {
+            LOGGER.severe("Error checking if graph exists: " + e.getMessage());
+            throw new NoResultsException("Error checking if graph exists");
         }
     }
 
     private void duplicateDefaultGraphForUser(String graphUri) {
-        String updateString = "ADD DEFAULT TO GRAPH <"+ graphUri +"> ";
-        ParameterizedSparqlString updateQuery = new ParameterizedSparqlString(updateString);
-        ontologyManager.insertQuery(updateQuery);
+        executorService.submit(() -> {
+            try {
+                String updateString = "ADD DEFAULT TO GRAPH <" + graphUri + "> ";
+                ParameterizedSparqlString updateQuery = new ParameterizedSparqlString(updateString);
+                ontologyManager.insertQuery(updateQuery);
+                LOGGER.info("Default graph duplicated for user: " + graphUri);
+            } catch (Exception e) {
+                LOGGER.severe("Error duplicating default graph for user: " + e.getMessage());
+            }
+        });
     }
 
     public boolean datasetIsEmpty() {
@@ -78,7 +90,7 @@ public class UserService {
         try (QueryExecution qExec = QueryExecutionFactory.sparqlService(OntologyManager.getTRIPLESTOREENDPOINT() + "/query", queryString)) {
             return !qExec.execAsk(); // execAsk returns true if the dataset contains any triples
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.severe("Error checking if dataset is empty: " + e.getMessage());
             // Handle error (e.g., log, throw a custom exception, or return a default value)
             return false; // or true, depending on how you want to handle errors
         }
