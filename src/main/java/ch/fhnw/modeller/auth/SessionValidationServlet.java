@@ -96,9 +96,9 @@ public class SessionValidationServlet extends HttpServlet {
 
             if (accessToken != null && idToken != null) {
                 // Validate the idToken and Get and Set the User
-                user = getUserData(idToken);
+//                user = getUserData(idToken);
                 // Initialize User Service and store it in the session
-                userService = new UserService(user);
+//                userService = new UserService(user);
                 //Initialize Graph upon login (create if doesn't exist and duplicate data from default graph)
                 userService.initializeUserGraph(userService.getUserGraphUri());
             } else {
@@ -129,14 +129,14 @@ public class SessionValidationServlet extends HttpServlet {
             User user = new User();
 
             user.setSub(jwt.getSubject());
-            user.setAud(jwt.getAudience());
-            user.setEmail_verified(jwt.getClaim("email_verified").asBoolean());
-            user.setUpdated_at(jwt.getClaim("updated_at").asString());
-            user.setIss(jwt.getIssuedAt());
+            user.setAud(String.valueOf(jwt.getAudience()));
+            user.setEmailVerified(jwt.getClaim("email_verified").asBoolean());
+            user.setUpdatedAt(jwt.getClaim("updated_at").asString());
+            user.setIss(jwt.getIssuer());
             user.setNickname(jwt.getClaim("nickname").asString());
             user.setName(jwt.getClaim("name").asString());
-            user.setExp(jwt.getExpiresAt());
-            user.setIat(jwt.getIssuedAt());
+//            user.setExp(jwt.getExpiresAt());
+//            user.setIat(jwt.getIssuedAt());
             user.setEmail(jwt.getClaim("email").asString());
             user.setSid(jwt.getId());
             user.setSid(jwt.getClaim("sid").asString());

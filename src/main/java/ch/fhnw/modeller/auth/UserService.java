@@ -3,14 +3,13 @@ package ch.fhnw.modeller.auth;
 import ch.fhnw.modeller.model.auth.User;
 import ch.fhnw.modeller.webservice.exception.NoResultsException;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
-
 import lombok.Getter;
-import org.apache.jena.query.*;
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 /**
@@ -23,30 +22,31 @@ import java.util.logging.Logger;
 public class UserService {
     private final OntologyManager ontologyManager;
     private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(10); // Adjust the pool size as needed
+//    private static final ExecutorService executorService = Executors.newFixedThreadPool(10); // Adjust the pool size as needed
 
     @Getter
     private final User user;
     @Getter
     private final String userGraphUri;
+
     public UserService(User user) {
         // Set User, current OntologyManager and respective UserService upon initialization
         this.user = user;
         this.ontologyManager = OntologyManager.getInstance();
         //this.ontologyManager.setUserService(this);
-        this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT()+'/'+user.getEmail();
+        this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT() + '/' + user.getEmail();
     }
 
-    public static UserService getUserService(HttpServletRequest request){
+    public static UserService getUserService(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if(session.getAttribute("userService") == null){
+        if (session.getAttribute("userService") == null) {
             throw new IllegalArgumentException("No user service found in session");
         }
         return (UserService) session.getAttribute("userService");
     }
 
     public void initializeUserGraph(String userGraphUri) throws NoResultsException {
-        if(userGraphUri == null || userGraphUri.isEmpty()){
+        if (userGraphUri == null || userGraphUri.isEmpty()) {
             throw new IllegalArgumentException("UserGraph cannot be null or empty");
         }
 
@@ -71,7 +71,7 @@ public class UserService {
     }
 
     private void duplicateDefaultGraphForUser(String graphUri) {
-        executorService.submit(() -> {
+//        executorService.submit(() -> {
             try {
                 String updateString = "ADD DEFAULT TO GRAPH <" + graphUri + "> ";
                 ParameterizedSparqlString updateQuery = new ParameterizedSparqlString(updateString);
@@ -80,7 +80,7 @@ public class UserService {
             } catch (Exception e) {
                 LOGGER.severe("Error duplicating default graph for user: " + e.getMessage());
             }
-        });
+//        });
     }
 
     public boolean datasetIsEmpty() {

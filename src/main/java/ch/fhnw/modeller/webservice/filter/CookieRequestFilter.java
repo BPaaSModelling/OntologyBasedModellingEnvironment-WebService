@@ -29,9 +29,11 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.security.Principal;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-
+import java.util.concurrent.*;
 import static ch.fhnw.modeller.auth.SessionValidationServlet.getUserData;
 
 @Provider
@@ -40,34 +42,39 @@ public class CookieRequestFilter implements ContainerRequestFilter {
     private static final Logger LOGGER = Logger.getLogger("JWTAuthFilter.class.getName()");
     private static final String AUTH0_DOMAIN = "https://dev-aoame.eu.auth0.com/";
     private static final String AUDIENCE = "https://aoame-webservice";
+//    private final TokenCache tokenCache = new TokenCache(); // Cache tokens for faster validation
     private static final Gson gson = new Gson();
-
-    @Context
-    private HttpServletRequest request;
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-        String idToken = requestContext.getHeaderString("X-ID-Token");
+        String userDataHeader = requestContext.getHeaderString("X-User-Data");
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ") || idToken == null) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             return;
         }
 
         String accessToken = authorizationHeader.substring("Bearer".length()).trim();
-
+        String userDataJson = new String(Base64.getDecoder().decode(userDataHeader));
         try {
+            // Decode user data
+            User user = gson.fromJson(userDataJson, User.class);
+
             DecodedJWT jwt = validateToken(accessToken);
             SecurityContext securityContext = requestContext.getSecurityContext();
             requestContext.setSecurityContext(new JWTSecurityContext(jwt, securityContext.isSecure()));
 
-            User user = getUserData(idToken);
-            UserService userService = new UserService(user);
+//            User user = getUserData(userData);
+
             //userService.initializeUserGraph(user.getEmail());
+            // Set Current user in the Ontology Manager for the upcoming request
+            UserService userService = new UserService(user);
+            requestContext.setProperty("userService", userService);
+            OntologyManager.getInstance().setUserService(requestContext);
         } catch (Exception e) {
-            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             LOGGER.severe("Error validating token: " + e.getMessage());
+            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }
 
@@ -77,14 +84,14 @@ public class CookieRequestFilter implements ContainerRequestFilter {
         User user = new User();
 
         user.setSub(jwt.getSubject());
-        user.setAud(jwt.getAudience());
-        user.setEmail_verified(jwt.getClaim("email_verified").asBoolean());
-        user.setUpdated_at(jwt.getClaim("updated_at").asString());
-        user.setIss(jwt.getIssuedAt());
+        user.setAud(String.valueOf(jwt.getAudience()));
+        user.setEmailVerified(jwt.getClaim("email_verified").asBoolean());
+        user.setUpdatedAt(jwt.getClaim("updated_at").asString());
+        user.setIss(jwt.getIssuer());
         user.setNickname(jwt.getClaim("nickname").asString());
         user.setName(jwt.getClaim("name").asString());
-        user.setExp(jwt.getExpiresAt());
-        user.setIat(jwt.getIssuedAt());
+//        user.setExp(jwt.getExpiresAt());
+//        user.setIat(jwt.getIssuedAt());
         user.setEmail(jwt.getClaim("email").asString());
         user.setSid(jwt.getId());
         user.setSid(jwt.getClaim("sid").asString());
@@ -93,6 +100,11 @@ public class CookieRequestFilter implements ContainerRequestFilter {
     }
 
     private DecodedJWT validateToken(String token) throws JwkException, IOException {
+//        DecodedJWT jwt = tokenCache.get(token);
+//        if (jwt != null) {
+//            return jwt;
+//        }
+
         DecodedJWT jwt = JWT.decode(token);
 
         JwkProvider provider = new UrlJwkProvider(new URL(AUTH0_DOMAIN + ".well-known/jwks.json"));
@@ -105,7 +117,29 @@ public class CookieRequestFilter implements ContainerRequestFilter {
                 //.withAudience(AUDIENCE)
                 .build();
 
-        return verifier.verify(token);
+        jwt = verifier.verify(token);
+//        tokenCache.put(token, jwt);
+
+        return  jwt;
+    }
+}
+
+class TokenCache {
+    private final ConcurrentHashMap<String, DecodedJWT> cache = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    public DecodedJWT get(String token) {
+        return cache.get(token);
+    }
+
+    public void put(String token, DecodedJWT jwt) {
+        Future<?> oldTask = (Future<?>) cache.put(token, jwt);
+        if (oldTask != null) {
+            oldTask.cancel(false);
+        }
+
+        Runnable expirationTask = () -> cache.remove(token);
+        executorService.schedule(expirationTask, 1, TimeUnit.HOURS);
     }
 }
 

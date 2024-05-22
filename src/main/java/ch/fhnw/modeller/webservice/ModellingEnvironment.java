@@ -264,41 +264,44 @@ public class ModellingEnvironment {
 	@GET
 	@Path("/model/{id}/element")
 	public Response getModelElementList(@PathParam("id") String id) {
-		// Start the task asynchronously
-		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
-		if (futureTask == null || futureTask.isDone()) {
-			futureTask = CompletableFuture.supplyAsync(() -> getModelElementDetailDtos(id));
-			taskMap.put(id, futureTask);
-		}
-		System.out.println("getModelElementList started for model " + id);
+
+		List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
+//		// Start the task asynchronously
+//		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
+//		if (futureTask == null || futureTask.isDone()) {
+//			futureTask = CompletableFuture.supplyAsync(() -> getModelElementDetailDtos(id));
+//			taskMap.put(id, futureTask);
+//		}
+//		System.out.println("getModelElementList started for model " + id);
 		// Immediately return a response indicating the task is in progress
-		return Response.status(Status.ACCEPTED).entity(gson.toJson(id)).build();
+		String payload = gson.toJson(elements);
+		return Response.status(Status.ACCEPTED).entity(payload).build();
 	}
 
-	@GET
-	@Path("/model/{id}/element/status")
-	public Response getModelElementStatus(@PathParam("id") String id) {
-		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
-		if (futureTask == null) {
-			Logger logger =  Logger.getLogger(ModellingEnvironment.class.getName());
-			logger.warning("getModelElementStatus: Task not found for model " + id);
-			return Response.status(Status.NOT_FOUND).build();
-		} else if (!futureTask.isDone()) {
-			return Response.status(Status.ACCEPTED).entity(gson.toJson("Processing elements in progress")).build();
-		} else {
-			try {
-				List<ModelElementDetailDto> elements = futureTask.get();
-
-				System.out.println("getModelElementList completed for model " + id);
-				return Response.status(Status.OK).entity(gson.toJson(elements)).build();
-			} catch (InterruptedException | ExecutionException e) {
-				System.out.println("getModelElementList Exception for model " + id + ": " + e.getMessage());
-				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(gson.toJson("Error processing task")).build();
-			} finally {
-				//taskMap.remove(id);
- 			}
-		}
-	}
+//	@GET
+//	@Path("/model/{id}/element/status")
+//	public Response getModelElementStatus(@PathParam("id") String id) {
+//		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
+//		if (futureTask == null) {
+//			Logger logger =  Logger.getLogger(ModellingEnvironment.class.getName());
+//			logger.warning("getModelElementStatus: Task not found for model " + id);
+//			return Response.status(Status.NOT_FOUND).build();
+//		} else if (!futureTask.isDone()) {
+//			return Response.status(Status.ACCEPTED).entity(gson.toJson("Processing elements in progress")).build();
+//		} else {
+//			try {
+//				List<ModelElementDetailDto> elements = futureTask.get();
+//
+//				System.out.println("getModelElementList completed for model " + id);
+//				return Response.status(Status.OK).entity(gson.toJson(elements)).build();
+//			} catch (InterruptedException | ExecutionException e) {
+//				System.out.println("getModelElementList Exception for model " + id + ": " + e.getMessage());
+//				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(gson.toJson("Error processing task")).build();
+//			} finally {
+//				//taskMap.remove(id);
+// 			}
+//		}
+//	}
 
 	private List<ModelElementDetailDto> getModelElementDetailDtos(String id) {
 		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);

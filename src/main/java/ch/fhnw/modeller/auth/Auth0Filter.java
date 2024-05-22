@@ -37,7 +37,7 @@ import com.auth0.jwt.interfaces.RSAKeyProvider;
 /**
  * Filter class to check if a valid session exists. This will be true if the User Id is present.
  */
-@WebFilter(urlPatterns = "/*")
+@WebFilter(urlPatterns = "/api/*")
 public class Auth0Filter implements Filter{
     private AuthenticationController authenticationController;
     private JwkProvider jwkProvider;

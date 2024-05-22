@@ -46,12 +46,8 @@ public final class OntologyManager {
 	private static OntologyManager INSTANCE;
 	private boolean localOntology = true;
 
-//	@Getter
-//	@Setter
 	private UserService userService;
 
-	//private Model rdfModel;
-	
 	/**
 	 * The URL of the triplestore server.<br>
 	 * This variable gets set based on the environment variable TRIPLESTORE_ENDPOINT.<br>
@@ -262,6 +258,7 @@ public final class OntologyManager {
 		//userService = UserService.getUserService(crc);
 		//UserService userService = UserService.getUserService();
 		// Modify the SPARQL query to target the specific user graph
+
 		if (userService == null) {
 			return null;
 			//throw new IllegalArgumentException("UserService is not set to any user");
@@ -283,6 +280,7 @@ public final class OntologyManager {
 		if (this.userService == null) {
 			//throw new IllegalArgumentException("UserService is not set to any user");
 			System.out.println("Welcome! UserService is not set to any user, this happens upon your first login.");
+			throw new IllegalArgumentException("UserService is not set to any user");
 		}
 	}
 
