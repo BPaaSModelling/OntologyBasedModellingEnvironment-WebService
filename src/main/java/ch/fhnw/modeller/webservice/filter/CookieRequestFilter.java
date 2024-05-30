@@ -3,9 +3,10 @@ package ch.fhnw.modeller.webservice.filter;
 import ch.fhnw.modeller.auth.AuthenticationControllerProvider;
 import ch.fhnw.modeller.auth.SessionValidationServlet;
 import ch.fhnw.modeller.auth.UserService;
-import ch.fhnw.modeller.model.auth.User;
+
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import com.auth0.AuthenticationController;
+import com.auth0.json.mgmt.users.User;
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwk.JwkProvider;
@@ -48,7 +49,7 @@ public class CookieRequestFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-        String userDataHeader = requestContext.getHeaderString("X-User-Data");
+        String userEmailHeader = requestContext.getHeaderString("X-User-Email");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
@@ -56,10 +57,10 @@ public class CookieRequestFilter implements ContainerRequestFilter {
         }
 
         String accessToken = authorizationHeader.substring("Bearer".length()).trim();
-        String userDataJson = new String(Base64.getDecoder().decode(userDataHeader));
         try {
             // Decode user data
-            User user = gson.fromJson(userDataJson, User.class);
+            User user = new User();
+            user.setEmail(userEmailHeader);
 
             DecodedJWT jwt = validateToken(accessToken);
             SecurityContext securityContext = requestContext.getSecurityContext();
@@ -78,26 +79,26 @@ public class CookieRequestFilter implements ContainerRequestFilter {
         }
     }
 
-    private User getUserData(String idToken) throws IOException, JwkException {
-        final DecodedJWT jwt = validateToken(idToken);
-        // Create User object
-        User user = new User();
-
-        user.setSub(jwt.getSubject());
-        user.setAud(String.valueOf(jwt.getAudience()));
-        user.setEmailVerified(jwt.getClaim("email_verified").asBoolean());
-        user.setUpdatedAt(jwt.getClaim("updated_at").asString());
-        user.setIss(jwt.getIssuer());
-        user.setNickname(jwt.getClaim("nickname").asString());
-        user.setName(jwt.getClaim("name").asString());
-//        user.setExp(jwt.getExpiresAt());
-//        user.setIat(jwt.getIssuedAt());
-        user.setEmail(jwt.getClaim("email").asString());
-        user.setSid(jwt.getId());
-        user.setSid(jwt.getClaim("sid").asString());
-
-        return user;
-    }
+//    private User getUserData(String idToken) throws IOException, JwkException {
+//        final DecodedJWT jwt = validateToken(idToken);
+//        // Create User object
+//        User user = new User();
+//
+//        user.setSub(jwt.getSubject());
+//        user.setAud(String.valueOf(jwt.getAudience()));
+//        user.setEmailVerified(jwt.getClaim("email_verified").asBoolean());
+//        user.setUpdatedAt(jwt.getClaim("updated_at").asString());
+//        user.setIss(jwt.getIssuer());
+//        user.setNickname(jwt.getClaim("nickname").asString());
+//        user.setName(jwt.getClaim("name").asString());
+////        user.setExp(jwt.getExpiresAt());
+////        user.setIat(jwt.getIssuedAt());
+//        user.setEmail(jwt.getClaim("email").asString());
+//        user.setSid(jwt.getId());
+//        user.setSid(jwt.getClaim("sid").asString());
+//
+//        return user;
+//    }
 
     private DecodedJWT validateToken(String token) throws JwkException, IOException {
 //        DecodedJWT jwt = tokenCache.get(token);

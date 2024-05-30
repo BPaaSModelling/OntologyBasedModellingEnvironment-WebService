@@ -23,6 +23,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
 
 import ch.fhnw.modeller.auth.UserService;
 import ch.fhnw.modeller.model.metamodel.*;
@@ -102,14 +103,31 @@ public class ModellingEnvironment {
 		return querySolution.get(label) != null ? querySolution.get(label).toString() : null;
 	}
 
-	@POST
+	/**
+	 * Sets the user data for the authenticated user after the user logs in.
+	 * @param securityContext the security context provided by the framework
+	 * @param requestContext the request context provided by the framework
+	 * @return a Response object indicating the status of the operation
+	 */
+	@GET
 	@Path("/auth")
-	public Response setUserData(User user) {
+	public Response setUserData(@Context SecurityContext securityContext, @Context ContainerRequestContext requestContext) {
 		String payload = gson.toJson("User data set");
-		//TODO: IMPLEMENT
-//		UserService userService = UserService.getUserService();
-//		userService.initializeUserGraph(user.getEmail());
 
+		UserService userService = (UserService) requestContext.getProperty("userService");
+		if (userService == null) {
+			return Response.status(Status.UNAUTHORIZED).entity("User service not found. Verify user authentication").build();
+		}
+
+		User user = userService.getUser();
+		// Checks if default graph is not empty
+		// Creates a new graph for the user if it does not exist (copy of the default graph)
+		try {
+			userService.initializeUserGraph(user.getEmail());
+		} catch (NoResultsException e) {
+			System.out.println("Error initializing user graph: " + e.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error initializing user graph").build();
+		}
 		return Response.status(Status.OK).entity(payload).build();
 	}
 

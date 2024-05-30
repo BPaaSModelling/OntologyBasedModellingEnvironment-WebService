@@ -1,6 +1,5 @@
 package ch.fhnw.modeller.auth;
 
-import ch.fhnw.modeller.model.auth.User;
 import ch.fhnw.modeller.webservice.exception.NoResultsException;
 import ch.fhnw.modeller.webservice.ontology.OntologyManager;
 import lombok.Getter;
@@ -11,6 +10,8 @@ import org.apache.jena.query.QueryExecutionFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.logging.Logger;
+
+import com.auth0.json.mgmt.users.User;
 
 /**
  * UserService class is responsible for managing user-related operations.
@@ -35,14 +36,6 @@ public class UserService {
         this.ontologyManager = OntologyManager.getInstance();
         //this.ontologyManager.setUserService(this);
         this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT() + '/' + user.getEmail();
-    }
-
-    public static UserService getUserService(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        if (session.getAttribute("userService") == null) {
-            throw new IllegalArgumentException("No user service found in session");
-        }
-        return (UserService) session.getAttribute("userService");
     }
 
     public void initializeUserGraph(String userGraphUri) throws NoResultsException {

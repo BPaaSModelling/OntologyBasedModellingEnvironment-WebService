@@ -46,7 +46,7 @@ import org.json.JSONObject;
  * The SessionValidationServlet class is a servlet responsible for validating user sessions and providing user data.
  * It handles accessToken and idToken cookies, decodes and validates them.
  */
-@WebServlet("/auth")
+@WebServlet("/auth/sessionValidation")
 public class SessionValidationServlet extends HttpServlet {
     @Context
     private ContainerRequestContext crc;
