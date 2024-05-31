@@ -74,6 +74,7 @@ public class ModellingEnvironment {
 	private Gson gson = new Gson();
 	private OntologyManager ontology = OntologyManager.getInstance();
 	private boolean debug_properties = false;
+	private final Logger LOGGER = Logger.getLogger(ModellingEnvironment.class.getName());
 
 	//Allows to retrieve the userService
 	@Context
@@ -125,7 +126,7 @@ public class ModellingEnvironment {
 		try {
 			userService.initializeUserGraph(user.getEmail());
 		} catch (NoResultsException e) {
-			System.out.println("Error initializing user graph: " + e.getMessage());
+			LOGGER.severe("Error initializing user graph: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error initializing user graph").build();
 		}
 		return Response.status(Status.OK).entity(payload).build();
@@ -301,8 +302,8 @@ public class ModellingEnvironment {
 //	public Response getModelElementStatus(@PathParam("id") String id) {
 //		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
 //		if (futureTask == null) {
-//			Logger logger =  Logger.getLogger(ModellingEnvironment.class.getName());
-//			logger.warning("getModelElementStatus: Task not found for model " + id);
+//			Logger LOGGER =  Logger.getLogger(ModellingEnvironment.class.getName());
+//			LOGGER.warning("getModelElementStatus: Task not found for model " + id);
 //			return Response.status(Status.NOT_FOUND).build();
 //		} else if (!futureTask.isDone()) {
 //			return Response.status(Status.ACCEPTED).entity(gson.toJson("Processing elements in progress")).build();

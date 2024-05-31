@@ -269,15 +269,10 @@ public final class OntologyManager {
 		return userGraphUri;
 	}
 
-//	TODO: Proper ErrorHandling where cookies are not passed. Therefore, in certain cases an error should not be thrown.
-//	TODO: Check if SessionValidationServlet.java can be done via JAX RS instead of Servlets, it would be easier and more consistent.
-//	TODO: Currently, because of a bug, setUserService is overloaded. Check if possible to remove the overloaded version.
-//	TODO: Check if CookieResponseFilter.java is needed. if not, remove.
 	public void setUserService(ContainerRequestContext crc) {
-		//this.userService = userService;
 		userService = (UserService) crc.getProperty("userService");
 		// Modify the SPARQL query to target the specific user graph
-		if (this.userService == null) {
+		if (this.userService == null || this.userService.getUser() == null) {
 			//throw new IllegalArgumentException("UserService is not set to any user");
 			System.out.println("Welcome! UserService is not set to any user, this happens upon your first login.");
 			throw new IllegalArgumentException("UserService is not set to any user");
