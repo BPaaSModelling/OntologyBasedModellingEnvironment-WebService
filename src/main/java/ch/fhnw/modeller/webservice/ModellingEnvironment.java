@@ -113,7 +113,6 @@ public class ModellingEnvironment {
 	@GET
 	@Path("/auth")
 	public Response setUserData(@Context SecurityContext securityContext, @Context ContainerRequestContext requestContext) {
-		String payload = gson.toJson("User data set");
 
 		UserService userService = (UserService) requestContext.getProperty("userService");
 		if (userService == null) {
@@ -124,12 +123,16 @@ public class ModellingEnvironment {
 		// Checks if default graph is not empty
 		// Creates a new graph for the user if it does not exist (copy of the default graph)
 		try {
-			userService.initializeUserGraph(user.getEmail());
+			userService.initializeUserGraph(userService.getUserGraphUri());
 		} catch (NoResultsException e) {
+			LOGGER.warning("The default dataset is empty. Please upload triples: " + e.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("The default dataset is empty. Please upload triples").build();
+		} catch (Exception e) {
 			LOGGER.severe("Error initializing user graph: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error initializing user graph").build();
-		}
-		return Response.status(Status.OK).entity(payload).build();
+
+        }
+        return Response.status(Status.OK).entity("User Graph successfully created").build();
 	}
 
 
@@ -3713,7 +3716,7 @@ public class ModellingEnvironment {
 
 		//con.setRequestProperty("Content-Type", "text/trig");
 		String contentType = con.getHeaderField("Content-Type");
-
+		LOGGER.info("Getting languages from GitHub");
 
 		int status = con.getResponseCode();
 		//Finally, let's read the response of the request and place it in a content String:
@@ -3760,6 +3763,7 @@ public class ModellingEnvironment {
 	@Path("postLanguagesSelectedtoFuseki")
 	public Response postLanguagesSelectedtoFuseki(String json) throws IOException {
 		List<String> sLanguageSelection = gson.fromJson(json, List.class);
+		LOGGER.info("Uploading modeling languages to Fuseki from Github");
 
 		try {
 			if(datasetIsEmpty(OntologyManager.getTRIPLESTOREENDPOINT())) {
@@ -3768,10 +3772,12 @@ public class ModellingEnvironment {
 				uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
 			}
 		} catch (Exception e) {
-
+			LOGGER.severe("Error occurred during the upload of the languages to Fuseki");
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).build();
 		}
+
+		LOGGER.info("Modeling languages uploaded to Fuseki");
 		return Response.status(Status.OK).build();
 	}
 

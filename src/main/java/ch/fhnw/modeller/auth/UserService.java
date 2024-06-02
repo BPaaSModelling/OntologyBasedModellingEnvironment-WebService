@@ -38,7 +38,7 @@ public class UserService {
         this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT() + '/' + user.getEmail();
     }
 
-    public void initializeUserGraph(String userGraphUri) throws NoResultsException {
+    public void initializeUserGraph(String userGraphUri) throws Exception {
         if (userGraphUri == null || userGraphUri.isEmpty()) {
             throw new IllegalArgumentException("UserGraph cannot be null or empty");
         }
@@ -52,14 +52,14 @@ public class UserService {
             throw new NoResultsException("Dataset is empty. Add triples to the default graph first on Jena Fuseki.");
     }
 
-    private boolean checkIfGraphExists(String userGraphUri) throws NoResultsException {
+    private boolean checkIfGraphExists(String userGraphUri) throws Exception {
         String queryString = String.format("ASK WHERE { GRAPH <" + userGraphUri + "> { ?s ?p ?o } }");
         ParameterizedSparqlString query = new ParameterizedSparqlString(queryString);
         try (QueryExecution qexec = ontologyManager.query(query)) {
             return qexec.execAsk();
         } catch (Exception e) {
             LOGGER.severe("Error checking if graph exists: " + e.getMessage());
-            throw new NoResultsException("Error checking if graph exists");
+            throw new Exception("Error checking if graph exists", e);
         }
     }
 
