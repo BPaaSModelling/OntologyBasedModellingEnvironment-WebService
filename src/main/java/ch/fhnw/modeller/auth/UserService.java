@@ -14,10 +14,10 @@ import java.util.logging.Logger;
 import com.auth0.json.mgmt.users.User;
 
 /**
- * UserService class is responsible for managing user-related operations.
+ * UserService is responsible for managing user-related operations.
  * It provides methods to initialize user graph, check if the graph already exists
  * and duplicate the default graph for each new user.
- * UserService is updated for each JAX-RS request by the CookieResponseFilter.
+ * UserService is updated for each JAX-RS request by the JWTAuthFilter.java filter
  * It is used by OntologyManager to access user data and set the user graph.
  */
 public class UserService {
@@ -38,7 +38,14 @@ public class UserService {
         this.userGraphUri = OntologyManager.getTRIPLESTOREENDPOINT() + '/' + user.getEmail();
     }
 
-    public void initializeUserGraph(String userGraphUri) throws Exception {
+    /**
+     * Initializes the user graph.
+     * Checks if the dataset is empty, if the graph exists and duplicates the default graph for the user.
+     * @param userGraphUri The URI of the user graph.
+     * @return A string message indicating the result of the operation.
+     * @throws Exception If an error occurs during the operation.
+     */
+    public String initializeUserGraph(String userGraphUri) throws Exception {
         if (userGraphUri == null || userGraphUri.isEmpty()) {
             throw new IllegalArgumentException("UserGraph cannot be null or empty");
         }
@@ -46,7 +53,11 @@ public class UserService {
         if (!datasetIsEmpty()) {
             if (!checkIfGraphExists(userGraphUri)) {
                 duplicateDefaultGraphForUser(userGraphUri);
-                LOGGER.info("Graph for user " + userGraphUri + " created");
+                LOGGER.info("Graph created for user: " + userGraphUri);
+                return "Graph created for user: " + userGraphUri;
+            } else {
+                LOGGER.info("Successfully connected to graph: " + userGraphUri);
+                return "Successfully connected to graph: " + userGraphUri;
             }
         } else
             throw new NoResultsException("Dataset is empty. Add triples to the default graph first on Jena Fuseki.");
@@ -64,22 +75,18 @@ public class UserService {
     }
 
     private void duplicateDefaultGraphForUser(String graphUri) {
-//        executorService.submit(() -> {
-            try {
-                String updateString = "ADD DEFAULT TO GRAPH <" + graphUri + "> ";
-                ParameterizedSparqlString updateQuery = new ParameterizedSparqlString(updateString);
-                ontologyManager.insertQuery(updateQuery);
-                LOGGER.info("Default graph duplicated for user: " + graphUri);
-            } catch (Exception e) {
-                LOGGER.severe("Error duplicating default graph for user: " + e.getMessage());
-            }
-//        });
+        try {
+            String updateString = "ADD DEFAULT TO GRAPH <" + graphUri + "> ";
+            ParameterizedSparqlString updateQuery = new ParameterizedSparqlString(updateString);
+            ontologyManager.insertQuery(updateQuery);
+        } catch (Exception e) {
+            LOGGER.severe("Error duplicating default graph for user: " + e.getMessage());
+        }
     }
 
     public boolean datasetIsEmpty() {
         // Query to check if the dataset is empty
         String queryString = "ASK { ?s ?p ?o }";
-        // Set up the query execution
         try (QueryExecution qExec = QueryExecutionFactory.sparqlService(OntologyManager.getTRIPLESTOREENDPOINT() + "/query", queryString)) {
             return !qExec.execAsk(); // execAsk returns true if the dataset contains any triples
         } catch (Exception e) {

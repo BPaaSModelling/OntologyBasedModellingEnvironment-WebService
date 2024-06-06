@@ -119,20 +119,20 @@ public class ModellingEnvironment {
 			return Response.status(Status.UNAUTHORIZED).entity("User service not found. Verify user authentication").build();
 		}
 
-		User user = userService.getUser();
 		// Checks if default graph is not empty
 		// Creates a new graph for the user if it does not exist (copy of the default graph)
 		try {
-			userService.initializeUserGraph(userService.getUserGraphUri());
+			String resultPayload = userService.initializeUserGraph(userService.getUserGraphUri());
+
+			return Response.status(Status.OK).entity(gson.toJson(resultPayload)).build();
+
 		} catch (NoResultsException e) {
 			LOGGER.warning("The default dataset is empty. Please upload triples: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("The default dataset is empty. Please upload triples").build();
 		} catch (Exception e) {
 			LOGGER.severe("Error initializing user graph: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error initializing user graph").build();
-
         }
-        return Response.status(Status.OK).entity("User Graph successfully created").build();
 	}
 
 
