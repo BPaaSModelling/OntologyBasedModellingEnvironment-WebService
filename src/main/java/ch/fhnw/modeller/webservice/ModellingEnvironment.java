@@ -286,7 +286,7 @@ public class ModellingEnvironment {
 	@GET
 	@Path("/model/{id}/element")
 	public Response getModelElementList(@PathParam("id") String id) {
-
+		LOGGER.info("getModelElementList started for model " + id);
 		List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
 //		// Start the task asynchronously
 //		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
@@ -296,6 +296,7 @@ public class ModellingEnvironment {
 //		}
 //		System.out.println("getModelElementList started for model " + id);
 		// Immediately return a response indicating the task is in progress
+		LOGGER.info("getModelElementList completed for model " + id);
 		String payload = gson.toJson(elements);
 		return Response.status(Status.ACCEPTED).entity(payload).build();
 	}
@@ -348,7 +349,7 @@ public class ModellingEnvironment {
 		}
 
 		List<ModelElementDetailDto> modelElements = new ArrayList<>(shapeIds.size());
-
+		LOGGER.info("Retrieved modelElements " + modelElements);
 		shapeIds.forEach(shapeId -> {
 			Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
 			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);

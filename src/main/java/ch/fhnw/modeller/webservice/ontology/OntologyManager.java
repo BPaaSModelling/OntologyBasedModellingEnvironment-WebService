@@ -27,6 +27,7 @@ import org.apache.jena.rdfs.RDFSFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.WriterDatasetRIOTFactory;
+import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateFactory;
@@ -54,7 +55,7 @@ public final class OntologyManager {
 	 * If this environment variable does not exist it is assumed that the software is running
 	 * locally and <i>http://localhost:3030/ModEnv</i> is used.
 	 */
-	private static String TRIPLESTOREENDPOINT 	= ConfigReader.getInstance().getEntry("TRIPLESTORE_ENDPOINT", "http://localhost:3030/ModEnv"); 
+	private static String TRIPLESTOREENDPOINT 	= ConfigReader.getInstance().getEntry("TRIPLESTORE_ENDPOINT", "http://localhost:3030/ModEnv");
 
 	private static String UPDATEENDPOINT 		= TRIPLESTOREENDPOINT + "/update";
 	private static String QUERYENDPOINT			= TRIPLESTOREENDPOINT + "/query";
@@ -91,7 +92,6 @@ public final class OntologyManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 	}
 
 	public Model applyReasoningRulesToTempModel(Model tempModel, ParameterizedSparqlString constructQuery) {
@@ -117,7 +117,7 @@ public final class OntologyManager {
 	}
 
 	public Model performConstructRule(Model model, ParameterizedSparqlString query) {
-	
+
 		// System.out.println("### performConstructRule: " +query.toString());
 		Model temp = ModelFactory.createOntologyModel();
 		addNamespacesToQuery(query);
@@ -127,9 +127,9 @@ public final class OntologyManager {
 		model = model.union(temp);
 		return model;
 	}
-	
+
 	public void performConstructRule(ParameterizedSparqlString query) {
-		
+
 		// System.out.println("### performConstructRule: " +query.toString());
 		addNamespacesToQuery(query);
 		System.out.println("### online performConstructRule: " + query.toString());
@@ -163,25 +163,25 @@ public final class OntologyManager {
 		Query query = QueryFactory.create(queryStr.toString());
 		if (userGraphUri != null && !query.toString().contains("GRAPH")) {
 			query.addGraphURI(userGraphUri);
-			System.out.println("Graph QUERY \n" + query.toString());
 		}
 		QueryExecution qexec;
-
 		qexec = QueryExecutionFactory.sparqlService(QUERYENDPOINT, query);
+
+		System.out.println("Graph QUERY \n" + query.toString());
 
 		return qexec;
 	}
-	
 
-	public void insertQuery(ParameterizedSparqlString queryStr) {
+
+	public void insertQuery(ParameterizedSparqlString query) {
 		try{
 		 	String userGraphUri = getCurrentUserGraph();// gets your specific graph URI
-			addNamespacesToQuery(queryStr);
+			addNamespacesToQuery(query);
 
 			// Modify the query based on its type
-			String modifiedQuery = modifyQueryForGraph(queryStr.toString(), userGraphUri);
+			String modifiedQuery = modifyQueryForGraph(query.toString(), userGraphUri);
 
-			//System.out.println("***Trying to insert***\n" + modifiedQuery.toString() + "***End query***\n");
+			System.out.println("***Trying to insert***\n" + modifiedQuery.toString() + "***End query***\n");
 			UpdateRequest update = UpdateFactory.create(modifiedQuery);
 			UpdateProcessor up;
 			up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
@@ -189,10 +189,8 @@ public final class OntologyManager {
 		}catch(Exception e){
 			System.out.println(e.getMessage());
 		}finally{
-	
 			Date date = new Date();
 			System.out.println(new Timestamp(date.getTime()));
-		
 		}
 	}
 
@@ -221,11 +219,11 @@ public final class OntologyManager {
 		return query;
 	}
 
-	
+
 	public boolean insertMultipleQueries(List<ParameterizedSparqlString> queryStrList) {
 		Model tempModel = ModelFactory.createOntologyModel();
 		tempModel.read(READENDPOINT);
-		
+
 		try {
 			//Try to execute queries in a temporary/local model
 			for (int i = 0; i < queryStrList.size(); i++){
@@ -238,7 +236,7 @@ public final class OntologyManager {
 			for (int i = 0; i < queryStrList.size(); i++){
 				insertQuery(queryStrList.get(i));
 			}
-			
+
 		}catch (Exception e){
 			System.out.println("***Error while inserting multiple queries: aborted***");
 			return false;
@@ -248,7 +246,7 @@ public final class OntologyManager {
 		}
 		return true;
 	}
-	
+
 	public boolean isLocalOntology() {
 		return localOntology;
 	}
@@ -289,5 +287,5 @@ public final class OntologyManager {
 	public static String getDATAENDPOINT() {
 		return DATAENDPOINT;
 	}
-	
+
 }
