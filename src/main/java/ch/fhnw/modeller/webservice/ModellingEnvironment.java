@@ -2483,9 +2483,7 @@ public class ModellingEnvironment {
 			ontology.insertQuery(querStr1);
 		}
 
-
 		return Response.status(Status.OK).entity("{}").build();
-
 	}
 
 	@POST
@@ -3091,7 +3089,6 @@ public class ModellingEnvironment {
 
 		queryStr.append("} ");
 		queryStr.append("ORDER BY ?label");
-
 
 		try (QueryExecution qexec = ontology.query(queryStr)) {
 			ResultSet results = qexec.execSelect();
