@@ -25,7 +25,6 @@ import java.net.URL;
 import java.security.Principal;
 import java.security.interfaces.RSAPublicKey;
 import java.util.logging.Logger;
-import java.util.concurrent.*;
 
 /**
  * JWTAuthFilter is a container request filter that performs JWT authentication.
@@ -116,28 +115,6 @@ public class JWTAuthFilter implements ContainerRequestFilter {
 //        tokenCache.put(token, jwt);
 
         return  jwt;
-    }
-}
-/**
- * TokenCache is a simple cache implementation that stores tokens and their corresponding decoded JWTs.
- * It uses a ConcurrentHashMap for storing the tokens and a ScheduledExecutorService for removing tokens from the cache after an hour.
- */
-class TokenCache {
-    private final ConcurrentHashMap<String, DecodedJWT> cache = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-
-    public DecodedJWT get(String token) {
-        return cache.get(token);
-    }
-
-    public void put(String token, DecodedJWT jwt) {
-        Future<?> oldTask = (Future<?>) cache.put(token, jwt);
-        if (oldTask != null) {
-            oldTask.cancel(false);
-        }
-
-        Runnable expirationTask = () -> cache.remove(token);
-        executorService.schedule(expirationTask, 1, TimeUnit.HOURS);
     }
 }
 /**
