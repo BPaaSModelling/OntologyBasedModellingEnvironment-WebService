@@ -37,8 +37,6 @@ import org.apache.jena.update.UpdateRequest;
 import ch.fhnw.modeller.webservice.config.ConfigReader;
 import org.apache.jena.util.FileManager;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.ws.rs.container.ContainerRequestContext;
 
 
