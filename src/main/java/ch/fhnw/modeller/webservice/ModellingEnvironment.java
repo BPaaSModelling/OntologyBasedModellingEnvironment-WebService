@@ -2,27 +2,23 @@ package ch.fhnw.modeller.webservice;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.swing.*;
 import javax.ws.rs.*;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
 
 import ch.fhnw.modeller.auth.UserService;
 import ch.fhnw.modeller.model.metamodel.*;
@@ -49,29 +45,23 @@ import org.apache.jena.rdf.model.impl.LiteralImpl;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.ShaclValidator;
-import org.apache.jena.shacl.Shapes;
 import org.apache.jena.shacl.ValidationReport;
-import org.apache.jena.shacl.engine.Shacl;
-import org.apache.jena.shacl.engine.ShaclPaths;
 import org.apache.jena.shacl.lib.ShLib;
-import org.apache.jena.shacl.parser.PropertyShape;
 import org.apache.jena.shacl.validation.ReportEntry;
 import org.apache.jena.shacl.validation.Severity;
 import org.apache.jena.shacl.vocabulary.SHACL;
-import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.vocabulary.*;
-import org.eclipse.rdf4j.model.Triple;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static ch.fhnw.modeller.webservice.ontology.NAMESPACE.MODEL;
-import static ch.fhnw.modeller.webservice.ontology.NAMESPACE.SH;
 
 @Path("/ModEnv")
 public class ModellingEnvironment {
 	private Gson gson = new Gson();
 	private OntologyManager ontology = OntologyManager.getInstance();
 	private boolean debug_properties = false;
+	private final Logger LOGGER = Logger.getLogger(ModellingEnvironment.class.getName());
 
 	//Allows to retrieve the userService
 	@Context
@@ -101,6 +91,37 @@ public class ModellingEnvironment {
 		return querySolution.get(label) != null ? querySolution.get(label).toString() : null;
 	}
 
+	/**
+	 * Sets the user data for the authenticated user after the user logs in.
+	 * @param securityContext the security context provided by the framework
+	 * @param requestContext the request context provided by the framework
+	 * @return a Response object indicating the status of the operation
+	 */
+	@GET
+	@Path("/auth")
+	public Response setUserData(@Context SecurityContext securityContext, @Context ContainerRequestContext requestContext) {
+
+		UserService userService = (UserService) requestContext.getProperty("userService");
+		if (userService == null) {
+			return Response.status(Status.UNAUTHORIZED).entity("User service not found. Verify user authentication").build();
+		}
+
+		// Checks if default graph is not empty
+		// Creates a new graph for the user if it does not exist (copy of the default graph)
+		try {
+			String resultPayload = userService.initializeUserGraph(userService.getUserGraphUri());
+
+			return Response.status(Status.OK).entity(gson.toJson(resultPayload)).build();
+
+		} catch (NoResultsException e) {
+			LOGGER.warning("The default dataset is empty. Please upload triples: " + e.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("The default dataset is empty. Please upload triples").build();
+		} catch (Exception e) {
+			LOGGER.severe("Error initializing user graph: " + e.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error initializing user graph").build();
+        }
+	}
+
 
 	@GET
 	@Path("/model")
@@ -114,18 +135,17 @@ public class ModellingEnvironment {
 				MODEL.getPrefix());
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		
-		ResultSet resultSet = ontology.query(query).execSelect();
-
 		ArrayList<Model> models = new ArrayList<>();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		while (resultSet.hasNext()) {
-			QuerySolution next = resultSet.next();
-			String id = extractIdFrom(next, "?model");
-			String label = extractValueFrom(next, "?label");
-			models.add(new Model(id, label));
+			while (resultSet.hasNext()) {
+				QuerySolution next = resultSet.next();
+				String id = extractIdFrom(next, "?model");
+				String label = extractValueFrom(next, "?label");
+				models.add(new Model(id, label));
+			}
 		}
-
 		String payload = gson.toJson(models);
 
 		return Response.status(Status.OK).entity(payload).build();
@@ -234,59 +254,65 @@ public class ModellingEnvironment {
 				modelId);
 
 		ParameterizedSparqlString selectQuery = new ParameterizedSparqlString(selectCommand);
-		ResultSet resultSet = ontology.query(selectQuery).execSelect();
+		try (QueryExecution qexec = ontology.query(selectQuery)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		if (!resultSet.hasNext()) {
-			throw new IllegalStateException("created model can not be queried");
+			if (!resultSet.hasNext()) {
+				throw new IllegalStateException("created model can not be queried");
+			}
+
+			QuerySolution next = resultSet.next();
+			String label = extractValueFrom(next, "?label");
+			Model createdModel = new Model(modelId, label);
+
+			String payload = gson.toJson(createdModel);
+
+			return Response.status(Status.CREATED).entity(payload).build();
 		}
-
-		QuerySolution next = resultSet.next();
-		String label = extractValueFrom(next, "?label");
-		Model createdModel = new Model(modelId, label);
-
-		String payload = gson.toJson(createdModel);
-
-		return Response.status(Status.CREATED).entity(payload).build();
 	}
 	private static final Map<String, CompletableFuture<List<ModelElementDetailDto>>> taskMap = new ConcurrentHashMap<>();
 	@GET
 	@Path("/model/{id}/element")
 	public Response getModelElementList(@PathParam("id") String id) {
-		// Start the task asynchronously
-		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
-		if (futureTask == null || futureTask.isDone()) {
-			futureTask = CompletableFuture.supplyAsync(() -> getModelElementDetailDtos(id));
-			taskMap.put(id, futureTask);
-		}
-		System.out.println("getModelElementList started for model " + id);
+		LOGGER.info("getModelElementList started for model " + id);
+		List<ModelElementDetailDto> elements = getModelElementDetailDtos(id);
+//		// Start the task asynchronously
+//		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
+//		if (futureTask == null || futureTask.isDone()) {
+//			futureTask = CompletableFuture.supplyAsync(() -> getModelElementDetailDtos(id));
+//			taskMap.put(id, futureTask);
+//		}
+//		System.out.println("getModelElementList started for model " + id);
 		// Immediately return a response indicating the task is in progress
-		return Response.status(Status.ACCEPTED).entity(gson.toJson(id)).build();
+		LOGGER.info("getModelElementList completed for model " + id);
+		String payload = gson.toJson(elements);
+		return Response.status(Status.ACCEPTED).entity(payload).build();
 	}
 
-	@GET
-	@Path("/model/{id}/element/status")
-	public Response getModelElementStatus(@PathParam("id") String id) {
-		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
-		if (futureTask == null) {
-			Logger logger =  Logger.getLogger(ModellingEnvironment.class.getName());
-			logger.warning("getModelElementStatus: Task not found for model " + id);
-			return Response.status(Status.NOT_FOUND).build();
-		} else if (!futureTask.isDone()) {
-			return Response.status(Status.ACCEPTED).entity(gson.toJson("Processing elements in progress")).build();
-		} else {
-			try {
-				List<ModelElementDetailDto> elements = futureTask.get();
-
-				System.out.println("getModelElementList completed for model " + id);
-				return Response.status(Status.OK).entity(gson.toJson(elements)).build();
-			} catch (InterruptedException | ExecutionException e) {
-				System.out.println("getModelElementList Exception for model " + id + ": " + e.getMessage());
-				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(gson.toJson("Error processing task")).build();
-			} finally {
-				//taskMap.remove(id);
- 			}
-		}
-	}
+//	@GET
+//	@Path("/model/{id}/element/status")
+//	public Response getModelElementStatus(@PathParam("id") String id) {
+//		CompletableFuture<List<ModelElementDetailDto>> futureTask = taskMap.get(id);
+//		if (futureTask == null) {
+//			Logger LOGGER =  Logger.getLogger(ModellingEnvironment.class.getName());
+//			LOGGER.warning("getModelElementStatus: Task not found for model " + id);
+//			return Response.status(Status.NOT_FOUND).build();
+//		} else if (!futureTask.isDone()) {
+//			return Response.status(Status.ACCEPTED).entity(gson.toJson("Processing elements in progress")).build();
+//		} else {
+//			try {
+//				List<ModelElementDetailDto> elements = futureTask.get();
+//
+//				System.out.println("getModelElementList completed for model " + id);
+//				return Response.status(Status.OK).entity(gson.toJson(elements)).build();
+//			} catch (InterruptedException | ExecutionException e) {
+//				System.out.println("getModelElementList Exception for model " + id + ": " + e.getMessage());
+//				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(gson.toJson("Error processing task")).build();
+//			} finally {
+//				//taskMap.remove(id);
+// 			}
+//		}
+//	}
 
 	private List<ModelElementDetailDto> getModelElementDetailDtos(String id) {
 		String modelId = String.format("%s:%s", MODEL.getPrefix(), id);
@@ -301,17 +327,18 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
-
 		List<String> shapeIds = new ArrayList<>();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		while (resultSet.hasNext()) {
-			QuerySolution solution = resultSet.next();
-			shapeIds.add(extractIdFrom(solution, "?diag"));
+			while (resultSet.hasNext()) {
+				QuerySolution solution = resultSet.next();
+				shapeIds.add(extractIdFrom(solution, "?diag"));
+			}
 		}
 
 		List<ModelElementDetailDto> modelElements = new ArrayList<>(shapeIds.size());
-
+		LOGGER.info("Retrieved modelElements " + modelElements);
 		shapeIds.forEach(shapeId -> {
 			Map<String, String> shapeAttributes = getShapeAttributes(shapeId);
 			PaletteVisualInformationDto visualInformationDto = getPaletteVisualInformation(shapeId);
@@ -348,24 +375,26 @@ public class ModellingEnvironment {
 				shapeId);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		QuerySolution querySolution = resultSet.next();
-		String category = extractIdFrom(querySolution, "?cat");
-		String imageName = extractValueFrom(querySolution, "?imgUrl");
-		String imageUrl = imageName != null ? category + "/" + imageName : null;
+			QuerySolution querySolution = resultSet.next();
+			String category = extractIdFrom(querySolution, "?cat");
+			String imageName = extractValueFrom(querySolution, "?imgUrl");
+			String imageUrl = imageName != null ? category + "/" + imageName : null;
 
-		String fromArrow = extractIdFrom(querySolution, "?fromArrow");
-		String toArrow = extractIdFrom(querySolution, "?toArrow");
-		String arrowStroke = extractIdFrom(querySolution, "?arrowStroke");
+			String fromArrow = extractIdFrom(querySolution, "?fromArrow");
+			String toArrow = extractIdFrom(querySolution, "?toArrow");
+			String arrowStroke = extractIdFrom(querySolution, "?arrowStroke");
 
-		PaletteVisualInformationDto dto = new PaletteVisualInformationDto();
-		dto.setFromArrow(fromArrow);
-		dto.setToArrow(toArrow);
-		dto.setImageUrl(imageUrl);
-		dto.setArrowStroke(arrowStroke);
+			PaletteVisualInformationDto dto = new PaletteVisualInformationDto();
+			dto.setFromArrow(fromArrow);
+			dto.setToArrow(toArrow);
+			dto.setImageUrl(imageUrl);
+			dto.setArrowStroke(arrowStroke);
 
-		return dto;
+			return dto;
+		}
 	}
 
 	private ModelElementDetailDto getModelElementDetail(String modelId, String shapeId) {
@@ -409,52 +438,53 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		System.out.println("Executing query: " + query.toString());
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		List<String> types = new ArrayList<>();
+			List<String> types = new ArrayList<>();
 
-		ModelElementType modelElementType = new ModelElementType();
+			ModelElementType modelElementType = new ModelElementType();
 
-		if (resultSet.hasNext()) {
-			QuerySolution next = resultSet.next();
-			String type = extractIdFrom(next, "?type");
-			String directSuperClass = extractIdFrom(next, "?class");
-			String firstType = extractNamespaceAndIdFrom(next, "?allTypes");
-
-			types.add(firstType);
-
-			if (type != null) {
-				modelElementType.setType(type);
-				modelElementType.setModellingLanguageConstruct(directSuperClass);
-			}
-		}
-
-		if ("ModelingElement".equals(modelElementType.getType())) {
-			while (resultSet.hasNext()) {
+			if (resultSet.hasNext()) {
 				QuerySolution next = resultSet.next();
 				String type = extractIdFrom(next, "?type");
-				if ("ModelingContainer".equals(type)) {
+				String directSuperClass = extractIdFrom(next, "?class");
+				String firstType = extractNamespaceAndIdFrom(next, "?allTypes");
+
+				types.add(firstType);
+
+				if (type != null) {
 					modelElementType.setType(type);
+					modelElementType.setModellingLanguageConstruct(directSuperClass);
 				}
 			}
-		}
 
-		if (resultSet.hasNext()) {
-			QuerySolution nextForOtherType = resultSet.next();
-			String otherType = extractNamespaceAndIdFrom(nextForOtherType, "?allTypes");
-			types.add(otherType);
-		}
-
-		if (modelElementType.getType() != null) {
-			if (types.contains("owl:Class")) {
-				modelElementType.setInstantiationType(InstantiationTargetType.Class);
-			} else {
-				modelElementType.setInstantiationType(InstantiationTargetType.Instance);
-
+			if ("ModelingElement".equals(modelElementType.getType())) {
+				while (resultSet.hasNext()) {
+					QuerySolution next = resultSet.next();
+					String type = extractIdFrom(next, "?type");
+					if ("ModelingContainer".equals(type)) {
+						modelElementType.setType(type);
+					}
+				}
 			}
 
-			return Optional.of(modelElementType);
+			if (resultSet.hasNext()) {
+				QuerySolution nextForOtherType = resultSet.next();
+				String otherType = extractNamespaceAndIdFrom(nextForOtherType, "?allTypes");
+				types.add(otherType);
+			}
+
+			if (modelElementType.getType() != null) {
+				if (types.contains("owl:Class")) {
+					modelElementType.setInstantiationType(InstantiationTargetType.Class);
+				} else {
+					modelElementType.setInstantiationType(InstantiationTargetType.Instance);
+
+				}
+
+				return Optional.of(modelElementType);
+			}
 		}
 
 		return Optional.empty();
@@ -475,14 +505,16 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		while (resultSet.hasNext()) {
-			QuerySolution solution = resultSet.next();
-			String relation = extractIdFrom(solution, "?rel");
-			String value = extractValueFrom(solution, "?relValue");
+			while (resultSet.hasNext()) {
+				QuerySolution solution = resultSet.next();
+				String relation = extractIdFrom(solution, "?rel");
+				String value = extractValueFrom(solution, "?relValue");
 
-			attributes.putIfAbsent(relation, value);
+				attributes.putIfAbsent(relation, value);
+			}
 		}
 		return attributes;
 	}
@@ -502,14 +534,17 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		while (resultSet.hasNext()) {
-			QuerySolution solution = resultSet.next();
-			String relation = extractValueFrom(solution, "?rel");
-			String value = extractValueFrom(solution, "?relValue");
 
-			attributes.putIfAbsent(relation, value);
+			while (resultSet.hasNext()) {
+				QuerySolution solution = resultSet.next();
+				String relation = extractValueFrom(solution, "?rel");
+				String value = extractValueFrom(solution, "?relValue");
+
+				attributes.putIfAbsent(relation, value);
+			}
 		}
 		return attributes;
 	}
@@ -574,67 +609,68 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		Set<RelationDto> options = new HashSet<>();
-		List<ModelElementAttribute> values = new ArrayList<>();
+			Set<RelationDto> options = new HashSet<>();
+			List<ModelElementAttribute> values = new ArrayList<>();
 
-		while (resultSet.hasNext()) {
-			QuerySolution solution = resultSet.next();
-			String relation = extractValueFrom(solution, "?objProp");
-			String instanceValue = extractValueFrom(solution, "?instanceValue");
-			String classValue = extractValueFrom(solution, "?classValue");
-			String actualValue = instanceValue != null ? instanceValue : classValue;
+			while (resultSet.hasNext()) {
+				QuerySolution solution = resultSet.next();
+				String relation = extractValueFrom(solution, "?objProp");
+				String instanceValue = extractValueFrom(solution, "?instanceValue");
+				String classValue = extractValueFrom(solution, "?classValue");
+				String actualValue = instanceValue != null ? instanceValue : classValue;
 
-			RelationDto relationDto = new RelationDto(GlobalVariables.getNamespaceMap().get(relation.split("#")[0]), relation.split("#")[1]);
-			options.add(relationDto);
+				RelationDto relationDto = new RelationDto(GlobalVariables.getNamespaceMap().get(relation.split("#")[0]), relation.split("#")[1]);
+				options.add(relationDto);
 
-			if (actualValue != null) {
-				boolean valueHasNamespace = false;
+				if (actualValue != null) {
+					boolean valueHasNamespace = false;
 
-				if (actualValue.contains("#")) {
-					String potentialNamespace = actualValue.split("#")[0];
-					valueHasNamespace = GlobalVariables.getPrefixMap().containsValue(potentialNamespace.concat("#"));
-				}
-
-				if (valueHasNamespace) {
-					ModelElementAttribute value = new ModelElementAttribute();
-					value.setRelation(relationDto.getRelation());
-					value.setRelationPrefix(relationDto.getRelationPrefix());
-					value.setValue(GlobalVariables.getNamespaceMap().get(actualValue.split("#")[0]) + ":" + actualValue.split("#")[1]);
-
-					values.add(value);
-				} else {
-					ModelElementAttribute value = new ModelElementAttribute();
-					value.setRelation(relationDto.getRelation());
-					value.setRelationPrefix(relationDto.getRelationPrefix());
-
-					if (!actualValue.contains("#")) { // string typings are omitted and must be added manually
-						actualValue = actualValue.concat("^^" + NAMESPACE.XSD.getURI() + "string");
+					if (actualValue.contains("#")) {
+						String potentialNamespace = actualValue.split("#")[0];
+						valueHasNamespace = GlobalVariables.getPrefixMap().containsValue(potentialNamespace.concat("#"));
 					}
 
-					String key = actualValue.split("#")[0];
-					String primitiveValuePart = key.split("\\^\\^")[0];
-					String namespacePart = key.split("\\^\\^")[1];
-					String actualNamespacePart = GlobalVariables.getNamespaceMap().get(namespacePart);
-					String typePart = actualValue.split("#")[1];
-					value.setValue(String.format("\"%s\"^^%s:%s", primitiveValuePart, actualNamespacePart, typePart));
+					if (valueHasNamespace) {
+						ModelElementAttribute value = new ModelElementAttribute();
+						value.setRelation(relationDto.getRelation());
+						value.setRelationPrefix(relationDto.getRelationPrefix());
+						value.setValue(GlobalVariables.getNamespaceMap().get(actualValue.split("#")[0]) + ":" + actualValue.split("#")[1]);
 
-					values.add(value);
+						values.add(value);
+					} else {
+						ModelElementAttribute value = new ModelElementAttribute();
+						value.setRelation(relationDto.getRelation());
+						value.setRelationPrefix(relationDto.getRelationPrefix());
+
+						if (!actualValue.contains("#")) { // string typings are omitted and must be added manually
+							actualValue = actualValue.concat("^^" + NAMESPACE.XSD.getURI() + "string");
+						}
+
+						String key = actualValue.split("#")[0];
+						String primitiveValuePart = key.split("\\^\\^")[0];
+						String namespacePart = key.split("\\^\\^")[1];
+						String actualNamespacePart = GlobalVariables.getNamespaceMap().get(namespacePart);
+						String typePart = actualValue.split("#")[1];
+						value.setValue(String.format("\"%s\"^^%s:%s", primitiveValuePart, actualNamespacePart, typePart));
+
+						values.add(value);
+					}
 				}
+
 			}
 
+			List<String> referencingShapes = getReferencingShapeIds(modelElementId);
+			return new AbstractElementAttributes(
+					elementTypeOpt.get().getModellingLanguageConstruct(),
+					options,
+					values,
+					elementTypeOpt.get().getType(),
+					elementTypeOpt.get().getInstantiationType(),
+					referencingShapes);
 		}
-
-		List<String> referencingShapes = getReferencingShapeIds(modelElementId);
-
-		return new AbstractElementAttributes(
-				elementTypeOpt.get().getModellingLanguageConstruct(),
-				options,
-				values,
-				elementTypeOpt.get().getType(),
-				elementTypeOpt.get().getInstantiationType(),
-				referencingShapes);
 	}
 
 	private List<String> getReferencingShapeIds(String modelElementId) {
@@ -649,11 +685,13 @@ public class ModellingEnvironment {
 		List<String> referencingShapes = new ArrayList<>();
 
 		ParameterizedSparqlString incomingReferencesQuery = new ParameterizedSparqlString(incomingReferencesCommand);
-		ResultSet incomingReferencesResultSet = ontology.query(incomingReferencesQuery).execSelect();
-		while (incomingReferencesResultSet.hasNext()) {
-			QuerySolution next = incomingReferencesResultSet.next();
-			String shape = extractIdFrom(next, "?diag");
-			referencingShapes.add(shape);
+		try (QueryExecution qexec = ontology.query(incomingReferencesQuery)) {
+			ResultSet incomingReferencesResultSet = qexec.execSelect();
+			while (incomingReferencesResultSet.hasNext()) {
+				QuerySolution next = incomingReferencesResultSet.next();
+				String shape = extractIdFrom(next, "?diag");
+				referencingShapes.add(shape);
+			}
 		}
 		return referencingShapes;
 	}
@@ -795,9 +833,10 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
-
-		return resultSet.hasNext();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
+			return resultSet.hasNext();
+		}
 	}
 
 	@PUT
@@ -1203,13 +1242,15 @@ public class ModellingEnvironment {
 				paletteConstruct);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		if (!resultSet.hasNext()) {
-			return Optional.empty();
+			if (!resultSet.hasNext()) {
+				return Optional.empty();
+			}
+
+			return Optional.ofNullable(extractIdFrom(resultSet.next(), "?mlo"));
 		}
-
-		return Optional.ofNullable(extractIdFrom(resultSet.next(), "?mlo"));
 	}
 
 	@POST
@@ -1252,22 +1293,24 @@ public class ModellingEnvironment {
 				MODEL.getPrefix()
 		);
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		List<ModellingLanguageConstructInstance> instances = new ArrayList<>();
+			List<ModellingLanguageConstructInstance> instances = new ArrayList<>();
 
-		while (resultSet.hasNext()) {
-			QuerySolution next = resultSet.next();
-			String modelId = extractIdFrom(next, "?model");
-			String shapeId = extractIdFrom(next, "?shape");
-			String instanceId = extractIdFrom(next, "?instance");
+			while (resultSet.hasNext()) {
+				QuerySolution next = resultSet.next();
+				String modelId = extractIdFrom(next, "?model");
+				String shapeId = extractIdFrom(next, "?shape");
+				String instanceId = extractIdFrom(next, "?instance");
 
-			instances.add(new ModellingLanguageConstructInstance(modelId, shapeId, instanceId));
+				instances.add(new ModellingLanguageConstructInstance(modelId, shapeId, instanceId));
+			}
+
+			String payload = gson.toJson(instances);
+
+			return Response.status(Status.OK).entity(payload).build();
 		}
-
-		String payload = gson.toJson(instances);
-
-		return Response.status(Status.OK).entity(payload).build();
 	}
 
 	/**
@@ -1313,7 +1356,8 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
 		Map<String, Map<String, String>> attributes = new HashMap<>();
 
@@ -1332,6 +1376,7 @@ public class ModellingEnvironment {
 		String payload = gson.toJson(attributes);
 
 		return Response.status(Status.OK).entity(payload).build();
+		}
 	}
 
 	@DELETE
@@ -1379,15 +1424,17 @@ public class ModellingEnvironment {
 				"}\n";
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		List<String> arrowHeads = new ArrayList<>();
+			List<String> arrowHeads = new ArrayList<>();
 
-		while (resultSet.hasNext()) {
-			String label = extractValueFrom(resultSet.next(), "?label");
-			arrowHeads.add(label);
+			while (resultSet.hasNext()) {
+				String label = extractValueFrom(resultSet.next(), "?label");
+				arrowHeads.add(label);
+			}
+			return arrowHeads;
 		}
-		return arrowHeads;
 	}
 
 	private List<String> getArrowStrokes() {
@@ -1398,15 +1445,17 @@ public class ModellingEnvironment {
 				"}\n";
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		List<String> strokes = new ArrayList<>();
+			List<String> strokes = new ArrayList<>();
 
-		while (resultSet.hasNext()) {
-			String label = extractValueFrom(resultSet.next(), "?label");
-			strokes.add(label);
+			while (resultSet.hasNext()) {
+				String label = extractValueFrom(resultSet.next(), "?label");
+				strokes.add(label);
+			}
+			return strokes;
 		}
-		return strokes;
 	}
 
 	@GET
@@ -1423,12 +1472,14 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString typeQuery = new ParameterizedSparqlString(typeCommand);
-		ResultSet typeResultSet = ontology.query(typeQuery).execSelect();
+		try (QueryExecution qexec = ontology.query(typeQuery)) {
+			ResultSet typeResultSet = qexec.execSelect();
 
-		if (typeResultSet.hasNext()) {
-			String range = extractNamespaceAndIdFrom(typeResultSet.next(), "?range");
-			String payload = gson.toJson(new Options(null, null, true, range));
-			return Response.ok(payload).build();
+			if (typeResultSet.hasNext()) {
+				String range = extractNamespaceAndIdFrom(typeResultSet.next(), "?range");
+				String payload = gson.toJson(new Options(null, null, true, range));
+				return Response.ok(payload).build();
+			}
 		}
 
 		String command = String.format(
@@ -1441,30 +1492,32 @@ public class ModellingEnvironment {
 				name);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		ResultSet resultSet = ontology.query(query).execSelect();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		Set<String> classes = new HashSet<>();
-		Set<String> instances = new HashSet<>();
+			Set<String> classes = new HashSet<>();
+			Set<String> instances = new HashSet<>();
 
-		while (resultSet.hasNext()) {
-			QuerySolution next = resultSet.next();
-			String clazz = extractValueFrom(next, "?class");
-			String instance = extractValueFrom(next, "?instance");
+			while (resultSet.hasNext()) {
+				QuerySolution next = resultSet.next();
+				String clazz = extractValueFrom(next, "?class");
+				String instance = extractValueFrom(next, "?instance");
 
-			if (clazz != null) {
-				String prefix = GlobalVariables.getNamespaceMap().get(clazz.split("#")[0]);
-				classes.add(prefix + ":" + clazz.split("#")[1]);
+				if (clazz != null) {
+					String prefix = GlobalVariables.getNamespaceMap().get(clazz.split("#")[0]);
+					classes.add(prefix + ":" + clazz.split("#")[1]);
+				}
+
+				if (instance != null) {
+					String prefix = GlobalVariables.getNamespaceMap().get(instance.split("#")[0]);
+					instances.add(prefix + ":" + instance.split("#")[1]);
+				}
 			}
 
-			if (instance != null) {
-				String prefix = GlobalVariables.getNamespaceMap().get(instance.split("#")[0]);
-				instances.add(prefix + ":" + instance.split("#")[1]);
-			}
+			String payload = gson.toJson(new Options(instances, classes, false, null));
+
+			return Response.ok(payload).build();
 		}
-
-		String payload = gson.toJson(new Options(instances, classes, false, null));
-
-		return Response.ok(payload).build();
 	}
 
 	@GET
@@ -1476,7 +1529,7 @@ public class ModellingEnvironment {
 		ArrayList<ModelingLanguage> all_modeling_languages = new ArrayList<ModelingLanguage>();
 
 		try {
-			all_modeling_languages = queryAllModelingLangugages();
+			all_modeling_languages = queryAllModelingLanguages();
 
 			if (debug_properties) {
 				for (int index = 0; index < all_modeling_languages.size(); index++) {
@@ -1495,7 +1548,7 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity(json).build();
 	}
 
-	private ArrayList<ModelingLanguage> queryAllModelingLangugages() throws NoResultsException {
+	private ArrayList<ModelingLanguage> queryAllModelingLanguages() throws NoResultsException {
 		ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
 		ArrayList<ModelingLanguage> result = new ArrayList<ModelingLanguage>();
 
@@ -1508,31 +1561,31 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				ModelingLanguage tempModelingLanguage = new ModelingLanguage();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					ModelingLanguage tempModelingLanguage = new ModelingLanguage();
 
-				QuerySolution soln = results.next();
-				String[] id = (soln.get("?element").toString()).split("#"); //eg. http://fhnw.ch/modelingEnvironment/LanguageOntology#DMN_1.1
-				String prefix = GlobalVariables.getNamespaceMap().get(id[0]); //eg. lo
-				String simpleId = prefix + ":" + id[1]; //eg. lo:DMN_1.1
-				tempModelingLanguage.setId(simpleId);
-				tempModelingLanguage.setLabel(soln.get("?label").toString());
-				if (soln.get("?hasModelingView") != null) {
-					tempModelingLanguage.setHasModelingView(FormatConverter.ParseOntologyBoolean(soln.get("?hasModelingView").toString()));
+					QuerySolution soln = results.next();
+					String[] id = (soln.get("?element").toString()).split("#"); //eg. http://fhnw.ch/modelingEnvironment/LanguageOntology#DMN_1.1
+					String prefix = GlobalVariables.getNamespaceMap().get(id[0]); //eg. lo
+					String simpleId = prefix + ":" + id[1]; //eg. lo:DMN_1.1
+					tempModelingLanguage.setId(simpleId);
+					tempModelingLanguage.setLabel(soln.get("?label").toString());
+					if (soln.get("?hasModelingView") != null) {
+						tempModelingLanguage.setHasModelingView(FormatConverter.ParseOntologyBoolean(soln.get("?hasModelingView").toString()));
+					}
+					if (soln.get("?viewIsPartOfModelingLanguage") != null) {
+						tempModelingLanguage.setViewIsPartOfModelingLanguage(soln.get("?viewIsPartOfModelingLanguage").toString());
+					}
+
+
+					result.add(tempModelingLanguage);
 				}
-				if (soln.get("?viewIsPartOfModelingLanguage") != null) {
-					tempModelingLanguage.setViewIsPartOfModelingLanguage(soln.get("?viewIsPartOfModelingLanguage").toString());
-				}
-
-
-				result.add(tempModelingLanguage);
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -1577,31 +1630,31 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				ModelingView tempModelingView = new ModelingView();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					ModelingView tempModelingView = new ModelingView();
 
-				QuerySolution soln = results.next();
-				String[] id = (soln.get("?element").toString()).split("#"); //eg. http://fhnw.ch/modelingEnvironment/LanguageOntology#DMN_1.1
-				String prefix = GlobalVariables.getNamespaceMap().get(id[0]); //eg. lo
-				String simpleId = prefix + ":" + id[1]; //eg. lo:DMN_1.1
-				tempModelingView.setId(simpleId);
-				tempModelingView.setLabel(soln.get("?label").toString());
-				if (soln.get("?isMainModelingView") != null) {
-					tempModelingView.setMainModelingView(FormatConverter.ParseOntologyBoolean(soln.get("?isMainModelingView").toString()));
+					QuerySolution soln = results.next();
+					String[] id = (soln.get("?element").toString()).split("#"); //eg. http://fhnw.ch/modelingEnvironment/LanguageOntology#DMN_1.1
+					String prefix = GlobalVariables.getNamespaceMap().get(id[0]); //eg. lo
+					String simpleId = prefix + ":" + id[1]; //eg. lo:DMN_1.1
+					tempModelingView.setId(simpleId);
+					tempModelingView.setLabel(soln.get("?label").toString());
+					if (soln.get("?isMainModelingView") != null) {
+						tempModelingView.setMainModelingView(FormatConverter.ParseOntologyBoolean(soln.get("?isMainModelingView").toString()));
+					}
+					if (soln.get("?viewIsPartOfModelingLanguage") != null) {
+						tempModelingView.setViewIsPartOfModelingLanguage(soln.get("?viewIsPartOfModelingLanguage").toString());
+					}
+
+
+					result.add(tempModelingView);
 				}
-				if (soln.get("?viewIsPartOfModelingLanguage") != null) {
-					tempModelingView.setViewIsPartOfModelingLanguage(soln.get("?viewIsPartOfModelingLanguage").toString());
-				}
-
-
-				result.add(tempModelingView);
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -1671,52 +1724,52 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 		//queryStr.append("ORDER BY ?domain ?field");
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				PaletteElement tempPaletteElement = new PaletteElement();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					PaletteElement tempPaletteElement = new PaletteElement();
 
-				QuerySolution soln = results.next();
-				tempPaletteElement.setId(soln.get("?element").toString());
-				tempPaletteElement.setLabel(soln.get("?label").toString());
-				tempPaletteElement.setRepresentedLanguageClass(soln.get("?representedClass").toString());
-				tempPaletteElement.setHiddenFromPalette(FormatConverter.ParseOntologyBoolean(soln.get("?hidden").toString()));
-				tempPaletteElement.setPaletteCategory(soln.get("?category").toString());
-				//tempPaletteElement.setUsesImage(FormatConverter.ParseOntologyBoolean(soln.get("?usesImage").toString()));
+					QuerySolution soln = results.next();
+					tempPaletteElement.setId(soln.get("?element").toString());
+					tempPaletteElement.setLabel(soln.get("?label").toString());
+					tempPaletteElement.setRepresentedLanguageClass(soln.get("?representedClass").toString());
+					tempPaletteElement.setHiddenFromPalette(FormatConverter.ParseOntologyBoolean(soln.get("?hidden").toString()));
+					tempPaletteElement.setPaletteCategory(soln.get("?category").toString());
+					//tempPaletteElement.setUsesImage(FormatConverter.ParseOntologyBoolean(soln.get("?usesImage").toString()));
 
-				if (soln.get("?backgroundColor") != null) {
-					tempPaletteElement.setBackgroundColor(soln.get("?backgroundColor").toString());
-				}
+					if (soln.get("?backgroundColor") != null) {
+						tempPaletteElement.setBackgroundColor(soln.get("?backgroundColor").toString());
+					}
 
-				if (soln.get("?height") != null) {
-					tempPaletteElement.setHeight(FormatConverter.ParseOntologyInteger(soln.get("?height").toString()));
-				}
+					if (soln.get("?height") != null) {
+						tempPaletteElement.setHeight(FormatConverter.ParseOntologyInteger(soln.get("?height").toString()));
+					}
 				/*if (soln.get("?iconPosition") != null){
 					tempPaletteElement.setIconPosition(soln.get("?iconPosition").toString());
 				}
 				if (soln.get("?iconURL") != null){
 					tempPaletteElement.setIconURL(soln.get("?iconURL").toString());
 				}*/
-				if (soln.get("?imageURL") != null) {
-					tempPaletteElement.setImageURL(soln.get("?imageURL").toString());
-				}
+					if (soln.get("?imageURL") != null) {
+						tempPaletteElement.setImageURL(soln.get("?imageURL").toString());
+					}
 				/*if (soln.get("?labelPosition") != null){
 					tempPaletteElement.setLabelPosition(soln.get("?labelPosition").toString());
 				}*/
-				if (soln.get("?shape") != null) {
-					tempPaletteElement.setShape(soln.get("?shape").toString());
-				}
-				if (soln.get("?thumbnailURL") != null) {
-					tempPaletteElement.setThumbnailURL(soln.get("?thumbnailURL").toString());
-				}
-				if (soln.get("?width") != null) {
-					tempPaletteElement.setWidth(FormatConverter.ParseOntologyInteger(soln.get("?width").toString()));
-				}
-				if (soln.get("?categoryLabel") != null) {
-					tempPaletteElement.setCategoryLabel(soln.get("?categoryLabel").toString());
-				}
+					if (soln.get("?shape") != null) {
+						tempPaletteElement.setShape(soln.get("?shape").toString());
+					}
+					if (soln.get("?thumbnailURL") != null) {
+						tempPaletteElement.setThumbnailURL(soln.get("?thumbnailURL").toString());
+					}
+					if (soln.get("?width") != null) {
+						tempPaletteElement.setWidth(FormatConverter.ParseOntologyInteger(soln.get("?width").toString()));
+					}
+					if (soln.get("?categoryLabel") != null) {
+						tempPaletteElement.setCategoryLabel(soln.get("?categoryLabel").toString());
+					}
 				/*if (soln.get("?borderColor") != null){
 					tempPaletteElement.setBorderColor(soln.get("?borderColor").toString());
 				}
@@ -1726,38 +1779,38 @@ public class ModellingEnvironment {
 				if (soln.get("?borderType") != null){
 					tempPaletteElement.setBorderType(soln.get("?borderType").toString());
 				}*/
-				if (soln.get("?comment") != null) {
-					tempPaletteElement.setComment(soln.get("?comment").toString());
+					if (soln.get("?comment") != null) {
+						tempPaletteElement.setComment(soln.get("?comment").toString());
+					}
+					if (soln.get("?parent") != null) {
+						tempPaletteElement.setParentElement(soln.get("?parent").toString());
+						//Read properties of the parent element here
+					}
+
+					if (soln.get("?arrowStroke") != null) {
+						tempPaletteElement.setArrowStroke(extractIdFrom(soln, "?arrowStroke"));
+					}
+
+					if (soln.get("?toArrow") != null) {
+						tempPaletteElement.setToArrow(extractIdFrom(soln, "?toArrow"));
+					}
+
+					if (soln.get("?fromArrow") != null) {
+						tempPaletteElement.setFromArrow(extractIdFrom(soln, "?fromArrow"));
+					}
+
+					String type = extractIdFrom(soln, "?type");
+					tempPaletteElement.setType(type);
+
+					String prefix = GlobalVariables.getNamespaceMap().get(tempPaletteElement.getRepresentedLanguageClass().split("#")[0]);
+					tempPaletteElement.setLanguagePrefix(prefix);
+					//System.out.println("language class: "+tempPaletteElement.getRepresentedLanguageClass());
+					//System.out.println("prefix: "+prefix);
+
+					result.add(tempPaletteElement);
 				}
-				if (soln.get("?parent") != null) {
-					tempPaletteElement.setParentElement(soln.get("?parent").toString());
-					//Read properties of the parent element here
-				}
-
-				if (soln.get("?arrowStroke") != null) {
-					tempPaletteElement.setArrowStroke(extractIdFrom(soln, "?arrowStroke"));
-				}
-
-				if (soln.get("?toArrow") != null) {
-					tempPaletteElement.setToArrow(extractIdFrom(soln, "?toArrow"));
-				}
-
-				if (soln.get("?fromArrow") != null) {
-					tempPaletteElement.setFromArrow(extractIdFrom(soln, "?fromArrow"));
-				}
-
-				String type = extractIdFrom(soln, "?type");
-				tempPaletteElement.setType(type);
-
-				String prefix = GlobalVariables.getNamespaceMap().get(tempPaletteElement.getRepresentedLanguageClass().split("#")[0]);
-				tempPaletteElement.setLanguagePrefix(prefix);
-				//System.out.println("language class: "+tempPaletteElement.getRepresentedLanguageClass());
-				//System.out.println("prefix: "+prefix);
-
-				result.add(tempPaletteElement);
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -1803,32 +1856,32 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 		queryStr.append("ORDER BY ?orderNumber");
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				PaletteCategory tempPaletteCategory = new PaletteCategory();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					PaletteCategory tempPaletteCategory = new PaletteCategory();
 
-				QuerySolution soln = results.next();
-				String categoryURI = soln.get("?category").toString();
-				tempPaletteCategory.setId(categoryURI);
-				String idSuffix = categoryURI.split("#")[1];
-				System.out.println("idSuffix: " + idSuffix);
-				tempPaletteCategory.setIdSuffix(idSuffix);
-				tempPaletteCategory.setLabel(soln.get("?label").toString());
+					QuerySolution soln = results.next();
+					String categoryURI = soln.get("?category").toString();
+					tempPaletteCategory.setId(categoryURI);
+					String idSuffix = categoryURI.split("#")[1];
+					System.out.println("idSuffix: " + idSuffix);
+					tempPaletteCategory.setIdSuffix(idSuffix);
+					tempPaletteCategory.setLabel(soln.get("?label").toString());
 
-				if (soln.get("?orderNumber") != null) {
-					tempPaletteCategory.setOrderNumber(FormatConverter.ParseOntologyInteger(soln.get("?orderNumber").toString()));
+					if (soln.get("?orderNumber") != null) {
+						tempPaletteCategory.setOrderNumber(FormatConverter.ParseOntologyInteger(soln.get("?orderNumber").toString()));
+					}
+					if (soln.get("?hidden") != null) {
+						tempPaletteCategory.setHiddenFromPalette((FormatConverter.ParseOntologyBoolean(soln.get("?hidden").toString())));
+					}
+
+					result.add(tempPaletteCategory);
 				}
-				if (soln.get("?hidden") != null) {
-					tempPaletteCategory.setHiddenFromPalette((FormatConverter.ParseOntologyBoolean(soln.get("?hidden").toString())));
-				}
-
-				result.add(tempPaletteCategory);
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -2078,8 +2131,9 @@ public class ModellingEnvironment {
 				MODEL.getPrefix());
 
 		ParameterizedSparqlString instantiatedQuery = new ParameterizedSparqlString(command);
-		
-		return ontology.query(instantiatedQuery).execSelect().hasNext();
+		try (QueryExecution qexec = ontology.query(instantiatedQuery)) {
+			 return qexec.execSelect().hasNext();
+		}
 	}
 
 	@POST
@@ -2429,9 +2483,7 @@ public class ModellingEnvironment {
 			ontology.insertQuery(querStr1);
 		}
 
-
 		return Response.status(Status.OK).entity("{}").build();
-
 	}
 
 	@POST
@@ -2761,14 +2813,15 @@ public class ModellingEnvironment {
 		);
 
 		ParameterizedSparqlString query = new ParameterizedSparqlString(command);
-		
-		ResultSet resultSet = ontology.query(query).execSelect();
 
 		List<String> shapeIds = new ArrayList<>();
+		try (QueryExecution qexec = ontology.query(query)) {
+			ResultSet resultSet = qexec.execSelect();
 
-		while (resultSet.hasNext()) {
-			QuerySolution solution = resultSet.next();
-			shapeIds.add(MODEL.getPrefix() + ':' + extractIdFrom(solution, "?diag"));
+			while (resultSet.hasNext()) {
+				QuerySolution solution = resultSet.next();
+				shapeIds.add(MODEL.getPrefix() + ':' + extractIdFrom(solution, "?diag"));
+			}
 		}
 
 		ArrayList<ObjectProperty> result = new ArrayList<>();
@@ -2786,17 +2839,19 @@ public class ModellingEnvironment {
 			System.out.println(command2);
 
 			ParameterizedSparqlString query2 = new ParameterizedSparqlString(command2);
-			
-			ResultSet resultSet2 = ontology.query(query2).execSelect();
 
 			List<String> elementsIds = new ArrayList<>();
+			try (QueryExecution qexec = ontology.query(query2)) {
+				ResultSet resultSet2 = qexec.execSelect();
 
-			if (resultSet2.hasNext()) {
-				while (resultSet2.hasNext()) {
-					QuerySolution solution = resultSet2.next();
-					elementsIds.add(MODEL.getPrefix() + ':'+extractIdFrom(solution, "?diag"));
+				if (resultSet2.hasNext()) {
+					while (resultSet2.hasNext()) {
+						QuerySolution solution = resultSet2.next();
+						elementsIds.add(MODEL.getPrefix() + ':' + extractIdFrom(solution, "?diag"));
+					}
 				}
 			}
+
 			ParameterizedSparqlString query3 = new ParameterizedSparqlString();
 
 			for (String elementId: elementsIds) {
@@ -2805,23 +2860,24 @@ public class ModellingEnvironment {
 						elementId + " ?property ?value . " +
 						"} ");
 				
-				QueryExecution qexec = ontology.query(query3);
-				ResultSet results = qexec.execSelect();
-				if (results.hasNext()) {
-					while (results.hasNext()) {
-						ObjectProperty objectProperty = new ObjectProperty();
-						QuerySolution soln = results.next();
-						//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
-						objectProperty.setId(elementId);
-						objectProperty.setLabel(soln.get("?property").toString());
-						objectProperty.setRange(soln.get("?value").toString());
+				try (QueryExecution qexec = ontology.query(query3)) {
+					ResultSet results = qexec.execSelect();
+					if (results.hasNext()) {
+						while (results.hasNext()) {
+							ObjectProperty objectProperty = new ObjectProperty();
+							QuerySolution soln = results.next();
+							//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
+							objectProperty.setId(elementId);
+							objectProperty.setLabel(soln.get("?property").toString());
+							objectProperty.setRange(soln.get("?value").toString());
 
-						result.add(objectProperty);
+							result.add(objectProperty);
+						}
+					} else try {
+						throw new NoResultsException("No results found");
+					} catch (NoResultsException e) {
+						throw new RuntimeException(e);
 					}
-				} else try {
-					throw new NoResultsException("No results found");
-				} catch (NoResultsException e) {
-					throw new RuntimeException(e);
 				}
 			}
 		});
@@ -2838,23 +2894,23 @@ public class ModellingEnvironment {
 						"FILTER (str(?object) = \"bpmn\") }");
 
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				Answer ans = new Answer();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					Answer ans = new Answer();
 
-				QuerySolution soln = results.next();
-				String nm = soln.get("?id").toString().split("#")[0];
-				//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
-				ans.setId(soln.get("?id").toString());
-				ans.setLabel(GlobalVariables.getNamespaceMap().get(nm) + ":" + soln.get("?label").toString());
+					QuerySolution soln = results.next();
+					String nm = soln.get("?id").toString().split("#")[0];
+					//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
+					ans.setId(soln.get("?id").toString());
+					ans.setLabel(GlobalVariables.getNamespaceMap().get(nm) + ":" + soln.get("?label").toString());
 
-				result.add(ans);
+					result.add(ans);
+				}
 			}
 		}
-		qexec.close();
 
 		return result;
 	}
@@ -2902,23 +2958,23 @@ public class ModellingEnvironment {
 		queryStr.append("ORDER BY ?label");
 
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				Answer ans = new Answer();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					Answer ans = new Answer();
 
-				QuerySolution soln = results.next();
-				String nm = soln.get("?id").toString().split("#")[0];
-				//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
-				ans.setId(soln.get("?id").toString());
-				ans.setLabel(GlobalVariables.getNamespaceMap().get(nm) + ":" + soln.get("?label").toString());
+					QuerySolution soln = results.next();
+					String nm = soln.get("?id").toString().split("#")[0];
+					//System.out.println(nm + " " + GlobalVariables.getNamespaceMap().get(nm));
+					ans.setId(soln.get("?id").toString());
+					ans.setLabel(GlobalVariables.getNamespaceMap().get(nm) + ":" + soln.get("?label").toString());
 
-				result.add(ans);
+					result.add(ans);
+				}
 			}
 		}
-		qexec.close();
 
 		return result;
 	}
@@ -2964,23 +3020,23 @@ public class ModellingEnvironment {
 		queryStr.append("ORDER BY ?id");
 
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				Answer ans = new Answer();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					Answer ans = new Answer();
 
-				QuerySolution soln = results.next();
-				ans.setId(soln.get("?id").toString());
-				String namespace = soln.get("?id").toString().split("#")[0];
-				//System.out.println("namespace :"+namespace);
-				ans.setLabel(GlobalVariables.getNamespaceMap().get(namespace) + ":" + soln.get("?label").toString());
+					QuerySolution soln = results.next();
+					ans.setId(soln.get("?id").toString());
+					String namespace = soln.get("?id").toString().split("#")[0];
+					//System.out.println("namespace :"+namespace);
+					ans.setLabel(GlobalVariables.getNamespaceMap().get(namespace) + ":" + soln.get("?label").toString());
 
-				result.add(ans);
+					result.add(ans);
+				}
 			}
 		}
-		qexec.close();
 
 		return result;
 	}
@@ -3034,26 +3090,25 @@ public class ModellingEnvironment {
 		queryStr.append("} ");
 		queryStr.append("ORDER BY ?label");
 
-		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				DatatypeProperty datatypeProperty = new DatatypeProperty();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					DatatypeProperty datatypeProperty = new DatatypeProperty();
 
-				QuerySolution soln = results.next();
-				datatypeProperty.setId(soln.get("?id").toString());
-				datatypeProperty.setLabel(soln.get("?label").toString());
-				datatypeProperty.setDomainName(domainName);
-				datatypeProperty.setRange(extractNamespaceAndIdFrom(soln, "?range"));
-				RDFNode rdfNode = soln.get("?isAvailableToModel");
-				if (rdfNode != null) datatypeProperty.setAvailableToModel(((LiteralImpl) rdfNode).getBoolean());
+					QuerySolution soln = results.next();
+					datatypeProperty.setId(soln.get("?id").toString());
+					datatypeProperty.setLabel(soln.get("?label").toString());
+					datatypeProperty.setDomainName(domainName);
+					datatypeProperty.setRange(extractNamespaceAndIdFrom(soln, "?range"));
+					RDFNode rdfNode = soln.get("?isAvailableToModel");
+					if (rdfNode != null) datatypeProperty.setAvailableToModel(((LiteralImpl) rdfNode).getBoolean());
 
-				result.add(datatypeProperty);
+					result.add(datatypeProperty);
+				}
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -3105,23 +3160,23 @@ public class ModellingEnvironment {
 		queryStr.append("ORDER BY ?label");
 
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				ObjectProperty objectProperty = new ObjectProperty();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					ObjectProperty objectProperty = new ObjectProperty();
 
-				QuerySolution soln = results.next();
-				objectProperty.setId(soln.get("?id").toString());
-				objectProperty.setLabel(soln.get("?label").toString());
-				objectProperty.setDomainName(domainName);
-				objectProperty.setRange(soln.get("?range").toString());
+					QuerySolution soln = results.next();
+					objectProperty.setId(soln.get("?id").toString());
+					objectProperty.setLabel(soln.get("?label").toString());
+					objectProperty.setDomainName(domainName);
+					objectProperty.setRange(soln.get("?range").toString());
 
-				result.add(objectProperty);
+					result.add(objectProperty);
+				}
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -3173,23 +3228,23 @@ public class ModellingEnvironment {
 		queryStr.append("ORDER BY ?label");
 
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				ObjectProperty objectProperty = new ObjectProperty();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					ObjectProperty objectProperty = new ObjectProperty();
 
-				QuerySolution soln = results.next();
-				objectProperty.setId(soln.get("?id").toString());
-				objectProperty.setLabel(soln.get("?label").toString());
-				objectProperty.setDomainName(domainName);
-				objectProperty.setRange(soln.get("?range").toString());
+					QuerySolution soln = results.next();
+					objectProperty.setId(soln.get("?id").toString());
+					objectProperty.setLabel(soln.get("?label").toString());
+					objectProperty.setDomainName(domainName);
+					objectProperty.setRange(soln.get("?range").toString());
 
-				result.add(objectProperty);
+					result.add(objectProperty);
+				}
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -3251,23 +3306,23 @@ public class ModellingEnvironment {
 				"ORDER BY ?label");
 
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				ObjectProperty objectProperty = new ObjectProperty();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					ObjectProperty objectProperty = new ObjectProperty();
 
-				QuerySolution soln = results.next();
-				objectProperty.setId(soln.get("?id").toString());
-				objectProperty.setLabel(soln.get("?label").toString());
-				objectProperty.setDomainName(domainName);
-				objectProperty.setRange(soln.get("?range").toString());
+					QuerySolution soln = results.next();
+					objectProperty.setId(soln.get("?id").toString());
+					objectProperty.setLabel(soln.get("?label").toString());
+					objectProperty.setDomainName(domainName);
+					objectProperty.setRange(soln.get("?range").toString());
 
-				result.add(objectProperty);
+					result.add(objectProperty);
+				}
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -3323,35 +3378,35 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				ShaclConstraint shaclConstraint = new ShaclConstraint();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					ShaclConstraint shaclConstraint = new ShaclConstraint();
 
-				QuerySolution soln = results.next();
-				shaclConstraint.setId(soln.get("?id").toString());
-				shaclConstraint.setName(soln.get("?name").toString());
-				if(soln.contains("?description"))
-					shaclConstraint.setDescription(soln.get("?description").toString());
-				if(soln.contains("?targetClass"))
-					shaclConstraint.setTargetClass(soln.get("?targetClass").toString());
-				if(soln.contains("?path"))
-					shaclConstraint.setPath(soln.get("?path").toString());
-				if(soln.contains("?datatype"))
-					shaclConstraint.setDatatype(soln.get("?datatype").toString());
-				if(soln.contains("?pattern"))
-					shaclConstraint.setPattern(soln.get("?pattern").toString());
-				if(soln.contains("?minCount"))
-					shaclConstraint.setMinCount(soln.get("?minCount").toString());
-				if(soln.contains("?maxCount"))
-					shaclConstraint.setMaxCount(soln.get("?maxCount").toString());
+					QuerySolution soln = results.next();
+					shaclConstraint.setId(soln.get("?id").toString());
+					shaclConstraint.setName(soln.get("?name").toString());
+					if (soln.contains("?description"))
+						shaclConstraint.setDescription(soln.get("?description").toString());
+					if (soln.contains("?targetClass"))
+						shaclConstraint.setTargetClass(soln.get("?targetClass").toString());
+					if (soln.contains("?path"))
+						shaclConstraint.setPath(soln.get("?path").toString());
+					if (soln.contains("?datatype"))
+						shaclConstraint.setDatatype(soln.get("?datatype").toString());
+					if (soln.contains("?pattern"))
+						shaclConstraint.setPattern(soln.get("?pattern").toString());
+					if (soln.contains("?minCount"))
+						shaclConstraint.setMinCount(soln.get("?minCount").toString());
+					if (soln.contains("?maxCount"))
+						shaclConstraint.setMaxCount(soln.get("?maxCount").toString());
 
-				result.add(shaclConstraint);
+					result.add(shaclConstraint);
+				}
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -3374,35 +3429,35 @@ public class ModellingEnvironment {
 		queryStr.append("}");
 
 		
-		QueryExecution qexec = ontology.query(queryStr);
-		ResultSet results = qexec.execSelect();
+		try (QueryExecution qexec = ontology.query(queryStr)) {
+			ResultSet results = qexec.execSelect();
 
-		if (results.hasNext()) {
-			while (results.hasNext()) {
-				ShaclConstraint shaclConstraint = new ShaclConstraint();
+			if (results.hasNext()) {
+				while (results.hasNext()) {
+					ShaclConstraint shaclConstraint = new ShaclConstraint();
 
-				QuerySolution soln = results.next();
-				shaclConstraint.setId(soln.get("?id").toString());
-				shaclConstraint.setName(soln.get("?name").toString());
-				if(soln.contains("?description"))
-					shaclConstraint.setDescription(soln.get("?description").toString());
-				if(soln.contains("?targetClass"))
-					shaclConstraint.setTargetClass(soln.get("?targetClass").toString());
-				if(soln.contains("?path"))
-					shaclConstraint.setPath(soln.get("?path").toString());
-				if(soln.contains("?datatype"))
-					shaclConstraint.setDatatype(soln.get("?datatype").toString());
-				if(soln.contains("?pattern"))
-					shaclConstraint.setPattern(soln.get("?pattern").toString());
-				if(soln.contains("?minCount"))
-					shaclConstraint.setMinCount(soln.get("?minCount").toString());
-				if(soln.contains("?maxCount"))
-					shaclConstraint.setMaxCount(soln.get("?maxCount").toString());
+					QuerySolution soln = results.next();
+					shaclConstraint.setId(soln.get("?id").toString());
+					shaclConstraint.setName(soln.get("?name").toString());
+					if (soln.contains("?description"))
+						shaclConstraint.setDescription(soln.get("?description").toString());
+					if (soln.contains("?targetClass"))
+						shaclConstraint.setTargetClass(soln.get("?targetClass").toString());
+					if (soln.contains("?path"))
+						shaclConstraint.setPath(soln.get("?path").toString());
+					if (soln.contains("?datatype"))
+						shaclConstraint.setDatatype(soln.get("?datatype").toString());
+					if (soln.contains("?pattern"))
+						shaclConstraint.setPattern(soln.get("?pattern").toString());
+					if (soln.contains("?minCount"))
+						shaclConstraint.setMinCount(soln.get("?minCount").toString());
+					if (soln.contains("?maxCount"))
+						shaclConstraint.setMaxCount(soln.get("?maxCount").toString());
 
-				result.add(shaclConstraint);
+					result.add(shaclConstraint);
+				}
 			}
 		}
-		qexec.close();
 		return result;
 	}
 
@@ -3679,7 +3734,7 @@ public class ModellingEnvironment {
 
 		//con.setRequestProperty("Content-Type", "text/trig");
 		String contentType = con.getHeaderField("Content-Type");
-
+		LOGGER.info("Getting languages from GitHub");
 
 		int status = con.getResponseCode();
 		//Finally, let's read the response of the request and place it in a content String:
@@ -3726,6 +3781,7 @@ public class ModellingEnvironment {
 	@Path("postLanguagesSelectedtoFuseki")
 	public Response postLanguagesSelectedtoFuseki(String json) throws IOException {
 		List<String> sLanguageSelection = gson.fromJson(json, List.class);
+		LOGGER.info("Uploading modeling languages to Fuseki from Github");
 
 		try {
 			if(datasetIsEmpty(OntologyManager.getTRIPLESTOREENDPOINT())) {
@@ -3734,10 +3790,12 @@ public class ModellingEnvironment {
 				uploadRDF(new File(sPathTtl), OntologyManager.getDATAENDPOINT());
 			}
 		} catch (Exception e) {
-
+			LOGGER.severe("Error occurred during the upload of the languages to Fuseki");
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).build();
 		}
+
+		LOGGER.info("Modeling languages uploaded to Fuseki");
 		return Response.status(Status.OK).build();
 	}
 
