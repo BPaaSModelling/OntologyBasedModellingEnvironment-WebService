@@ -90,13 +90,14 @@ public class ModellingEnvironment {
 	private String extractValueFrom(QuerySolution querySolution, String label) {
 		return querySolution.get(label) != null ? querySolution.get(label).toString() : null;
 	}
-
+/*
 	/**
 	 * Sets the user data for the authenticated user after the user logs in.
 	 * @param securityContext the security context provided by the framework
 	 * @param requestContext the request context provided by the framework
 	 * @return a Response object indicating the status of the operation
 	 */
+/* This experimental feature is not used in the current version
 	@GET
 	@Path("/auth")
 	public Response setUserData(@Context SecurityContext securityContext, @Context ContainerRequestContext requestContext) {
@@ -121,7 +122,7 @@ public class ModellingEnvironment {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error initializing user graph").build();
         }
 	}
-
+*/
 
 	@GET
 	@Path("/model")

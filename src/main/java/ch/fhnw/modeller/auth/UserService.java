@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import com.auth0.json.mgmt.users.User;
 
 /**
+ * THIS CLASS IS NOT USED IN THE CURRENT IMPLEMENTATION
  * UserService is responsible for managing user-related operations.
  * It provides methods to initialize user graph, check if the graph already exists
  * and duplicate the default graph for each new user.

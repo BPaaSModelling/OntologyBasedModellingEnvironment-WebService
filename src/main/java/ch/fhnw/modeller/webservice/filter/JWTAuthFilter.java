@@ -26,26 +26,28 @@ import java.security.Principal;
 import java.security.interfaces.RSAPublicKey;
 import java.util.logging.Logger;
 
-/**
+/** THIS CLASS IS NOT USED IN THE CURRENT IMPLEMENTATION
  * JWTAuthFilter is a container request filter that performs JWT authentication.
  * It extracts the JWT token from the request's Authorization header,
  * validates the token using the Auth0 server, and sets the authenticated user
  * and security context in the request context for further processing.
  */
+/*
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class JWTAuthFilter implements ContainerRequestFilter {
-    private static final Logger LOGGER = Logger.getLogger("JWTAuthFilter.class.getName()");
-    private static final String AUTH0_DOMAIN = "https://dev-aoame.eu.auth0.com/";
-    private static final String AUDIENCE = "https://aoame-webservice";
+   private static final Logger LOGGER = Logger.getLogger("JWTAuthFilter.class.getName()");
+   private static final String AUTH0_DOMAIN = "https://dev-aoame.eu.auth0.com/";
+   private static final String AUDIENCE = "https://aoame-webservice";
 //    private final TokenCache tokenCache = new TokenCache(); // Cache tokens for faster validation
-    private static final Gson gson = new Gson();
-    /**
-     * This method is called for every HTTP request to the server.
-     * It checks if the Authorization header is present and starts with "Bearer ".
-     * If the Authorization header is present, it extracts the access token from it and validates the token using the validateToken method.
-     * If the token is valid, it sets a new SecurityContext for the request with the decoded JWT and the user's email.
-     */
+   private static final Gson gson = new Gson();
+   /**
+    * This method is called for every HTTP request to the server.
+    * It checks if the Authorization header is present and starts with "Bearer ".
+    * If the Authorization header is present, it extracts the access token from it and validates the token using the validateToken method.
+    * If the token is valid, it sets a new SecurityContext for the request with the decoded JWT and the user's email.
+    */
+    /*
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
@@ -73,7 +75,7 @@ public class JWTAuthFilter implements ContainerRequestFilter {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
     }
-
+*/
 //    private User getUserData(String idToken) throws IOException, JwkException {
 //        final DecodedJWT jwt = validateToken(idToken);
 //        // Create User object
@@ -98,6 +100,7 @@ public class JWTAuthFilter implements ContainerRequestFilter {
      * This method decodes the JWT, retrieves the public key from Auth0's JWKS (JSON Web Key Set) endpoint,
      * and verifies the JWT signature with the public key. If the verification is successful, it returns the decoded JWT.
      */
+    /*
     private DecodedJWT validateToken(String token) throws JwkException, IOException {
         DecodedJWT jwt = JWT.decode(token);
 
@@ -117,11 +120,14 @@ public class JWTAuthFilter implements ContainerRequestFilter {
         return  jwt;
     }
 }
+*/
+
 /**
  * JWTSecurityContext implements the SecurityContext interface.
  * It provides methods for getting the user principal (in this case, the subject of the JWT),
  * checking if the user is in a certain role (not implemented), checking if the request is secure, and getting the authentication scheme (returns "Bearer").
  */
+/*
 class JWTSecurityContext implements SecurityContext {
 
     private final DecodedJWT jwt;
@@ -153,3 +159,4 @@ class JWTSecurityContext implements SecurityContext {
         return "Bearer";
     }
 }
+*/
