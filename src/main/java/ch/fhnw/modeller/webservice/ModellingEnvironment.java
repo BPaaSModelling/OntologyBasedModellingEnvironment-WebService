@@ -959,6 +959,48 @@ public class ModellingEnvironment {
 					shapeId,
 					dto.getNote()));
 		}
+		if (dto.getxCoorDobotMagician() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasXCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getxCoorDobotMagician()));
+		}
+		if (dto.getyCoorDobotMagician() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasYCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getyCoorDobotMagician()));
+		}
+		if (dto.getzCoorDobotMagician() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasZCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getzCoorDobotMagician()));
+		}
+		if (dto.getSucCupOnDobotMagician()) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasSucCupOnDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getSucCupOnDobotMagician()));
+		}
+		if (dto.getSucCupOffDobotMagician()) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasSucCupOffDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getSucCupOffDobotMagician()));
+		}
+		if (dto.getCalDobotMagician()) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasCalDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getCalDobotMagician()));
+		}
 
 		if (dto.getLabel() != null) {
 			queryBuilder.append(String.format(
@@ -1011,6 +1053,48 @@ public class ModellingEnvironment {
 					shapeId,
 					dto.getNote()));
 		}
+		if (dto.getxCoorDobotMagician() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasXCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getxCoorDobotMagician()));
+		}
+		if (dto.getyCoorDobotMagician() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasYCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getyCoorDobotMagician()));
+		}
+		if (dto.getzCoorDobotMagician() != null) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasZCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getzCoorDobotMagician()));
+		}
+		if (dto.getSucCupOnDobotMagician()) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasSucCupOnDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getSucCupOnDobotMagician()));
+		}
+		if (dto.getSucCupOffDobotMagician()) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasSucCupOffDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getSucCupOffDobotMagician()));
+		}
+		if (dto.getCalDobotMagician()) {
+			queryBuilder.append(String.format(
+					"\t%1$s:%2$s %1$s:shapeHasCalDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					shapeId,
+					dto.getCalDobotMagician()));
+		}
 
 		if (dto.getLabel() != null) {
 			queryBuilder.append(String.format(
@@ -1044,6 +1128,12 @@ public class ModellingEnvironment {
 						"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
 						"\t%1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo .\n" +
 						"\t%1$s:%2$s %1$s:shapeHasNote ?note .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasXCoorDobotMagician ?xCoorDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasYCoorDobotMagician ?yCoorDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasZCoorDobotMagician ?zCoorDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasSucCupOnDobotMagician ?SucCupOnDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasSucCupOffDobotMagician ?SucCupOffDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasCalDobotMagician ?CalDobotMagician .\n" +
 						"\t%1$s:%2$s rdfs:label ?label .\n" +
 						"\t%1$s:%2$s %1$s:shapeRepresentsModel ?model .\n" +
 						"\t?parentModel %1$s:modelHasShape %1$s:%2$s .\n" +
@@ -1055,6 +1145,12 @@ public class ModellingEnvironment {
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasNote ?note }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasXCoorDobotMagician ?xCoorDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasYCoorDobotMagician ?yCoorDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasZCoorDobotMagician ?zCoorDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasSucCupOnDobotMagician ?SucCupOnDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasSucCupOffDobotMagician ?SucCupOffDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasCalDobotMagician ?CalDobotMagician }\n" +
 						"\tOPTIONAL { %1$s:%2$s rdfs:label ?label }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeRepresentsModel ?model }\n" +
 						"\t?parentModel %1$s:modelHasShape %1$s:%2$s .\n" +
@@ -1076,6 +1172,12 @@ public class ModellingEnvironment {
 						"\t%1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po .\n" +
 						"\t%1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo .\n" +
 						"\t%1$s:%2$s %1$s:shapeHasNote ?note .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasXCoorDobotMagician ?xCoorDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasYCoorDobotMagician ?yCoorDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasZCoorDobotMagician ?zCoorDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasSucCupOnDobotMagician ?SucCupOnDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasSucCupOffDobotMagician ?SucCupOffDobotMagician .\n" +
+						"\t%1$s:%2$s %1$s:shapeHasCalDobotMagician ?CalDobotMagician .\n" +
 						"\t%1$s:%2$s rdfs:label ?label .\n" +
 						"\t%1$s:%2$s %1$s:shapeRepresentsModel ?model .\n" +
 						"} WHERE {\n" +
@@ -1086,6 +1188,12 @@ public class ModellingEnvironment {
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeInstantiatesPaletteConstruct ?po }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeVisualisesConceptualElement ?mlo }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasNote ?note }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasXCoorDobotMagician ?xCoorDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasYCoorDobotMagician ?yCoorDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasZCoorDobotMagician ?zCoorDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasSucCupOnDobotMagician ?SucCupOnDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasSucCupOffDobotMagician ?SucCupOffDobotMagician }\n" +
+						"\tOPTIONAL { %1$s:%2$s %1$s:shapeHasCalDobotMagician ?CalDobotMagician }\n" +
 						"\tOPTIONAL { %1$s:%2$s rdfs:label ?label }\n" +
 						"\tOPTIONAL { %1$s:%2$s %1$s:shapeRepresentsModel ?model }\n" +
 						"} ",
@@ -1126,6 +1234,42 @@ public class ModellingEnvironment {
 					MODEL.getPrefix(),
 					modelElementCreationDto.getUuid(),
 					modelElementCreationDto.getNote()));
+		}
+		if (modelElementCreationDto.getxCoorDobotMagician() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeHasXCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getxCoorDobotMagician()));
+		}
+		if (modelElementCreationDto.getyCoorDobotMagician() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeHasYCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getyCoorDobotMagician()));
+		}
+		if (modelElementCreationDto.getzCoorDobotMagician() != null) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeHasZCoorDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getzCoorDobotMagician()));
+		}
+		if (modelElementCreationDto.getSucCupOnDobotMagician()) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeHasSucCupOnDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getSucCupOnDobotMagician()));
+		}
+		if (modelElementCreationDto.getSucCupOffDobotMagician()) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeHasSucCupOffDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getSucCupOffDobotMagician()));
+		}
+		if (modelElementCreationDto.getCalDobotMagician()) {
+			commandBuilder.append(String.format("	%1$s:%2$s %1$s:shapeHasCalDobotMagician \"%3$s\" .\n",
+					MODEL.getPrefix(),
+					modelElementCreationDto.getUuid(),
+					modelElementCreationDto.getCalDobotMagician()));
 		}
 
 		if (modelElementCreationDto.getShapeRepresentsModel() != null) {
@@ -2230,6 +2374,40 @@ public class ModellingEnvironment {
 		return Response.status(Status.OK).entity("{}").build();
 
 	}
+
+	@POST
+	@Path("/addIoTdevice")
+	public Response addIoTdevice(String json) {
+		System.out.println("/addIoTdevice received: " + json);
+
+		Gson gson = new Gson();
+		IoTDevice device = gson.fromJson(json, IoTDevice.class);
+
+		ParameterizedSparqlString querStr = new ParameterizedSparqlString();
+
+		String xCOR = device.getxCOR();
+		String yCOR = device.getyCOR();
+		String zCOR = device.getzCOR();
+
+		// Assuming you have a method to get the ID or URI of the device
+		String deviceId = device.getModelid();
+		querStr.setNsPrefix("ex", "http://example.org/");
+
+		querStr.append("INSERT DATA { ");
+		querStr.append("<" + deviceId + "> ex:xCOR \"" + xCOR + "\" . ");
+		querStr.append("<" + deviceId + "> ex:yCOR \"" + yCOR + "\" . ");
+		querStr.append("<" + deviceId + "> ex:zCOR \"" + zCOR + "\" . ");
+		querStr.append("}");
+		querStr.append("}");
+
+		System.out.println("SPARQL Query: " + querStr.toString());
+
+		// Assuming ontology is properly initialized and available
+		ontology.insertQuery(querStr);
+
+		return Response.status(Response.Status.OK).entity("{}").build();
+	}
+
 
 	@POST
 	@Path("/editDatatypeProperty")
@@ -3833,6 +4011,7 @@ public class ModellingEnvironment {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
+
 
 
 	public static String makeTempFile(String sContentToUpload) {
