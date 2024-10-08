@@ -46,7 +46,8 @@ public enum NAMESPACE {
 	BRICK("BRICK", 							"https://brickschema.org/schema/Brick#"),
 	TAG("TAG", 								"https://brickschema.org/schema/BrickTag#"),
 	QUDT("qudt",							"http://qudt.org/schema/qudt/"),
-	USO("uso",							    "http://fhnw.ch/userstoryontology#")
+	USO("uso",							    "http://fhnw.ch/userstoryontology#"),
+	WS4CRP("wscrp",							"http://www.semanticweb.org/alise96/ontologies/2024/5/6/WS4CRP#"),
 	;
 	
 	private String prefix;
