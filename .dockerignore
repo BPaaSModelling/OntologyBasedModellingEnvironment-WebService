@@ -1,0 +1,7 @@
+/.idea
+/.run
+/OntologyBasedModellingEnvironment-WebService.iml
+**/.vscode
+.git/
+**/README.md
+**/LICENSE
