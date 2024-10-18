@@ -31,6 +31,12 @@ public class ModelElementDetailDto {
     private String toShape;
     private List<String> containedShapes;
     private List<String> otherVisualisationsOfSameLanguageConstruct;
+    private String xCoorDobotMagician;
+    private String yCoorDobotMagician;
+    private String zCoorDobotMagician;
+    private boolean sucCupOnDobotMagician;
+    private boolean sucCupOffDobotMagician;
+    private boolean calDobotMagician;
 
     public ModelElementDetailDto() {}
 
@@ -54,6 +60,12 @@ public class ModelElementDetailDto {
         }
 
         dto.setNote(shapeAttributes.get("shapeHasNote"));
+        dto.setxCoorDobotMagician(shapeAttributes.get("shapeHasXCoorDobotMagician"));
+        dto.setyCoorDobotMagician(shapeAttributes.get("shapeHasYCoorDobotMagician"));
+        dto.setzCoorDobotMagician(shapeAttributes.get("shapeHasZCoorDobotMagician"));
+        dto.setSucCupOnDobotMagician(Boolean.parseBoolean(shapeAttributes.get("shapeHasSucCupOnDobotMagician")));
+        dto.setSucCupOffDobotMagician(Boolean.parseBoolean(shapeAttributes.get("shapeHasSucCupOffDobotMagician")));
+        dto.setCalDobotMagician(Boolean.parseBoolean(shapeAttributes.get("shapeHasCalDobotMagician")));
 
         dto.setModelElementType(modelElementType);
 
@@ -93,6 +105,58 @@ public class ModelElementDetailDto {
     }
 
     public boolean hasOptionalValues() {
-        return getShapeRepresentsModel() != null || getLabel() != null || getNote() != null;
+        return getShapeRepresentsModel() != null || getLabel() != null || getNote() != null || getxCoorDobotMagician() != null || getyCoorDobotMagician() != null || getzCoorDobotMagician() != null;
+    }
+
+
+
+
+
+    public String getxCoorDobotMagician() {
+        return xCoorDobotMagician;
+    }
+
+    public void setxCoorDobotMagician(String xCoorDobotMagician) {
+        this.xCoorDobotMagician = xCoorDobotMagician;
+    }
+
+    public String getyCoorDobotMagician() {
+        return yCoorDobotMagician;
+    }
+
+    public void setyCoorDobotMagician(String yCoorDobotMagician) {
+        this.yCoorDobotMagician = yCoorDobotMagician;
+    }
+
+    public String getzCoorDobotMagician() {
+        return zCoorDobotMagician;
+    }
+
+    public void setzCoorDobotMagician(String zCoorDobotMagician) {
+        this.zCoorDobotMagician = zCoorDobotMagician;
+    }
+
+    public boolean getSucCupOnDobotMagician() {
+        return sucCupOnDobotMagician;
+    }
+
+    public void setSucCupOnDobotMagician(boolean sucCupOnDobotMagician) {
+        this.sucCupOnDobotMagician = sucCupOnDobotMagician;
+    }
+
+    public boolean getSucCupOffDobotMagician() {
+        return sucCupOffDobotMagician;
+    }
+
+    public void setSucCupOffDobotMagician(boolean sucCupOffDobotMagician) {
+        this.sucCupOffDobotMagician = sucCupOffDobotMagician;
+    }
+
+    public boolean getCalDobotMagician() {
+        return calDobotMagician;
+    }
+
+    public void setCalDobotMagician(boolean calDobotMagician) {
+        this.calDobotMagician = calDobotMagician;
     }
 }
