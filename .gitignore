@@ -3,6 +3,7 @@
 /.idea/
 /.run/
 /OntologyBasedModellingEnvironment-WebService.iml
+/node_modules/
 
 # eclipse project file
 .settings/

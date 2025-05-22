@@ -286,4 +286,17 @@ public final class OntologyManager {
 		return DATAENDPOINT;
 	}
 
+
+	// return a boolean to control if that particular string exists into fuseki
+	// il helps in controlling during the creation of new elements
+	public boolean askQuery(String askQueryString) {
+		Query query = QueryFactory.create(askQueryString);
+
+		try (QueryExecution qexec = QueryExecutionFactory.sparqlService("http://localhost:3030/ModEnv/sparql", query)) {
+			return qexec.execAsk();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+    }
 }

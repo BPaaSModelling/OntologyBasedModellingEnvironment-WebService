@@ -49,8 +49,5 @@ public class PaletteCategory {
 	public PaletteCategory() {
 		super();
 	}
-	
-	
 
-	
 }
