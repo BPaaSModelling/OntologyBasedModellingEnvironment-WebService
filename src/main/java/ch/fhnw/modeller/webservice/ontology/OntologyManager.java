@@ -173,14 +173,14 @@ public final class OntologyManager {
 
 	public void insertQuery(ParameterizedSparqlString query) {
 		try{
-		 	String userGraphUri = getCurrentUserGraph();// gets your specific graph URI
-			addNamespacesToQuery(query);
+		 	//String userGraphUri = getCurrentUserGraph();// gets your specific graph URI
+			//addNamespacesToQuery(query);
 
 			// Modify the query based on its type
-			String modifiedQuery = modifyQueryForGraph(query.toString(), userGraphUri);
+			//String modifiedQuery = modifyQueryForGraph(query.toString(), userGraphUri);
 
-			System.out.println("***Trying to insert***\n" + modifiedQuery.toString() + "***End query***\n");
-			UpdateRequest update = UpdateFactory.create(modifiedQuery);
+			System.out.println("***Trying to insert***\n" + query.toString() + "***End query***\n");
+			UpdateRequest update = UpdateFactory.create(query.toString());
 			UpdateProcessor up;
 			up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
 			up.execute();
