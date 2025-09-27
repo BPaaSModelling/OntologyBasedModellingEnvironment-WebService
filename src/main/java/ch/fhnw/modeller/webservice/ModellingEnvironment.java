@@ -2737,13 +2737,13 @@ public class ModellingEnvironment {
             // Property Definition
             q.append("INSERT DATA { \n");
 
-            //q.append("GRAPH <" + graph + "> {\n");
+            q.append("GRAPH <" + graph + "> {\n");
             q.append("<" + propertyRelationIRI+ "> rdf:type owl:DatatypeProperty ; \n");
             q.append("rdfs:label \"" + localLabel + "\" ; \n");
             q.append("rdfs:domain <" + property.getDomainClassUri() + "> ; \n");
             q.append("rdfs:range " + property.getXsdRange() + " . } \n");
 
-            //q.append("}");
+            q.append("}");
 
             System.out.println("SPARQL UPDATE:\n" + q.toString());
             ontology.insertQuery(q);
@@ -4015,78 +4015,294 @@ public class ModellingEnvironment {
             return result;
         }
 
-        @GET
-        @Path("/getDatatypeProperties/{domainName}")
-        public Response getDatatypeProperties(@PathParam("domainName") String domainName) {
-            System.out.println("\n####################<start>####################");
-            System.out.println("/requested datatype properties for " + domainName);
-            System.out.println("####################<end>####################");
-            ArrayList<DatatypeProperty> datatype_properties = new ArrayList<DatatypeProperty>();
+//        @GET
+//        @Path("/getDatatypeProperties/{domainName}")
+//        public Response getDatatypeProperties(@PathParam("domainName") String domainName) {
+//            System.out.println("\n####################<start>####################");
+//            System.out.println("/requested datatype properties for " + domainName);
+//            System.out.println("####################<end>####################");
+//            ArrayList<DatatypeProperty> datatype_properties = new ArrayList<DatatypeProperty>();
+//
+//            try {
+//                if (domainName != null) {
+//                    String[] domainNameArr = domainName.split(":");
+//                    domainName = GlobalVariables.getNamespaceMap().get(domainNameArr[0].toLowerCase()) + "#" + domainNameArr[1];
+//                    System.out.println("domain range for query is : " + domainName);
+//                    datatype_properties = queryAllDatatypeProperties(domainName);
+//
+//                    if (debug_properties) {
+//                        for (int index = 0; index < datatype_properties.size(); index++) {
+//                            System.out.println("Domain " + index + ": ");
+//                        }
+//                    }
+//                }
+//            } catch (NoResultsException e) {
+//                e.printStackTrace();
+//            }
+//
+//
+//            String json = gson.toJson(datatype_properties);
+//            System.out.println("\n####################<start>####################");
+//            System.out.println("/search genereated json: " + json);
+//            System.out.println("####################<end>####################");
+//            return Response.status(Status.OK).entity(json).build();
+//        }
+//
+//        private ArrayList<DatatypeProperty> queryAllDatatypeProperties(String domainName) throws NoResultsException {
+//            ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
+//            ArrayList<DatatypeProperty> result = new ArrayList<DatatypeProperty>();
+//
+//            queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label ?isAvailableToModel WHERE {");
+//            queryStr.append("?id a ?type . FILTER(?type IN (owl:DatatypeProperty)) . ");
+//            queryStr.append("?id rdfs:domain ?domain . ");
+//            queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
+//            queryStr.append("?id rdfs:label ?label . ");
+//            queryStr.append("?id rdfs:range ?range . ");
+//            queryStr.append("OPTIONAL {?id " + MODEL.getPrefix() + ":propertyIsShownInModel ?isAvailableToModel} ");
+//            //queryStr.append("OPTIONAL {?domain rdf:type owl:DataTypeProperty} ");
+//
+//            queryStr.append("} ");
+//            queryStr.append("ORDER BY ?label");
+//
+//            try (QueryExecution qexec = ontology.query(queryStr)) {
+//                ResultSet results = qexec.execSelect();
+//
+//                if (results.hasNext()) {
+//                    while (results.hasNext()) {
+//                        DatatypeProperty datatypeProperty = new DatatypeProperty();
+//
+//                        QuerySolution soln = results.next();
+//                        datatypeProperty.setId(soln.get("?id").toString());
+//                        datatypeProperty.setLabel(soln.get("?label").toString());
+//                        datatypeProperty.setDomainName(domainName);
+//                        datatypeProperty.setRange(extractNamespaceAndIdFrom(soln, "?range"));
+//                        RDFNode rdfNode = soln.get("?isAvailableToModel");
+//                        if (rdfNode != null) datatypeProperty.setAvailableToModel(((LiteralImpl) rdfNode).getBoolean());
+//
+//                        result.add(datatypeProperty);
+//                    }
+//                }
+//            }
+//            return result;
+//        }
 
-            try {
-                if (domainName != null) {
-                    String[] domainNameArr = domainName.split(":");
-                    domainName = GlobalVariables.getNamespaceMap().get(domainNameArr[0].toLowerCase()) + "#" + domainNameArr[1];
-                    System.out.println("domain range for query is : " + domainName);
-                    datatype_properties = queryAllDatatypeProperties(domainName);
+    @GET
+    @Path("/getDatatypeProperties")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDatatypeProperties() {
+        System.out.println("\n####################<start>####################");
+        System.out.println("/requested ALL datatype properties (no domain filter)");
+        System.out.println("####################<end>####################");
 
-                    if (debug_properties) {
-                        for (int index = 0; index < datatype_properties.size(); index++) {
-                            System.out.println("Domain " + index + ": ");
-                        }
-                    }
-                }
-            } catch (NoResultsException e) {
-                e.printStackTrace();
-            }
+        ArrayList<DatatypeProperty> datatypeProperties = new ArrayList<>();
 
-
-            String json = gson.toJson(datatype_properties);
-            System.out.println("\n####################<start>####################");
-            System.out.println("/search genereated json: " + json);
-            System.out.println("####################<end>####################");
-            return Response.status(Status.OK).entity(json).build();
+        try {
+            datatypeProperties = queryAllDatatypeProperties(); // nuova versione sotto
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.serverError().entity("{\"error\":\"" + e.getMessage() + "\"}").build();
         }
 
-        private ArrayList<DatatypeProperty> queryAllDatatypeProperties(String domainName) throws NoResultsException {
-            ParameterizedSparqlString queryStr = new ParameterizedSparqlString();
-            ArrayList<DatatypeProperty> result = new ArrayList<DatatypeProperty>();
+        String json = gson.toJson(datatypeProperties);
+        System.out.println("\n####################<start>####################");
+        System.out.println("/search generated json: " + json);
+        System.out.println("####################<end>####################");
+        return Response.status(Status.OK).entity(json).build();
+    }
 
-            queryStr.append("SELECT DISTINCT ?id ?domain ?range ?label ?isAvailableToModel WHERE {");
-            queryStr.append("?id a ?type . FILTER(?type IN (owl:DatatypeProperty)) . ");
-            queryStr.append("?id rdfs:domain ?domain . ");
-            queryStr.append("FILTER(?domain IN (<" + domainName + ">)) . ");
-            queryStr.append("?id rdfs:label ?label . ");
-            queryStr.append("?id rdfs:range ?range . ");
-            queryStr.append("OPTIONAL {?id " + MODEL.getPrefix() + ":propertyIsShownInModel ?isAvailableToModel} ");
-            //queryStr.append("OPTIONAL {?domain rdf:type owl:DataTypeProperty} ");
+    private ArrayList<DatatypeProperty> queryAllDatatypeProperties() throws NoResultsException {
+        ParameterizedSparqlString q = new ParameterizedSparqlString();
+        ArrayList<DatatypeProperty> result = new ArrayList<>();
 
-            queryStr.append("} ");
-            queryStr.append("ORDER BY ?label");
+        q.setNsPrefix("rdf",  "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+        q.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+        q.setNsPrefix("owl",  "http://www.w3.org/2002/07/owl#");
 
-            try (QueryExecution qexec = ontology.query(queryStr)) {
-                ResultSet results = qexec.execSelect();
+        // CERCA OVUNQUE (no FROM NAMED; no GRAPH fisso)
+        q.append(
+                "SELECT DISTINCT ?id ?label ?domain ?range ?isAvailableToModel ?g WHERE {\n" +
+                        "  GRAPH ?g {\n" +
+                        "    ?id a owl:DatatypeProperty .\n" +
+                        "    OPTIONAL { ?id rdfs:label  ?label }\n" +
+                        "    OPTIONAL { ?id rdfs:domain ?domain }\n" +
+                        "    OPTIONAL { ?id rdfs:range  ?range }\n" +
+                        "    OPTIONAL { ?id <http://fhnw.ch/modelingEnvironment/PaletteOntology#propertyIsShownInModel> ?isAvailableToModel }\n" +
+                        "  }\n" +
+                        "}\n" +
+                        "ORDER BY LCASE(STR(?label)) STR(?id)\n"
+        );
 
-                if (results.hasNext()) {
-                    while (results.hasNext()) {
-                        DatatypeProperty datatypeProperty = new DatatypeProperty();
+        System.out.println("SPARQL SELECT (datatype props):\n" + q.toString());
 
-                        QuerySolution soln = results.next();
-                        datatypeProperty.setId(soln.get("?id").toString());
-                        datatypeProperty.setLabel(soln.get("?label").toString());
-                        datatypeProperty.setDomainName(domainName);
-                        datatypeProperty.setRange(extractNamespaceAndIdFrom(soln, "?range"));
-                        RDFNode rdfNode = soln.get("?isAvailableToModel");
-                        if (rdfNode != null) datatypeProperty.setAvailableToModel(((LiteralImpl) rdfNode).getBoolean());
+        int count = 0;
+        try (QueryExecution qexec = ontology.query(q)) {
+            ResultSet rs = qexec.execSelect();
+            while (rs.hasNext()) {
+                QuerySolution sol = rs.next();
+                DatatypeProperty dto = new DatatypeProperty();
 
-                        result.add(datatypeProperty);
+                // id
+                RDFNode idNode = sol.get("id");
+                dto.setId(idNode != null ? idNode.toString() : null);
+
+                // label (fallback localname)
+                String label = null;
+                if (sol.contains("label") && sol.get("label").isLiteral()) {
+                    label = sol.getLiteral("label").getString();
+                } else if (dto.getId() != null) {
+                    String uri = dto.getId();
+                    int pos = Math.max(uri.lastIndexOf('#'), uri.lastIndexOf('/'));
+                    label = (pos >= 0 && pos + 1 < uri.length()) ? uri.substring(pos + 1) : uri;
+                }
+                dto.setLabel(label);
+
+                // domain
+                dto.setDomainName(sol.contains("domain") ? sol.get("domain").toString() : null);
+
+                // range: supporta sia IRI che literal
+                if (sol.contains("range")) {
+                    RDFNode r = sol.get("range");
+                    if (r.isResource()) {
+                        dto.setRange(r.asResource().getURI());
+                    } else if (r.isLiteral()) {
+                        dto.setRange(r.asLiteral().getString()); // es. "xsd:decimal"
                     }
                 }
-            }
-            return result;
-        }
 
-        @GET
+                // flag
+                if (sol.contains("isAvailableToModel") && sol.get("isAvailableToModel").isLiteral()) {
+                    dto.setAvailableToModel(sol.getLiteral("isAvailableToModel").getBoolean());
+                }
+
+                result.add(dto);
+                count++;
+            }
+        }
+        System.out.println(">>> DatatypeProperties trovate: " + count);
+        return result;
+    }
+
+    @POST
+    @Path("/createDatatypeAssertion")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createDatatypeAssertion(String json) {
+        try {
+            DatatypeAssertionDto dto = new Gson().fromJson(json, DatatypeAssertionDto.class);
+            if (dto == null || isBlank(dto.propertyUri) || isBlank(dto.domainInstanceUri) || dto.value == null) {
+                return Response.status(Status.BAD_REQUEST).entity("{\"error\":\"Missing required fields\"}").build();
+            }
+
+            final String GRAPH = "http://fhnw.ch/modelingEnvironment/DomainOntology";
+
+            // 1) prefissi
+            ParameterizedSparqlString q = new ParameterizedSparqlString();
+            q.setNsPrefix("rdf",  "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+            q.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+            q.setNsPrefix("owl",  "http://www.w3.org/2002/07/owl#");
+            q.setNsPrefix("xsd",  "http://www.w3.org/2001/XMLSchema#");
+
+            // 2) se non arriva il datatype, prova a ricavarlo dal range della property
+            String resolvedDatatype = resolveDatatypeFromDtoOrProperty(dto);
+
+            // 3) costruisci literal SPARQL
+            String literal = buildLiteral(dto.value, resolvedDatatype, dto.lang);
+
+            // 4) (opzionale) evita duplicati
+            String ask = "ASK { GRAPH <" + GRAPH + "> { <" + dto.domainInstanceUri + "> <" + dto.propertyUri + "> " + literal + " . } }";
+            try (QueryExecution qe = ontology.query(new ParameterizedSparqlString(ask))) {
+                if (qe.execAsk()) {
+                    return Response.ok("{\"success\":true, \"duplicate\":true}").build();
+                }
+            }
+
+            // 5) INSERT
+            String insert = "INSERT DATA { GRAPH <" + GRAPH + "> { <" + dto.domainInstanceUri + "> <" + dto.propertyUri + "> " + literal + " . } }";
+            System.out.println("SPARQL UPDATE (Datatype assertion):\n" + insert);
+            ontology.insertQuery(new ParameterizedSparqlString(insert));
+
+            return Response.ok("{\"success\":true}").build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\":\"" + e.getMessage() + "\"}")
+                    .build();
+        }
+    }
+
+// ===== Helpers =====
+
+    private String resolveDatatypeFromDtoOrProperty(DatatypeAssertionDto dto) {
+        // 1) se dto.datatypeUri è presente, normalizza prefisso xsd -> uri
+        if (!isBlank(dto.datatypeUri)) {
+            return expandXsd(dto.datatypeUri.trim());
+        }
+        // 2) altrimenti leggi il rdfs:range della property
+        final String GRAPH = "http://fhnw.ch/modelingEnvironment/DomainOntology";
+        ParameterizedSparqlString q = new ParameterizedSparqlString();
+        q.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+        String sel = "SELECT ?range WHERE { GRAPH <" + GRAPH + "> { <" + dto.propertyUri + "> rdfs:range ?range } } LIMIT 1";
+        try (QueryExecution qe = ontology.query(new ParameterizedSparqlString(sel))) {
+            ResultSet rs = qe.execSelect();
+            if (rs.hasNext()) {
+                String uri = rs.next().get("range").toString();
+                return expandXsd(uri);
+            }
+        }
+        // 3) fallback
+        return "http://www.w3.org/2001/XMLSchema#string";
+    }
+
+    private String buildLiteral(String raw, String datatypeUri, String lang) {
+        // se datatype è stringa e lang presente → linguistico
+        if (!isBlank(lang) && isXsdString(datatypeUri)) {
+            return "\"" + escape(raw) + "\"@" + lang.trim();
+        }
+        // normalizza numeri/boolean/dateTime se vuoi (facoltativo, quick win)
+        String canon = canonicalize(raw, datatypeUri);
+        return "\"" + escape(canon) + "\"^^<" + datatypeUri + ">";
+    }
+
+    private String canonicalize(String v, String dtype) {
+        String d = dtype.toLowerCase();
+        try {
+            if (d.endsWith("#boolean")) {
+                String t = v.trim().toLowerCase();
+                return (t.equals("true") || t.equals("1")) ? "true" : "false";
+            }
+            if (d.endsWith("#integer") || d.endsWith("#int") || d.endsWith("#long") || d.endsWith("#short")) {
+                return String.valueOf(Long.parseLong(v.trim()));
+            }
+            if (d.endsWith("#decimal") || d.endsWith("#double") || d.endsWith("#float")) {
+                java.math.BigDecimal bd = new java.math.BigDecimal(v.trim());
+                return bd.stripTrailingZeros().toPlainString();
+            }
+            // per xsd:dateTime ci aspettiamo ISO 8601; lascio così (opzionale validazione)
+        } catch (Exception ignored) {}
+        return v;
+    }
+
+    private boolean isXsdString(String uri) {
+        return uri != null && uri.equalsIgnoreCase("http://www.w3.org/2001/XMLSchema#string");
+    }
+
+    private String expandXsd(String maybePrefixed) {
+        if (maybePrefixed == null) return null;
+        if (maybePrefixed.startsWith("http://") || maybePrefixed.startsWith("https://")) return maybePrefixed;
+        if (maybePrefixed.startsWith("xsd:")) {
+            return "http://www.w3.org/2001/XMLSchema#" + maybePrefixed.substring(4);
+        }
+        return maybePrefixed; // lascio com’è
+    }
+
+    private boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
+    private String escape(String s) { return s.replace("\\", "\\\\").replace("\"", "\\\""); }
+
+
+
+
+    @GET
         @Path("/getBridgeConnectors/{domainName}")
         public Response getBCObjectProperties(@PathParam("domainName") String domainName) {
             System.out.println("\n####################<start>####################");
