@@ -173,14 +173,14 @@ public final class OntologyManager {
 
 	public void insertQuery(ParameterizedSparqlString query) {
 		try{
-		 	String userGraphUri = getCurrentUserGraph();// gets your specific graph URI
-			addNamespacesToQuery(query);
+		 	//String userGraphUri = getCurrentUserGraph();// gets your specific graph URI
+			//addNamespacesToQuery(query);
 
 			// Modify the query based on its type
-			String modifiedQuery = modifyQueryForGraph(query.toString(), userGraphUri);
+			//String modifiedQuery = modifyQueryForGraph(query.toString(), userGraphUri);
 
-			System.out.println("***Trying to insert***\n" + modifiedQuery.toString() + "***End query***\n");
-			UpdateRequest update = UpdateFactory.create(modifiedQuery);
+			System.out.println("***Trying to insert***\n" + query.toString() + "***End query***\n");
+			UpdateRequest update = UpdateFactory.create(query.toString());
 			UpdateProcessor up;
 			up = UpdateExecutionFactory.createRemote(update, UPDATEENDPOINT);
 			up.execute();
@@ -286,4 +286,17 @@ public final class OntologyManager {
 		return DATAENDPOINT;
 	}
 
+
+	// return a boolean to control if that particular string exists into fuseki
+	// il helps in controlling during the creation of new elements
+	public boolean askQuery(String askQueryString) {
+		Query query = QueryFactory.create(askQueryString);
+
+		try (QueryExecution qexec = QueryExecutionFactory.sparqlService("http://localhost:3030/ModEnv/sparql", query)) {
+			return qexec.execAsk();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+    }
 }

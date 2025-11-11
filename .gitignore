@@ -3,8 +3,11 @@
 /.idea/
 /.run/
 /OntologyBasedModellingEnvironment-WebService.iml
+/node_modules/
 
 # eclipse project file
 .settings/
 .classpath
 .project
+package-lock.json
+package.json
