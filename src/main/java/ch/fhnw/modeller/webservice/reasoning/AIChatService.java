@@ -24,14 +24,36 @@ public class AIChatService {
     @POST
     @Path("/ask-ollama")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public Response askOllama(AIAskRequestDto req) throws Exception {
-        String system = "You are a SWRL assistant. Given a SWRL rule and (optional) TTL excerpt:" +
-                "\n1) Validate syntax & variable usage (e.g., variables in consequent must appear in antecedent)." +
-                "\n2) Explain issues briefly." +
-                "\n3) Propose a corrected rule." +
-                "\n4) Offer 1–2 alternative patterns when useful." +
-                "\nKeep answers concise. Show SWRL in fenced code blocks.";
+        String system =
+                "You are an expert SWRL reasoning assistant. You help users create, validate and improve "
+                        + "Semantic Web Rule Language (SWRL) rules based on ontology content provided in TTL format.\n\n"
+
+                        + "General behaviour:\n"
+                        + "- If the user asks to create or suggest one or more SWRL rules, do that leveraging the provided TTL.\n"
+                        + "- You may internally validate, correct and optimise rules, but your FINAL ANSWER must contain SWRL rules with their explanations.\n"
+                        + "- NEVER include or repeat the TTL content in your answer.\n\n"
+
+                        + "Examples of SWRL rules (style and structure):\n"
+                        + "1) Inferring a Mother from a Woman with a child:\n"
+                        + "\n"
+                        + "Woman(?m) ^ hasChild(?m, ?c) -> Mother(?m)\n"
+                        + "\n\n"
+                        + "2) Inferring ancestors from parent relationships:\n"
+                        + "hasParent(?x, ?y) -> hasAncestor(?x, ?y);\n"
+                        + "hasParent(?x, ?y) ^ hasAncestor(?y, ?z) -> hasAncestor(?x, ?z)\n"
+                        + "\n\n"
+
+                        + "OUTPUT FORMAT (very important):\n"
+                        + "• Your final answer must consist ONLY of one or more SWRL rules inside a single fenced code block:\n"
+                        + "Example of the output structure:\n" +
+                        "\n1. Explanation of Rule1\n"
+                        + "SWRL Rule1\n"
+                        + "\n2. Explanation of Rule2\n"
+                        + "SWRL Rule2\n"
+                        + "• include any surrounding explanation, bullets, headings, or comments.\n"
+                        + "• Do NOT include the TTL in the output.\n";
 
         String ttlPart = (req.getTtlContent() != null && !req.getTtlContent().isBlank())
                 ? "\n\nTTL excerpt:\n```ttl\n" + truncate(req.getTtlContent(), 8000) + "\n```"
@@ -42,7 +64,7 @@ public class AIChatService {
                 + ttlPart
                 + "\n\nUser question/comment:\n" + safe(req.getUserMessage());
 
-        String body = "{\"model\":\"llama3.1:latest\",\"prompt\":%s,\"stream\":false}".formatted(jsonString(prompt));
+        String body = "{\"model\":\"gemma3:latest\",\"prompt\":%s,\"stream\":false}".formatted(jsonString(prompt));
 
         HttpClient http = HttpClient.newHttpClient();
         HttpRequest httpReq = HttpRequest.newBuilder()
@@ -53,15 +75,18 @@ public class AIChatService {
 
         HttpResponse<String> resp = http.send(httpReq, HttpResponse.BodyHandlers.ofString());
 
-        // Ollama response contains a "response" field with the text
+        // Ollama response contains a "response" field with the textw
         String answer = new com.fasterxml.jackson.databind.json.JsonMapper()
                 .readTree(resp.body()).path("response").asText("");
+
 
         String payload = gson.toJson(answer);
 
         logger.info("PAYLOAD: " + payload);
 
-        return Response.ok(payload).build();
+        return Response.ok(answer)
+                .type(MediaType.TEXT_PLAIN)
+                .build();
     }
 
     // --- helpers ---
